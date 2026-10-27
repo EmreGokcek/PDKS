@@ -17,6 +17,12 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] İzinli günde giriş okutulursa uyarı gösterilmeli ("Bugün yıllık izindesin, yine de giriş yapılsın mı?").
 - [ ] Kiosk ekranının internet kesintisinde ne yapacağı: personel tarafında çevrimdışı okutma kuyruğu.
 
+## Pano ve raporlar
+
+- [ ] Canlı pano 30 sn'de bir yenileniyor; anlık güncelleme için SignalR (okutma olduğu an panoya düşsün).
+- [ ] 00:00'da başlayan vardiyada bir önceki gün 23:55'te okutulan giriş önceki güne yazılıyor; vardiyaya yakınlığa göre eşleştirme yapılmalı.
+- [ ] Raporlarda pasif personelin geçmiş kayıtları: şu an yalnızca okutma kaydı olan pasif kişiler listeleniyor.
+
 ## Vardiya planı
 
 - [ ] Hafta başlangıç günü yayınlanmış haftalar varken değiştirilirse eski yayın kayıtları yeni haftalarla eşleşmez. Değişiklik sırasında uyarı ya da dönüştürme gerekli.

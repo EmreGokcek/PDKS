@@ -98,7 +98,7 @@ Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
 - [x] Adım 2 — Admin: personel yönetimi, çalışma kuralları, tema ve dil seçenekleri
 - [x] Adım 3 — Kiosk dinamik QR, QR ile giriş-çıkış-mola, "Bugünüm" ekranı (anlık durum, kalan mola, haftalık süre, fazla mesai)
 - [x] Adım 4 — Vardiya planlama (şablonlar, fırça ile atama, haftayı kopyalama), Vardiyalarım
-- [ ] Adım 5 — Müdür canlı panosu, geç kalma tespiti, personel bazlı süreler
+- [x] Adım 5 — Müdür canlı panosu, geç kalma / erken çıkma / devamsızlık tespiti, ekip süreleri raporu
 - [ ] Adım 6 — Kayıt düzeltme, düzeltme ve izin talepleri
 - [ ] Adım 7 — Aylık puantaj raporu (Excel/PDF)
 - [ ] Adım 8 — PWA (telefona uygulama gibi kurulum), konum doğrulaması

@@ -22,7 +22,7 @@ export interface LoginResponse {
 
 /** Girişten sonra her rolün açılacağı sayfa. */
 export const roleHome: Record<Role, string> = {
-  Admin: '/admin/personel',
+  Admin: '/admin/pano',
   Manager: '/mudur',
   Employee: '/personel',
   Kiosk: '/kiosk',

@@ -6,13 +6,15 @@ import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
-import { IconButton } from '../../components/ui/Button'
+import { Button, IconButton } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Overlay'
 import { Spinner } from '../../components/ui/Spinner'
 import { api } from '../../lib/api'
 import { addDays, formatDay, formatRange, hhmm, todayIso, weekStartOf, type WeekDayName } from '../../lib/dates'
 import { formatMinutes, formatSeconds, formatTime } from '../../lib/format'
 import { isLeave, leaveColors } from '../shifts/leave'
+import { useAuth } from '../../auth/AuthContext'
+import { DayEditor, type DayEditorTarget } from '../corrections/DayEditor'
 import { usePersonReport, useTeamReport, type DayRecord, type ReportPerson } from './api'
 import { statusTone } from './status'
 
@@ -144,7 +146,10 @@ function Num({ value, tone, children }: { value: number; tone: 'pause' | 'overru
 
 function PersonSheet({ person, from, to, onClose }: { person: ReportPerson | null; from: string | null; to: string | null; onClose: () => void }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const detail = usePersonReport(person?.userId ?? null, from, to)
+  const [editing, setEditing] = useState<DayEditorTarget | null>(null)
+  const canEdit = person && person.userId !== user?.id
   return (
     <Sheet open={!!person} onClose={onClose} closeLabel={t('common.close')} title={person?.name ?? ''} description={t('reports.detail')}>
       {detail.isPending || !detail.data ? (
@@ -154,15 +159,24 @@ function PersonSheet({ person, from, to, onClose }: { person: ReportPerson | nul
       ) : (
         <ol className="space-y-2">
           {detail.data.days.map((d) => (
-            <DayRow key={d.date} day={d} />
+            <DayRow
+              key={d.date}
+              day={d}
+              onEdit={
+                canEdit && d.date <= todayIso()
+                  ? () => setEditing({ userId: person.userId, name: person.name, date: d.date, plan: d.plan && !isLeave(d.plan.kind) ? d.plan : null })
+                  : undefined
+              }
+            />
           ))}
         </ol>
       )}
+      <DayEditor target={editing} onClose={() => setEditing(null)} />
     </Sheet>
   )
 }
 
-function DayRow({ day: d }: { day: DayRecord }) {
+function DayRow({ day: d, onEdit }: { day: DayRecord; onEdit?: () => void }) {
   const { t } = useTranslation()
   const plan = d.plan
   const leave = plan && isLeave(plan.kind)
@@ -184,9 +198,16 @@ function DayRow({ day: d }: { day: DayRecord }) {
             )}
           </p>
         </div>
-        <Badge tone={statusTone[d.status]} dot>
-          {t(`dashboard.status.${d.status}`)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge tone={statusTone[d.status]} dot>
+            {t(`dashboard.status.${d.status}`)}
+          </Badge>
+          {onEdit && (
+            <Button variant="secondary" size="sm" onClick={onEdit}>
+              {t('corrections.button')}
+            </Button>
+          )}
+        </div>
       </div>
 
       {(d.firstIn || d.workedSeconds > 0) && (

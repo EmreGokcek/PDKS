@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { BarChart3, CalendarDays, CalendarRange, Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
@@ -15,17 +16,21 @@ interface NavItem {
   label: string
   icon: ReactNode
   end?: boolean
+  /** Menüde sağda gösterilen sayı (ör. bekleyen talep) */
+  badge?: number
 }
 
 function useNavItems(role: Role): NavItem[] {
   const { t } = useTranslation()
   const icon = 'size-[18px]'
+  const pending = usePendingCount(role === 'Admin' || role === 'Manager').data ?? 0
   switch (role) {
     case 'Admin':
       return [
         { to: '/admin/pano', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
         { to: '/admin/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/admin/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/admin/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
         { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
         { to: '/admin/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
@@ -36,6 +41,8 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/mudur/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/mudur/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
         { to: '/mudur/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/mudur/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+        { to: '/mudur/taleplerim', label: t('nav.myRequests'), icon: <Send className={icon} /> },
         { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
         { to: '/mudur/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
@@ -43,6 +50,7 @@ function useNavItems(role: Role): NavItem[] {
       return [
         { to: '/personel', label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
         { to: '/personel/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+        { to: '/personel/taleplerim', label: t('nav.myRequests'), icon: <Send className={icon} /> },
       ]
   }
 }
@@ -90,7 +98,20 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
                   />
                 )}
                 <span className="relative">{item.icon}</span>
-                <span className="relative">{item.label}</span>
+                <span className="relative flex-1">{item.label}</span>
+                <AnimatePresence>
+                  {!!item.badge && (
+                    <motion.span
+                      key={item.badge}
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      className="tabular relative grid min-w-6 place-items-center rounded-full bg-pause px-1.5 text-xs font-semibold text-white"
+                    >
+                      {item.badge}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </>
             )}
           </NavLink>

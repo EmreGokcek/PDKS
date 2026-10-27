@@ -20,6 +20,8 @@ const TodayPage = named(() => import('./features/attendance/TodayPage'), 'TodayP
 const KioskPage = named(() => import('./features/kiosk/KioskPage'), 'KioskPage')
 const LiveDashboardPage = named(() => import('./features/dashboard/LiveDashboardPage'), 'LiveDashboardPage')
 const TeamReportPage = named(() => import('./features/dashboard/TeamReportPage'), 'TeamReportPage')
+const MyRequestsPage = named(() => import('./features/requests/MyRequestsPage'), 'MyRequestsPage')
+const RequestsPage = named(() => import('./features/requests/RequestsPage'), 'RequestsPage')
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
@@ -39,6 +41,7 @@ export default function App() {
           <Route index element={<Navigate to="pano" replace />} />
           <Route path="pano" element={<LiveDashboardPage />} />
           <Route path="sureler" element={<TeamReportPage />} />
+          <Route path="talepler" element={<RequestsPage />} />
           <Route path="personel" element={<UsersPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="kurallar" element={<WorkRulesPage />} />
@@ -47,6 +50,8 @@ export default function App() {
         <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
           <Route index element={<LiveDashboardPage />} />
           <Route path="sureler" element={<TeamReportPage />} />
+          <Route path="talepler" element={<RequestsPage />} />
+          <Route path="taleplerim" element={<MyRequestsPage />} />
           <Route path="bugunum" element={<TodayPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="vardiyalarim" element={<MyShiftsPage />} />
@@ -57,6 +62,7 @@ export default function App() {
         <Route path="/personel" element={<RequireRole roles={['Employee']}><AppShell /></RequireRole>}>
           <Route index element={<TodayPage />} />
           <Route path="vardiyalarim" element={<MyShiftsPage />} />
+          <Route path="taleplerim" element={<MyRequestsPage />} />
         </Route>
 
         {/* Telefonun kendi kamerasıyla kiosk QR'ı okutulunca açılan sayfa */}

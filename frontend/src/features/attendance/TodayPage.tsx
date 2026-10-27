@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { AlertTriangle, Coffee, LogIn, LogOut, Play, TrendingUp, Watch } from 'lucide-react'
 import { useCallback, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
 import { PageHeader } from '../../components/AppShell'
 import { Button } from '../../components/ui/Button'
@@ -96,7 +97,12 @@ export function TodayPage() {
       {status.hasUnclosedSession && (
         <p className="mb-5 flex items-start gap-2.5 rounded-xl bg-pause-soft px-4 py-3 text-sm text-pause">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          {t('attendance.unclosed')}
+          <span>
+            {t('attendance.unclosed')}{' '}
+            <Link to={user?.role === 'Manager' ? '/mudur/taleplerim' : '/personel/taleplerim'} className="font-medium underline underline-offset-4">
+              {t('requests.unclosedLink')}
+            </Link>
+          </span>
         </p>
       )}
 

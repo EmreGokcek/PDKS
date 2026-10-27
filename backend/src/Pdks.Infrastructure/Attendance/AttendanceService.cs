@@ -86,6 +86,27 @@ public class AttendanceService(PdksDbContext db, TimeProvider time, ShiftPublica
         return FindTimeZone(id ?? DefaultTimeZone);
     }
 
+    /// <summary>Şubenin yerel saatindeki tarih + saati UTC'ye çevirir.</summary>
+    public static DateTimeOffset ToUtc(DateOnly date, TimeOnly time, TimeZoneInfo tz) =>
+        new(TimeZoneInfo.ConvertTimeToUtc(date.ToDateTime(time, DateTimeKind.Unspecified), tz), TimeSpan.Zero);
+
+    /// <summary>
+    /// Bir kişinin olaylarına önerilen değişiklik uygulanınca sıra hâlâ anlamlı mı?
+    /// Değişikliğin bir gün öncesi ile bir gün sonrası arasındaki olaylar kontrol edilir.
+    /// </summary>
+    public async Task<string?> ValidateChangeAsync(
+        Guid userId, DateTimeOffset around, Guid? removedEventId, EventPoint? added, CancellationToken ct = default)
+    {
+        var from = around.AddDays(-1);
+        var to = around.AddDays(1);
+        var points = await db.AttendanceEvents.AsNoTracking()
+            .Where(e => e.UserId == userId && e.OccurredAt >= from && e.OccurredAt <= to && e.Id != removedEventId)
+            .Select(e => new EventPoint(e.Type, e.OccurredAt))
+            .ToListAsync(ct);
+        if (added is { } a) points.Add(a);
+        return AttendanceRules.ValidateSequence(points);
+    }
+
     public static TimeZoneInfo FindTimeZone(string id)
     {
         try { return TimeZoneInfo.FindSystemTimeZoneById(id); }

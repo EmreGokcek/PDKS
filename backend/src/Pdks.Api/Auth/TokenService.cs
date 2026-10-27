@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Pdks.Domain.Entities;
+using Pdks.Domain.Enums;
 
 namespace Pdks.Api.Auth;
 
@@ -13,7 +14,9 @@ public class TokenService(IOptions<JwtOptions> options)
 
     public (string Token, DateTimeOffset ExpiresAt) CreateAccessToken(User user)
     {
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
+        var expiresAt = user.Role == UserRole.Kiosk
+            ? DateTimeOffset.UtcNow.AddDays(_options.KioskTokenDays)
+            : DateTimeOffset.UtcNow.AddMinutes(_options.AccessTokenMinutes);
 
         var claims = new List<Claim>
         {

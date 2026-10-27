@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pdks.Domain.Entities;
 using Pdks.Infrastructure.Attendance;
+using Pdks.Infrastructure.Scheduling;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Persistence.Seed;
 using Pdks.Infrastructure.Services;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<KioskQrTokens>();
         services.AddScoped<AttendanceService>();
+        services.AddScoped<ShiftPublication>();
 
         return services;
     }

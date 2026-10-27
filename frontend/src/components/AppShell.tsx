@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { CalendarDays, CalendarRange, Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
@@ -8,6 +8,7 @@ import type { Role } from '../auth/types'
 import { LanguageMenu, ThemeSwitch } from './PreferencesControls'
 import { Avatar } from './ui/Avatar'
 import { IconButton } from './ui/Button'
+import { Spinner } from './ui/Spinner'
 
 interface NavItem {
   to: string
@@ -172,7 +173,9 @@ export function AppShell() {
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
           className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10"
         >
-          <Outlet />
+          <Suspense fallback={<div className="grid place-items-center py-24 text-ink-soft"><Spinner /></div>}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </main>
     </div>

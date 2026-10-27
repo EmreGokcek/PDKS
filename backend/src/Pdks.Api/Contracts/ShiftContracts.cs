@@ -49,7 +49,9 @@ public record PlannerDto(
     int DailyBreakMinutes,
     DayOfWeek WeekStartsOn,
     List<PlannerStaffDto> Staff,
-    List<ShiftDto> Shifts);
+    List<ShiftDto> Shifts,
+    DateTimeOffset? PublishedAt = null,
+    string? PublishedBy = null);
 
 public record ShiftCell(Guid UserId, DateOnly Date);
 
@@ -71,3 +73,9 @@ public record ClearShiftsRequest([Required, MinLength(1), MaxLength(500)] List<S
 public record CopyWeekRequest(DateOnly FromWeekStart, DateOnly ToWeekStart, bool Overwrite);
 
 public record CopyWeekResult(int Copied, int Skipped);
+
+public record PublishWeekRequest(DateOnly WeekStart);
+
+public record MissingDaysDto(Guid UserId, string Name, List<DateOnly> Dates);
+
+public record PublishResult(DateTimeOffset PublishedAt);

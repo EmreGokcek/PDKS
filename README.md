@@ -91,6 +91,9 @@ API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygul
 
 ## Yol haritası
 
+Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
+
+
 - [x] Adım 1 — Proje iskeleti, veri modeli, giriş ve roller
 - [x] Adım 2 — Admin: personel yönetimi, çalışma kuralları, tema ve dil seçenekleri
 - [x] Adım 3 — Kiosk dinamik QR, QR ile giriş-çıkış-mola, "Bugünüm" ekranı (anlık durum, kalan mola, haftalık süre, fazla mesai)

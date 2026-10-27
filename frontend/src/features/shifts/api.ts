@@ -37,6 +37,14 @@ export interface Planner {
   weekStartsOn: WeekDayName
   staff: { id: string; fullName: string; role: Role; isActive: boolean }[]
   shifts: Shift[]
+  publishedAt: string | null
+  publishedBy: string | null
+}
+
+export interface MissingDays {
+  userId: string
+  name: string
+  dates: string[]
 }
 
 export interface Cell {
@@ -167,4 +175,13 @@ export function useDeleteTemplate() {
 
 export function useMyShifts(from: string, to: string) {
   return useQuery({ queryKey: ['my-shifts', from, to], queryFn: () => api<Shift[]>(`/me/shifts?from=${from}&to=${to}`) })
+}
+
+export function usePublishWeek() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ weekStart, publish }: { weekStart: string; publish: boolean }) =>
+      api<unknown>(publish ? '/shifts/publish' : '/shifts/unpublish', { method: 'POST', ...json({ weekStart }) }),
+    onSuccess: (_r, v) => qc.invalidateQueries({ queryKey: plannerKey(v.weekStart) }),
+  })
 }

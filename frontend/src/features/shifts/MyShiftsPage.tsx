@@ -46,6 +46,7 @@ export function MyShiftsPage() {
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             {[start, addDays(start, 7)].map((ws, wi) => {
               const weekShifts = weekDays(ws).map((d) => byDate.get(d)).filter((s): s is Shift => !!s && !isLeave(s.kind))
+              const unpublished = weekDays(ws).every((d) => !byDate.has(d))
               const weekWork = weekShifts.reduce((sum, s) => sum + workOf(s), 0)
               return (
               <section key={ws} className="rounded-2xl bg-panel p-2 ring-1 ring-line">
@@ -57,6 +58,7 @@ export function MyShiftsPage() {
                     </p>
                   )}
                 </div>
+                {unpublished && <p className="mx-3 mb-2 rounded-xl bg-panel-2 px-3 py-2 text-sm text-ink-soft ring-1 ring-line">{t('shifts.notPublished')}</p>}
                 <ul>
                   {weekDays(ws).map((d, i) => {
                     const s = byDate.get(d)

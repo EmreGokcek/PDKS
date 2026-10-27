@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { ChevronLeft, ChevronRight, Clock, Copy, Eraser, LayoutTemplate, MousePointer2, Plus } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Clock, Copy, Eraser, EyeOff, LayoutTemplate, MousePointer2, Plus, Send } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -10,11 +10,12 @@ import { Button, IconButton } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 import { Dialog } from '../../components/ui/Overlay'
 import { Spinner } from '../../components/ui/Spinner'
-import { api, errorMessage } from '../../lib/api'
+import { locale } from '../../i18n'
+import { api, ApiError, errorMessage } from '../../lib/api'
 import { addDays, formatDay, formatRange, hhmm, isOvernight, shiftMinutes, todayIso, toApiTime, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
 import { formatDuration } from '../../lib/format'
 import { ConfirmDialog } from '../users/Dialogs'
-import { useAssignShifts, useClearShifts, useCopyWeek, usePlanner, useTemplates, type Cell, type Shift } from './api'
+import { useAssignShifts, useClearShifts, useCopyWeek, usePlanner, usePublishWeek, useTemplates, type Cell, type MissingDays, type Shift } from './api'
 import { CellDialog, type CellTarget } from './CellDialog'
 import { isLeave, leaveColors, leaveKinds, matchTemplate, netWorkMinutes, type LeaveKind } from './leave'
 import { LeaveChip, ShiftChip } from './ShiftChip'
@@ -46,6 +47,8 @@ export function ShiftPlannerPage() {
   const assign = useAssignShifts(weekStart ?? '', tpls)
   const clear = useClearShifts(weekStart ?? '')
   const copyWeek = useCopyWeek()
+  const publish = usePublishWeek()
+  const [missing, setMissing] = useState<MissingDays[] | null>(null)
 
   const [brush, setBrush] = useState<Brush>(null)
   const [customOpen, setCustomOpen] = useState(false)
@@ -132,6 +135,26 @@ export function ShiftPlannerPage() {
   }
 
   const activeTemplate = brush?.kind === 'template' ? tpls.find((x) => x.id === brush.id) : undefined
+
+  // Aktif kişilerin boş günleri (vardiya da izin de yok)
+  const emptyCount =
+    data?.staff
+      .filter((p) => p.isActive)
+      .reduce((n, p) => n + days.filter((d) => !shiftsByCell.has(`${p.id}|${d}`)).length, 0) ?? 0
+
+  async function togglePublish(next: boolean) {
+    if (!weekStart) return
+    try {
+      await publish.mutateAsync({ weekStart, publish: next })
+      toast.success(next ? t('shifts.publishedToast') : t('shifts.unpublishedToast'))
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'plan_incomplete' && Array.isArray(err.details?.missing)) {
+        setMissing(err.details.missing as MissingDays[])
+      } else {
+        handleError(err)
+      }
+    }
+  }
 
   if (!weekStart || (planner.isPending && !data)) {
     return (
@@ -238,6 +261,18 @@ export function ShiftPlannerPage() {
         <p className="mt-2 text-xs text-ink-soft">{t('shifts.brushHint')}</p>
       </section>
 
+      {/* Yayın durumu */}
+      {data && data.staff.length > 0 && (
+        <PublishBar
+          publishedAt={data.publishedAt}
+          publishedBy={data.publishedBy}
+          emptyCount={emptyCount}
+          busy={publish.isPending}
+          onPublish={() => togglePublish(true)}
+          onUnpublish={() => togglePublish(false)}
+        />
+      )}
+
       {data && data.staff.length === 0 ? (
         <p className="rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('shifts.noStaff')}</p>
       ) : (
@@ -265,6 +300,7 @@ export function ShiftPlannerPage() {
               const rowShifts = days.map((d) => shiftsByCell.get(`${person.id}|${d}`)).filter((s): s is Shift => !!s)
               const planned = rowShifts.reduce((sum, s) => sum + netMinutes(s), 0)
               const leaves = rowShifts.filter((s) => isLeave(s.kind)).length
+              const empties = person.isActive ? days.length - rowShifts.length : 0
               const target = data.weeklyWorkMinutes
               const ratio = Math.min(1.2, planned / Math.max(1, target))
               return (
@@ -277,6 +313,7 @@ export function ShiftPlannerPage() {
                         {t('shifts.planned', { planned: formatDuration(planned), target: formatDuration(target) })}
                         {leaves > 0 && <> · {t('shifts.leaveCount', { count: leaves })}</>}
                       </p>
+                      {empties > 0 && <p className="text-xs font-medium text-pause">{t('shifts.emptyDays', { count: empties })}</p>}
                       <div className="mt-1 h-1 overflow-hidden rounded-full bg-panel-2">
                         <motion.div
                           className={`h-full rounded-full ${planned > target ? 'bg-pause' : 'bg-signal'}`}
@@ -354,8 +391,18 @@ export function ShiftPlannerPage() {
                               )}
                             </motion.span>
                           ) : (
-                            <span key="empty" className="grid h-full place-items-center rounded-lg border border-dashed border-transparent text-ink-soft/0 transition-colors group-hover:border-line group-hover:text-ink-soft/60">
-                              <Plus className="size-4" />
+                            <span
+                              key="empty"
+                              className={`grid h-full place-items-center rounded-lg border border-dashed transition-colors ${
+                                person.isActive
+                                  ? 'border-pause/40 bg-pause-soft/40 text-pause/70 group-hover:border-pause'
+                                  : 'border-transparent text-ink-soft/0 group-hover:border-line group-hover:text-ink-soft/60'
+                              }`}
+                            >
+                              <span className="flex items-center gap-1 text-xs">
+                                <Plus className="size-3.5" />
+                                {person.isActive && t('shifts.emptyCell')}
+                              </span>
                             </span>
                           )}
                         </AnimatePresence>
@@ -417,6 +464,25 @@ export function ShiftPlannerPage() {
       />
 
       <TemplatesSheet open={templatesOpen} templates={tpls} onClose={() => setTemplatesOpen(false)} />
+
+      <Dialog open={!!missing} onClose={() => setMissing(null)} title={t('shifts.incompleteTitle')}>
+        <p className="text-ink-soft">{t('shifts.incompleteBody')}</p>
+        <ul className="mt-4 max-h-72 space-y-2 overflow-y-auto">
+          {missing?.map((m) => (
+            <li key={m.userId} className="rounded-xl bg-pause-soft px-3.5 py-2.5">
+              <p className="font-medium">{m.name}</p>
+              <p className="text-sm text-pause first-letter:uppercase">
+                {m.dates.map((d) => formatDay(d, { weekday: 'long', day: 'numeric' })).join(', ')}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 flex justify-end">
+          <Button onClick={() => setMissing(null)} data-autofocus>
+            {t('common.close')}
+          </Button>
+        </div>
+      </Dialog>
 
       <ConfirmDialog
         open={copyOpen}
@@ -532,5 +598,62 @@ function CustomBrushForm({ initial, onPick }: { initial: { start: string; end: s
         </Button>
       </div>
     </div>
+  )
+}
+
+/** Haftanın yayın durumu: taslak / yayında, boş gün sayısı ve yayınla düğmesi. */
+function PublishBar({
+  publishedAt,
+  publishedBy,
+  emptyCount,
+  busy,
+  onPublish,
+  onUnpublish,
+}: {
+  publishedAt: string | null
+  publishedBy: string | null
+  emptyCount: number
+  busy: boolean
+  onPublish: () => void
+  onUnpublish: () => void
+}) {
+  const { t } = useTranslation()
+  const published = !!publishedAt
+  const date = publishedAt
+    ? new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }).format(new Date(publishedAt))
+    : ''
+
+  return (
+    <motion.section
+      layout
+      className={`mb-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-5 py-3.5 ring-1 ${published ? 'bg-signal-soft ring-signal/25' : 'bg-panel ring-line'}`}
+    >
+      <span className={`flex items-center gap-2 font-semibold ${published ? 'text-signal' : 'text-ink'}`}>
+        {published ? <CheckCircle2 className="size-5" /> : <span className="size-2.5 rounded-full bg-pause" />}
+        {published ? t('shifts.published') : t('shifts.draft')}
+      </span>
+      <span className="min-w-0 flex-1 text-sm text-ink-soft">
+        {published
+          ? emptyCount > 0
+            ? t('shifts.publishedButEmpty', { count: emptyCount })
+            : t('shifts.publishedInfo', { date, name: publishedBy ?? '' })
+          : t('shifts.draftHint')}
+      </span>
+      <span className={`flex items-center gap-1.5 text-sm font-medium ${emptyCount > 0 ? 'text-pause' : 'text-signal'}`}>
+        {emptyCount > 0 ? <AlertTriangle className="size-4" /> : <CheckCircle2 className="size-4" />}
+        {emptyCount > 0 ? t('shifts.emptyDays', { count: emptyCount }) : t('shifts.allFilled')}
+      </span>
+      {published ? (
+        <Button variant="ghost" size="sm" onClick={onUnpublish} loading={busy}>
+          <EyeOff className="size-4" />
+          {t('shifts.unpublish')}
+        </Button>
+      ) : (
+        <Button size="sm" onClick={onPublish} loading={busy}>
+          <Send className="size-4" />
+          {t('shifts.publish')}
+        </Button>
+      )}
+    </motion.section>
   )
 }

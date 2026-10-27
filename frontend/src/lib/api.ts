@@ -18,11 +18,14 @@ export const tokenStorage = {
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
+  /** Sunucunun döndüğü ProblemDetails (ek alanlar dahil, ör. "missing"). */
+  readonly details: Record<string, unknown> | null
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: string, message: string, details: Record<string, unknown> | null = null) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -52,7 +55,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (!response.ok) {
     const problem = await response.json().catch(() => null)
     const code: string = problem?.code ?? (problem?.errors ? 'validation' : 'generic')
-    throw new ApiError(response.status, code, problem?.title ?? `HTTP ${response.status}`)
+    throw new ApiError(response.status, code, problem?.title ?? `HTTP ${response.status}`, problem)
   }
 
   if (response.status === 204) return undefined as T

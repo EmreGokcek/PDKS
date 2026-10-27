@@ -42,6 +42,12 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(x => x.EmployeeNumber).HasMaxLength(50);
         b.Property(x => x.Phone).HasMaxLength(30);
         b.Property(x => x.Role).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Position).HasMaxLength(100);
+        b.Property(x => x.Address).HasMaxLength(300);
+        b.Property(x => x.BloodType).HasMaxLength(5);
+        b.Property(x => x.EmergencyContactName).HasMaxLength(150);
+        b.Property(x => x.EmergencyContactPhone).HasMaxLength(30);
+        b.Property(x => x.EmergencyContactRelation).HasMaxLength(50);
 
         b.HasIndex(x => x.Email).IsUnique();
         b.HasIndex(x => new { x.CompanyId, x.Role });
@@ -114,6 +120,18 @@ internal class StaffRequestConfiguration : IEntityTypeConfiguration<StaffRequest
 
         b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+internal class NotificationConfiguration : IEntityTypeConfiguration<Notification>
+{
+    public void Configure(EntityTypeBuilder<Notification> b)
+    {
+        b.Property(x => x.Type).HasConversion<string>().HasMaxLength(40);
+        b.Property(x => x.Data).HasColumnType("jsonb");
+        b.HasIndex(x => new { x.UserId, x.CreatedAt });
+        b.HasIndex(x => new { x.UserId, x.ReadAt });
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 

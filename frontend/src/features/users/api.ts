@@ -19,6 +19,8 @@ export interface StaffMember {
   mustChangePassword: boolean
   lastLoginAt: string | null
   createdAt: string
+  position: string | null
+  hireDate: string | null
 }
 
 export interface StaffInput {
@@ -29,6 +31,8 @@ export interface StaffInput {
   employeeNumber: string | null
   role: ManagedRole
   branchId: string | null
+  position: string | null
+  hireDate: string | null
 }
 
 export interface StaffWithPassword {

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, UserRoundX } from 'lucide-react'
+import { IdCard, KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, UserRoundX } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -24,6 +24,7 @@ import {
   type StaffWithPassword,
 } from './api'
 import { ConfirmDialog, TempPasswordDialog } from './Dialogs'
+import { StaffProfileSheet } from '../profile/StaffProfileSheet'
 import { UserSheet } from './UserSheet'
 
 type Pending = { kind: 'deactivate' | 'reset'; member: StaffMember } | null
@@ -40,6 +41,7 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
   const [sheet, setSheet] = useState<{ open: boolean; member: StaffMember | null }>({ open: false, member: null })
   const [password, setPassword] = useState<{ result: StaffWithPassword; mode: 'created' | 'reset' } | null>(null)
   const [pending, setPending] = useState<Pending>(null)
+  const [viewing, setViewing] = useState<string | null>(null)
 
   const setActive = useSetStaffActive()
   const resetPassword = useResetStaffPassword()
@@ -75,6 +77,7 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
 
   const rowActions = (member: StaffMember): MenuItem[] => [
     { label: t('common.edit'), icon: <Pencil className="size-4" />, onSelect: () => openEdit(member) },
+    { label: t('profile.viewProfile'), icon: <IdCard className="size-4" />, onSelect: () => setViewing(member.id) },
     { label: t('users.resetPassword'), icon: <KeyRound className="size-4" />, onSelect: () => setPending({ kind: 'reset', member }) },
     member.isActive
       ? { label: t('users.deactivate'), icon: <UserRoundX className="size-4" />, tone: 'danger', onSelect: () => setPending({ kind: 'deactivate', member }) }
@@ -169,13 +172,15 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
                   animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i, 10) * 0.025 } }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                 >
-                  <StaffRow member={m} readOnly={readOnly} onOpen={() => !readOnly && openEdit(m)} actions={rowActions(m)} />
+                  <StaffRow member={m} readOnly={readOnly} onOpen={() => (readOnly ? setViewing(m.id) : openEdit(m))} actions={rowActions(m)} />
                 </motion.li>
               ))}
             </AnimatePresence>
           </ul>
         )}
       </section>
+
+      <StaffProfileSheet userId={viewing} onClose={() => setViewing(null)} />
 
       {!readOnly && (
         <>
@@ -239,7 +244,7 @@ function StaffRow({
 
   return (
     <div
-      className={`group grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors md:grid-cols-[minmax(0,2.2fr)_1fr_1fr_1fr_1fr_44px] ${readOnly ? '' : 'cursor-pointer hover:bg-panel-2/70'} ${m.isActive ? '' : 'text-ink-soft'}`}
+      className={`group grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-5 py-3.5 transition-colors md:grid-cols-[minmax(0,2.2fr)_1fr_1fr_1fr_1fr_44px] cursor-pointer hover:bg-panel-2/70 ${m.isActive ? '' : 'text-ink-soft'}`}
       onClick={onOpen}
     >
       <div className="flex min-w-0 items-center gap-3">

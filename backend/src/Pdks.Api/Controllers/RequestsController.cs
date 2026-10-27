@@ -23,6 +23,7 @@ public class MyRequestsController(
     ICurrentUser currentUser,
     AttendanceService attendance,
     AuditLogger audit,
+    Notifier notifier,
     TimeProvider time) : ControllerBase
 {
     private static readonly ShiftKind[] RequestableLeaves = [ShiftKind.AnnualLeave, ShiftKind.SickLeave, ShiftKind.ExcusedLeave];
@@ -74,6 +75,8 @@ public class MyRequestsController(
 
         db.StaffRequests.Add(entity);
         audit.Log("request.created", nameof(StaffRequest), entity.Id, newValues: new { Type = entity.Type.ToString() });
+        notifier.Notify(await notifier.ReviewersAsync(entity.BranchId, user.Id, ct), NotificationType.RequestCreated,
+            new { requestId = entity.Id, name = user.FullName, type = entity.Type.ToString() });
         await db.SaveChangesAsync(ct);
         return (await RequestQueries.ToDtos(db, db.StaffRequests.Where(r => r.Id == entity.Id), ct)).Single();
     }
@@ -102,6 +105,7 @@ public class RequestsController(
     ICurrentUser currentUser,
     AttendanceService attendance,
     AuditLogger audit,
+    Notifier notifier,
     TimeProvider time) : ControllerBase
 {
     [HttpGet]
@@ -190,6 +194,9 @@ public class RequestsController(
         entity.ReviewNote = string.IsNullOrWhiteSpace(note) ? null : note.Trim();
         audit.Log(status == RequestStatus.Approved ? "request.approved" : "request.rejected", nameof(StaffRequest), entity.Id,
             newValues: new { Type = entity.Type.ToString(), entity.UserId }, reason: entity.ReviewNote);
+        notifier.Notify(entity.UserId,
+            status == RequestStatus.Approved ? NotificationType.RequestApproved : NotificationType.RequestRejected,
+            new { requestId = entity.Id, type = entity.Type.ToString(), note = entity.ReviewNote });
     }
 
     private async Task<(StaffRequest?, ObjectResult?)> LoadForReviewAsync(Guid id, CancellationToken ct)

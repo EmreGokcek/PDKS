@@ -25,6 +25,7 @@ public class CorrectionsController(
     ICurrentUser currentUser,
     AttendanceService attendance,
     AuditLogger audit,
+    Notifier notifier,
     TimeProvider time) : ControllerBase
 {
     /// <summary>Bir günün kayıtları (gece vardiyası çıkışları için ertesi gün öğlene kadar).</summary>
@@ -77,6 +78,7 @@ public class CorrectionsController(
         if (evt.BranchId == Guid.Empty) return this.ApiError(400, "invalid_branch", "Personelin şubesi tanımlı değil.");
 
         db.AttendanceEvents.Add(evt);
+        notifier.Notify(userId, NotificationType.RecordCorrected, new { action = "added", type = request.Type.ToString(), at });
         audit.Log("attendance.added", nameof(AttendanceEvent), evt.Id,
             newValues: new { UserId = userId, Type = request.Type.ToString(), OccurredAt = at }, reason: request.Reason);
         await db.SaveChangesAsync(ct);
@@ -103,6 +105,7 @@ public class CorrectionsController(
         evt.RecordedByUserId = currentUser.UserId;
         evt.Note = request.Reason.Trim();
 
+        notifier.Notify(evt.UserId, NotificationType.RecordCorrected, new { action = "changed", type = evt.Type.ToString(), at });
         audit.Log("attendance.changed", nameof(AttendanceEvent), evt.Id,
             oldValues: new { OccurredAt = before }, newValues: new { OccurredAt = at }, reason: request.Reason);
         await db.SaveChangesAsync(ct);
@@ -121,6 +124,7 @@ public class CorrectionsController(
             return SequenceError(error);
 
         db.AttendanceEvents.Remove(evt);
+        notifier.Notify(evt.UserId, NotificationType.RecordCorrected, new { action = "deleted", type = evt.Type.ToString(), at = evt.OccurredAt });
         audit.Log("attendance.deleted", nameof(AttendanceEvent), evt.Id,
             oldValues: new { evt.UserId, Type = evt.Type.ToString(), evt.OccurredAt, Source = evt.Source.ToString() }, reason: request.Reason);
         await db.SaveChangesAsync(ct);

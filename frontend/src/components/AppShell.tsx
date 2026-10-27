@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { BarChart3, CalendarDays, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -64,10 +65,13 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 px-5 pt-6 pb-8">
         <img src="/favicon.svg" alt="" className="size-9 rounded-xl" />
-        <div className="min-w-0 leading-tight">
+        <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate font-semibold">{user!.companyName}</p>
           {user!.branchName && <p className="truncate text-sm text-ink-soft">{user!.branchName}</p>}
         </div>
+        <span className="max-lg:hidden">
+          <NotificationBell />
+        </span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
@@ -124,11 +128,18 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
           <LanguageMenu />
         </div>
         <div className="flex items-center gap-3">
-          <Avatar name={user!.fullName} size="sm" />
-          <div className="min-w-0 flex-1 leading-tight">
-            <p className="truncate text-sm font-medium">{user!.fullName}</p>
-            <p className="truncate text-xs text-ink-soft">{t(`roles.${user!.role}`)}</p>
-          </div>
+          <NavLink
+            to={`${user!.role === 'Admin' ? '/admin' : user!.role === 'Manager' ? '/mudur' : '/personel'}/profil`}
+            onClick={onNavigate}
+            title={t('nav.profile')}
+            className={({ isActive }) => `-m-1.5 flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1.5 transition-colors hover:bg-panel-2 ${isActive ? 'bg-panel-2 ring-1 ring-line' : ''}`}
+          >
+            <Avatar name={user!.fullName} size="sm" />
+            <div className="min-w-0 flex-1 leading-tight">
+              <p className="truncate text-sm font-medium">{user!.fullName}</p>
+              <p className="truncate text-xs text-ink-soft">{t('nav.profile')}</p>
+            </div>
+          </NavLink>
           <IconButton label={t('nav.logout')} onClick={logout}>
             <LogOut className="size-[18px]" />
           </IconButton>
@@ -149,7 +160,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-      <aside className="sticky top-0 hidden h-dvh border-r border-line bg-panel lg:block">
+      <aside className="sticky top-0 z-30 hidden h-dvh border-r border-line bg-panel lg:block">
         <Sidebar />
       </aside>
 
@@ -158,9 +169,12 @@ export function AppShell() {
           <img src="/favicon.svg" alt="" className="size-8 rounded-lg" />
           <span className="font-semibold">{user.companyName}</span>
         </div>
-        <IconButton label={t('nav.menu')} onClick={() => setDrawerOpen(true)}>
-          <MenuIcon className="size-5" />
-        </IconButton>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <IconButton label={t('nav.menu')} onClick={() => setDrawerOpen(true)}>
+            <MenuIcon className="size-5" />
+          </IconButton>
+        </div>
       </header>
 
       <AnimatePresence>

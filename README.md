@@ -100,6 +100,7 @@ Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
 - [x] Adım 4 — Vardiya planlama (şablonlar, fırça ile atama, haftayı kopyalama), Vardiyalarım
 - [x] Adım 5 — Müdür canlı panosu, geç kalma / erken çıkma / devamsızlık tespiti, ekip süreleri raporu
 - [x] Adım 6 — Kayıt düzeltme (gerekçeli, denetim kayıtlı), düzeltme ve izin talepleri, onay akışı
-- [ ] Adım 7 — Aylık puantaj raporu (Excel/PDF)
-- [ ] Adım 8 — PWA (telefona uygulama gibi kurulum), konum doğrulaması
-- [ ] Adım 9 — Sunucuya yükleme
+- [x] Adım 7 — Profilim (iletişim, kişisel, acil durum, iş bilgileri; KVKK açık rızası), uygulama içi bildirimler
+- [ ] Adım 8 — Aylık puantaj raporu (Excel/PDF)
+- [ ] Adım 9 — PWA (telefona uygulama gibi kurulum), anlık bildirimler, konum doğrulaması
+- [ ] Adım 10 — Sunucuya yükleme

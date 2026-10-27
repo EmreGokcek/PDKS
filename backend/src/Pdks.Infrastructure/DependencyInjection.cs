@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<DbSeeder>();
         services.AddScoped<AuditLogger>();
+        services.AddScoped<Notifier>();
         services.AddSingleton(TimeProvider.System);
         services.AddSingleton<KioskQrTokens>();
         services.AddScoped<AttendanceService>();

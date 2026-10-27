@@ -267,6 +267,13 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Property<TimeOnly>("EndTime")
                         .HasColumnType("time without time zone");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValueSql("'Work'");
+
                     b.Property<string>("Note")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -48,7 +49,8 @@ builder.Services
 builder.Services.AddAuthorization();
 
 // ---- Web API ----
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
@@ -78,6 +80,7 @@ app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors(WebCors);
 app.UseAuthentication();
+app.UseMiddleware<PasswordChangeGate>();
 app.UseAuthorization();
 app.MapControllers();
 

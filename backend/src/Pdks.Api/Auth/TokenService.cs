@@ -23,6 +23,8 @@ public class TokenService(IOptions<JwtOptions> options)
             new(PdksClaims.Role, user.Role.ToString()),
             new(PdksClaims.CompanyId, user.CompanyId.ToString())
         };
+        if (user.MustChangePassword)
+            claims.Add(new Claim(PdksClaims.MustChangePassword, "true"));
         if (user.BranchId is { } branchId)
             claims.Add(new Claim(PdksClaims.BranchId, branchId.ToString()));
 

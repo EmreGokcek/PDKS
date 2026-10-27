@@ -1,0 +1,48 @@
+# Commit mesajında [migration:İsim] geçen bir push geldiğinde EF Core migration'ını
+# GitHub üzerinde üretir ve aynı dala commit'ler. Örnek: "Personel alanı eklendi [migration:AddUserPhone]"
+name: EF migration
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  migration:
+    if: contains(github.event.head_commit.message, '[migration:')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Read migration name
+        id: name
+        env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          name=$(printf '%s' "$MESSAGE" | grep -oP '\[migration:\K[A-Za-z0-9_]+(?=\])' | head -n1)
+          test -n "$name" || { echo "Migration adı okunamadı"; exit 1; }
+          echo "value=$name" >> "$GITHUB_OUTPUT"
+      - run: dotnet tool install --global dotnet-ef --version "10.0.*"
+      - run: dotnet build
+      - run: >
+          dotnet ef migrations add ${{ steps.name.outputs.value }}
+          --project src/Pdks.Infrastructure
+          --startup-project src/Pdks.Api
+          --output-dir Persistence/Migrations
+          --no-build
+      - name: Commit migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/Pdks.Infrastructure/Persistence/Migrations
+          git commit -m "Migration: ${{ steps.name.outputs.value }}"
+          git push

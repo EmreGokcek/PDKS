@@ -19,6 +19,9 @@ public class User : TenantEntity
     public string? Phone { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>Geçici şifreyle oluşturulan veya şifresi sıfırlanan kullanıcı, ilk girişte şifresini değiştirmek zorundadır.</summary>
+    public bool MustChangePassword { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }
 
     public Company? Company { get; set; }

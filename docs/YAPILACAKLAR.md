@@ -39,6 +39,14 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Yayından sonra yapılan değişikliklerin personele bildirilmesi (Adım 8: bildirimler).
 - [ ] Resmi tatiller: tatil günleri planda otomatik işaretlenmeli.
 
+## Profil ve bildirimler
+
+- [ ] Telefon numarası biçim doğrulaması (ör. +90 5xx xxx xx xx).
+- [ ] Profil fotoğrafı yükleme.
+- [ ] KVKK aydınlatma metni sayfası ve ilk girişte onay.
+- [ ] Anlık (push) bildirimler: telefona kurulum (PWA) adımında. Şu an uygulama içi; liste 60 sn'de bir yenileniyor.
+- [ ] Bildirim tercihleri (hangi bildirimleri almak istediğini seçme) ve eski bildirimlerin otomatik temizlenmesi.
+
 ## Yönetim
 
 - [ ] Denetim kaydı (AuditLog) görüntüleme ekranı.

@@ -22,6 +22,8 @@ function emptyInput(member?: StaffMember | null): StaffInput {
     employeeNumber: member?.employeeNumber ?? '',
     role: member?.role ?? 'Employee',
     branchId: member?.branchId ?? null,
+    position: member?.position ?? '',
+    hireDate: member?.hireDate ?? '',
   }
 }
 
@@ -93,6 +95,8 @@ function UserForm({
       ...values,
       phone: values.phone?.trim() || null,
       employeeNumber: values.employeeNumber?.trim() || null,
+      position: values.position?.trim() || null,
+      hireDate: values.hireDate || null,
     }
 
     try {
@@ -133,6 +137,15 @@ function UserForm({
           </Field>
           <Field label={t('users.form.employeeNumber')} optional={t('common.optional')}>
             {(p) => <Input {...p} value={values.employeeNumber ?? ''} onChange={(e) => set('employeeNumber', e.target.value)} />}
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label={t('profile.fields.position')} optional={t('common.optional')}>
+            {(p) => <Input {...p} maxLength={100} value={values.position ?? ''} onChange={(e) => set('position', e.target.value)} />}
+          </Field>
+          <Field label={t('profile.fields.hireDate')} optional={t('common.optional')}>
+            {(p) => <Input {...p} type="date" value={values.hireDate ?? ''} onChange={(e) => set('hireDate', e.target.value)} />}
           </Field>
         </div>
 

@@ -1,0 +1,40 @@
+@import 'tailwindcss';
+
+/*
+  Renkler durumları anlatır:
+  - signal (yeşil): içeride / çalışıyor
+  - pause (kehribar): molada
+  - overrun (kiremit): aşım / hata
+*/
+@theme {
+  --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif;
+
+  --color-ink: #16324a;
+  --color-ink-soft: #4a6175;
+  --color-paper: #f2f5f7;
+  --color-panel: #ffffff;
+  --color-line: #d9e1e7;
+
+  --color-signal: #1f9a76;
+  --color-signal-soft: #e3f4ee;
+  --color-pause: #c48a12;
+  --color-pause-soft: #fbf1dc;
+  --color-overrun: #c2410c;
+  --color-overrun-soft: #fdebe2;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-signal;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

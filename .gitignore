@@ -1,0 +1,22 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+*.swp
+
+# Node
+node_modules/
+dist/
+*.local
+
+# Editörler / işletim sistemi
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Ortam dosyaları
+.env
+.env.*

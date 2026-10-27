@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
+import { CalendarDays, CalendarRange, Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
@@ -23,17 +23,23 @@ function useNavItems(role: Role): NavItem[] {
     case 'Admin':
       return [
         { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
+        { to: '/admin/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/admin/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
     case 'Manager':
       return [
         { to: '/mudur', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
         { to: '/mudur/bugunum', label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
+        { to: '/mudur/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+        { to: '/mudur/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
         { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
         { to: '/mudur/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
     default:
-      return [{ to: '/personel', label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true }]
+      return [
+        { to: '/personel', label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
+        { to: '/personel/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+      ]
   }
 }
 

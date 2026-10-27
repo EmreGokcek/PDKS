@@ -34,7 +34,9 @@ public record AttendanceStatusDto(
     TodayDto Today,
     WeekDto Week,
     bool HasUnclosedSession,
-    List<EventDto> Events)
+    List<EventDto> Events,
+    ShiftDto? TodayShift = null,
+    ShiftDto? NextShift = null)
 {
     public static AttendanceStatusDto From(AttendanceSnapshot snap)
     {

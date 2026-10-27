@@ -27,6 +27,16 @@ export interface AttendanceStatus {
   }
   hasUnclosedSession: boolean
   events: { type: AttendanceAction; occurredAt: string }[]
+  todayShift: ShiftInfo | null
+  nextShift: ShiftInfo | null
+}
+
+export interface ShiftInfo {
+  date: string
+  startTime: string
+  endTime: string
+  templateName: string | null
+  color: string
 }
 
 export interface ScanResult {

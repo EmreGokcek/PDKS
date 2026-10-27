@@ -94,5 +94,9 @@ API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygul
 - [x] Adım 1 — Proje iskeleti, veri modeli, giriş ve roller
 - [x] Adım 2 — Admin: personel yönetimi, çalışma kuralları, tema ve dil seçenekleri
 - [x] Adım 3 — Kiosk dinamik QR, QR ile giriş-çıkış-mola, "Bugünüm" ekranı (anlık durum, kalan mola, haftalık süre, fazla mesai)
-- [ ] Adım 4 — PWA (telefona uygulama gibi kurulum), konum doğrulaması
-- [ ] Adım 5 — Müdür: vardiya planlama, canlı pano
+- [x] Adım 4 — Vardiya planlama (şablonlar, fırça ile atama, haftayı kopyalama), Vardiyalarım
+- [ ] Adım 5 — Müdür canlı panosu, geç kalma tespiti, personel bazlı süreler
+- [ ] Adım 6 — Kayıt düzeltme, düzeltme ve izin talepleri
+- [ ] Adım 7 — Aylık puantaj raporu (Excel/PDF)
+- [ ] Adım 8 — PWA (telefona uygulama gibi kurulum), konum doğrulaması
+- [ ] Adım 9 — Sunucuya yükleme

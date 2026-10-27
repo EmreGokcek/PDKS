@@ -25,6 +25,8 @@ export interface Shift {
   color: string
   note: string | null
   durationMinutes: number
+  /** Boşsa çalışma kurallarındaki günlük mola geçerli. */
+  breakMinutes: number | null
 }
 
 export interface Planner {
@@ -42,7 +44,7 @@ export interface Cell {
   date: string
 }
 
-export type AssignInput = { cells: Cell[]; note?: string | null } & (
+export type AssignInput = { cells: Cell[]; note?: string | null; breakMinutes?: number | null } & (
   | { kind?: 'Work'; templateId: string; startTime?: undefined; endTime?: undefined }
   | { kind?: 'Work'; templateId?: undefined; startTime: string; endTime: string }
   | { kind: Exclude<ShiftKind, 'Work'>; templateId?: undefined; startTime?: undefined; endTime?: undefined }
@@ -100,6 +102,7 @@ export function useAssignShifts(from: string, templates: ShiftTemplate[]) {
           color: tpl?.color ?? '#64748b',
           note: input.note ?? null,
           durationMinutes: 0,
+          breakMinutes: kind === 'Work' ? (input.breakMinutes ?? null) : null,
         }))
         qc.setQueryData<Planner>(key, {
           ...previous,

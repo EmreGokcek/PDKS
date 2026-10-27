@@ -229,6 +229,9 @@ const en: Translations = {
     days: { short: 'Mon Tue Wed Thu Fri Sat Sun' },
   },
   shifts: {
+    breakMinutes: 'Break (min)',
+    breakDefaultHint: 'Default is {{minutes}} min. Leave it as is to use the default.',
+    chipBreak: '{{minutes}} min break',
     leave: 'Leave',
     kinds: {
       Work: 'Work',
@@ -296,6 +299,7 @@ const en: Translations = {
     nextShiftHint: 'Your next shift is {{day}} at {{start}}.',
   },
   errors: {
+    break_too_long: 'The break must be shorter than the shift.',
     shift_overlap: 'This shift overlaps the same person’s shift on the previous or next day.',
     shift_zero_length: 'Start and end times can’t be the same.',
     shift_too_long: 'A shift can be at most 16 hours.',

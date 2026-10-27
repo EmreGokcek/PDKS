@@ -33,8 +33,8 @@ export function CellDialog({
   templates: ShiftTemplate[]
   dailyBreak: number
   onLeave: (kind: LeaveKind) => void
-  onTemplate: (templateId: string) => void
-  onCustom: (start: string, end: string, note: string) => void
+  onTemplate: (templateId: string, breakMinutes: number | null) => void
+  onCustom: (start: string, end: string, note: string, breakMinutes: number | null) => void
   onRemove: () => void
   onClose: () => void
 }) {
@@ -75,8 +75,8 @@ function CellForm({
   templates: ShiftTemplate[]
   dailyBreak: number
   onLeave: (kind: LeaveKind) => void
-  onTemplate: (templateId: string) => void
-  onCustom: (start: string, end: string, note: string) => void
+  onTemplate: (templateId: string, breakMinutes: number | null) => void
+  onCustom: (start: string, end: string, note: string, breakMinutes: number | null) => void
   onRemove: () => void
 }) {
   const { t } = useTranslation()
@@ -84,6 +84,9 @@ function CellForm({
   const [start, setStart] = useState(work ? hhmm(work.startTime) : '09:00')
   const [end, setEnd] = useState(work ? hhmm(work.endTime) : '18:00')
   const gross = start && end && start !== end ? shiftMinutes(start, end) : 0
+  const [brk, setBrk] = useState(work?.breakMinutes ?? dailyBreak)
+  // Varsayılanla aynıysa boş gönderilir; böylece çalışma kurallarındaki mola geçerli olur.
+  const breakToSend = brk === dailyBreak ? null : brk
   const [note, setNote] = useState(target.shift?.note ?? '')
 
   return (
@@ -95,7 +98,7 @@ function CellForm({
             <button
               key={tpl.id}
               type="button"
-              onClick={() => onTemplate(tpl.id)}
+              onClick={() => onTemplate(tpl.id, breakToSend)}
               className={`h-14 rounded-xl ring-2 transition-[box-shadow] ${work?.templateId === tpl.id ? 'ring-signal' : 'ring-transparent hover:ring-line'}`}
             >
               <ShiftChip start={tpl.startTime} end={tpl.endTime} name={tpl.name} color={tpl.color} />
@@ -112,11 +115,28 @@ function CellForm({
             {(p) => <Input {...p} type="time" value={end} onChange={(e) => setEnd(e.target.value)} />}
           </Field>
         </div>
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          <Field label={t('shifts.breakMinutes')}>
+            {(p) => (
+              <Input
+                {...p}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={240}
+                step={5}
+                value={brk}
+                onChange={(e) => setBrk(Math.max(0, Math.min(240, parseInt(e.target.value || '0', 10))))}
+              />
+            )}
+          </Field>
+          <p className="self-end pb-3 text-xs text-ink-soft">{t('shifts.breakDefaultHint', { minutes: dailyBreak })}</p>
+        </div>
         {gross > 0 && (
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="mt-2 rounded-xl bg-panel-2 px-3 py-2 text-sm text-ink-soft ring-1 ring-line">
             {t('shifts.workAndBreak', {
-              work: formatDuration(netWorkMinutes(gross, dailyBreak)),
-              break: formatMinutes(gross > dailyBreak ? dailyBreak : 0),
+              work: formatDuration(netWorkMinutes(gross, brk)),
+              break: formatMinutes(gross > brk ? brk : 0),
             })}
           </p>
         )}
@@ -152,7 +172,7 @@ function CellForm({
         ) : (
           <span />
         )}
-        <Button onClick={() => onCustom(start, end, note)} disabled={!start || !end || start === end}>
+        <Button onClick={() => onCustom(start, end, note, breakToSend)} disabled={!start || !end || start === end}>
           {t('shifts.apply')}
         </Button>
       </div>

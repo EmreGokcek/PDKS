@@ -119,8 +119,17 @@ export function ShiftPlannerPage() {
 
   // ---- Toplamlar ----
   const dailyBreak = data?.dailyBreakMinutes ?? 60
-  const netMinutes = (s: Shift) => (isLeave(s.kind) ? 0 : netWorkMinutes(shiftMinutes(s.startTime, s.endTime), dailyBreak))
-  const shiftName = (s: Shift) => s.templateName ?? matchTemplate(s.startTime, s.endTime, tpls)?.name ?? s.note
+  const netMinutes = (s: Shift) =>
+    isLeave(s.kind) ? 0 : netWorkMinutes(shiftMinutes(s.startTime, s.endTime), s.breakMinutes ?? dailyBreak)
+  const shiftName = (s: Shift) => {
+    const name = s.templateName ?? matchTemplate(s.startTime, s.endTime, tpls)?.name ?? s.note
+    // Mola varsayılandan farklıysa etikette göster
+    if (s.breakMinutes != null && s.breakMinutes !== dailyBreak) {
+      const b = t('shifts.chipBreak', { minutes: s.breakMinutes })
+      return name ? `${name} · ${b}` : b
+    }
+    return name
+  }
 
   const activeTemplate = brush?.kind === 'template' ? tpls.find((x) => x.id === brush.id) : undefined
 
@@ -380,12 +389,15 @@ export function ShiftPlannerPage() {
           setEditing(null)
         }}
         onClose={() => setEditing(null)}
-        onTemplate={(templateId) => {
-          assign.mutate({ cells: [editing!], templateId }, { onError: handleError })
+        onTemplate={(templateId, breakMinutes) => {
+          assign.mutate({ cells: [editing!], templateId, breakMinutes }, { onError: handleError })
           setEditing(null)
         }}
-        onCustom={(start, end, note) => {
-          assign.mutate({ cells: [editing!], startTime: toApiTime(start), endTime: toApiTime(end), note: note || null }, { onError: handleError })
+        onCustom={(start, end, note, breakMinutes) => {
+          assign.mutate(
+            { cells: [editing!], startTime: toApiTime(start), endTime: toApiTime(end), note: note || null, breakMinutes },
+            { onError: handleError },
+          )
           setEditing(null)
         }}
         onRemove={() => {

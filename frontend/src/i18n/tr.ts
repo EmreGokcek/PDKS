@@ -227,6 +227,9 @@ const tr = {
     days: { short: 'Pzt Sal Çar Per Cum Cmt Paz' },
   },
   shifts: {
+    breakMinutes: 'Mola süresi (dk)',
+    breakDefaultHint: 'Varsayılan {{minutes}} dk. Değiştirmezsen bu süre kullanılır.',
+    chipBreak: '{{minutes}} dk mola',
     leave: 'İzin',
     kinds: {
       Work: 'Çalışma',
@@ -294,6 +297,7 @@ const tr = {
     nextShiftHint: 'Sıradaki vardiyan {{day}} {{start}}.',
   },
   errors: {
+    break_too_long: 'Mola süresi vardiya süresinden kısa olmalı.',
     shift_overlap: 'Bu vardiya aynı kişinin bir önceki ya da sonraki günkü vardiyasıyla çakışıyor.',
     shift_zero_length: 'Başlangıç ve bitiş saati aynı olamaz.',
     shift_too_long: 'Bir vardiya en fazla 16 saat olabilir.',

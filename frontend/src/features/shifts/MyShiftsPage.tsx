@@ -28,8 +28,9 @@ export function MyShiftsPage() {
   const byDate = new Map((shifts.data ?? []).map((s) => [s.date, s]))
   const next = (shifts.data ?? []).find((s) => !isLeave(s.kind) && startOf(s) > now)
   const dailyBreak = rules.data?.dailyBreakMinutes ?? 60
-  const workOf = (s: Shift) => netWorkMinutes(shiftMinutes(s.startTime, s.endTime), dailyBreak)
-  const breakOf = (s: Shift) => (shiftMinutes(s.startTime, s.endTime) > dailyBreak ? dailyBreak : 0)
+  const breakFor = (s: Shift) => s.breakMinutes ?? dailyBreak
+  const workOf = (s: Shift) => netWorkMinutes(shiftMinutes(s.startTime, s.endTime), breakFor(s))
+  const breakOf = (s: Shift) => (shiftMinutes(s.startTime, s.endTime) > breakFor(s) ? breakFor(s) : 0)
 
   return (
     <>

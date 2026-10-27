@@ -18,7 +18,8 @@ const UsersPage = named(() => import('./features/users/UsersPage'), 'UsersPage')
 const ScanLinkPage = named(() => import('./features/attendance/ScanLinkPage'), 'ScanLinkPage')
 const TodayPage = named(() => import('./features/attendance/TodayPage'), 'TodayPage')
 const KioskPage = named(() => import('./features/kiosk/KioskPage'), 'KioskPage')
-const ManagerHomePage = named(() => import('./pages/RolePages'), 'ManagerHomePage')
+const LiveDashboardPage = named(() => import('./features/dashboard/LiveDashboardPage'), 'LiveDashboardPage')
+const TeamReportPage = named(() => import('./features/dashboard/TeamReportPage'), 'TeamReportPage')
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
@@ -35,14 +36,17 @@ export default function App() {
         <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
 
         <Route path="/admin" element={<RequireRole roles={['Admin']}><AppShell /></RequireRole>}>
-          <Route index element={<Navigate to="personel" replace />} />
+          <Route index element={<Navigate to="pano" replace />} />
+          <Route path="pano" element={<LiveDashboardPage />} />
+          <Route path="sureler" element={<TeamReportPage />} />
           <Route path="personel" element={<UsersPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="kurallar" element={<WorkRulesPage />} />
         </Route>
 
         <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
-          <Route index element={<ManagerHomePage />} />
+          <Route index element={<LiveDashboardPage />} />
+          <Route path="sureler" element={<TeamReportPage />} />
           <Route path="bugunum" element={<TodayPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="vardiyalarim" element={<MyShiftsPage />} />

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { CalendarDays, CalendarRange, Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, CalendarRange, Clock3, LayoutDashboard, LogOut, Menu as MenuIcon, SlidersHorizontal, Users, X } from 'lucide-react'
 import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
@@ -23,8 +23,10 @@ function useNavItems(role: Role): NavItem[] {
   switch (role) {
     case 'Admin':
       return [
-        { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
+        { to: '/admin/pano', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
         { to: '/admin/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+        { to: '/admin/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
         { to: '/admin/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
     case 'Manager':
@@ -33,6 +35,7 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/mudur/bugunum', label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
         { to: '/mudur/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/mudur/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+        { to: '/mudur/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
         { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
         { to: '/mudur/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
@@ -192,29 +195,5 @@ export function PageHeader({ title, subtitle, actions }: { title: ReactNode; sub
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
-  )
-}
-
-/** Henüz yapılmamış bölümler için yer tutucu. */
-export function ComingSoon({ items }: { items: string[] }) {
-  const { t } = useTranslation()
-  return (
-    <section className="rounded-2xl border border-dashed border-line bg-panel p-6">
-      <p className="text-ink-soft">{t('placeholder.intro')}</p>
-      <ul className="mt-4 space-y-2.5">
-        {items.map((item, i) => (
-          <motion.li
-            key={item}
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.08 + i * 0.05 }}
-            className="flex items-center gap-3"
-          >
-            <span className="size-1.5 rounded-full bg-signal" />
-            {item}
-          </motion.li>
-        ))}
-      </ul>
-    </section>
   )
 }

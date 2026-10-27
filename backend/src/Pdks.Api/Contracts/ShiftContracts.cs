@@ -21,20 +21,23 @@ public record ShiftDto(
     Guid Id,
     Guid UserId,
     DateOnly Date,
+    ShiftKind Kind,
     TimeOnly StartTime,
     TimeOnly EndTime,
     Guid? TemplateId,
     string? TemplateName,
     string Color,
     string? Note,
-    int DurationMinutes)
+    int DurationMinutes,
+    int? BreakMinutes)
 {
     public const string DefaultColor = "#64748b";
 
     public static ShiftDto From(Shift s) => new(
-        s.Id, s.UserId, s.Date, s.StartTime, s.EndTime, s.ShiftTemplateId,
+        s.Id, s.UserId, s.Date, s.Kind, s.StartTime, s.EndTime, s.ShiftTemplateId,
         s.ShiftTemplate?.Name, s.ShiftTemplate?.Color ?? DefaultColor, s.Note,
-        (int)ShiftMath.Duration(s.StartTime, s.EndTime).TotalMinutes);
+        s.Kind == ShiftKind.Work ? (int)ShiftMath.Duration(s.StartTime, s.EndTime).TotalMinutes : 0,
+        s.Kind == ShiftKind.Work ? s.BreakMinutes : null);
 }
 
 public record PlannerStaffDto(Guid Id, string FullName, UserRole Role, bool IsActive);
@@ -50,13 +53,18 @@ public record PlannerDto(
 
 public record ShiftCell(Guid UserId, DateOnly Date);
 
-/// <summary>Seçilen hücrelere şablon ya da özel saat atar. Hücrede vardiya varsa değiştirilir.</summary>
+/// <summary>
+/// Seçilen hücrelere şablon, özel saat ya da izin atar. Hücrede kayıt varsa değiştirilir.
+/// Kind izin türlerinden biriyse şablon ve saatler yok sayılır.
+/// </summary>
 public record AssignShiftsRequest(
     [Required, MinLength(1), MaxLength(500)] List<ShiftCell> Cells,
     Guid? TemplateId,
     TimeOnly? StartTime,
     TimeOnly? EndTime,
-    [MaxLength(500)] string? Note);
+    [MaxLength(500)] string? Note,
+    ShiftKind Kind = ShiftKind.Work,
+    [Range(0, 240)] int? BreakMinutes = null);
 
 public record ClearShiftsRequest([Required, MinLength(1), MaxLength(500)] List<ShiftCell> Cells);
 

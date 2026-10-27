@@ -24,6 +24,13 @@ public class AttendanceService(PdksDbContext db, TimeProvider time)
         // Bir gün öncesinden başla: haftanın ilk gününe sarkan gece vardiyası ve açık oturum için.
         var fromUtc = LocalMidnightUtc(weekStart.AddDays(-1), tz);
 
+        // O günün vardiyasında özel mola süresi varsa günlük mola hakkı odur.
+        var todayBreak = await db.Shifts.AsNoTracking()
+            .Where(s => s.UserId == user.Id && s.Date == today && s.Kind == ShiftKind.Work)
+            .Select(s => s.BreakMinutes)
+            .FirstOrDefaultAsync(ct);
+        var dailyBreakMinutes = todayBreak ?? rules.DailyBreakMinutes;
+
         var events = await db.AttendanceEvents.AsNoTracking()
             .Where(e => e.UserId == user.Id && e.OccurredAt >= fromUtc)
             .OrderBy(e => e.OccurredAt)
@@ -32,7 +39,7 @@ public class AttendanceService(PdksDbContext db, TimeProvider time)
         var summary = AttendanceCalculator.Summarize(
             events.Select(e => new EventPoint(e.Type, e.OccurredAt)),
             now, tz,
-            new CalculatorRules(rules.WeeklyWorkMinutes, rules.DailyBreakMinutes, rules.WeekStartsOn));
+            new CalculatorRules(rules.WeeklyWorkMinutes, dailyBreakMinutes, rules.WeekStartsOn));
 
         var todayEvents = events.Where(e => AttendanceCalculator.LocalDate(e.OccurredAt, tz) == today).ToList();
         return new AttendanceSnapshot(summary, todayEvents, now);

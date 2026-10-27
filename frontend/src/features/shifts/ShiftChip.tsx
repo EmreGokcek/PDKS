@@ -30,3 +30,19 @@ export function ShiftChip({
 }
 
 export const templateColors = ['#2f80ed', '#1f9a76', '#9b51e0', '#e07a2f', '#d6455d', '#0ea5b7', '#b7791f', '#64748b']
+
+/** İzin günü etiketi: çizgili arka plan, izin türünün adı. */
+export function LeaveChip({ label, color, pending = false }: { label: string; color: string; pending?: boolean }) {
+  return (
+    <span
+      className={`flex h-full w-full items-center rounded-lg px-2 text-[13px] font-medium text-ink transition-opacity ${pending ? 'opacity-60' : ''}`}
+      style={{
+        backgroundImage: `repeating-linear-gradient(135deg, ${color}26 0 6px, ${color}10 6px 12px)`,
+        boxShadow: `inset 0 0 0 1px ${color}55`,
+      }}
+    >
+      <span className="mr-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+      <span className="truncate">{label}</span>
+    </span>
+  )
+}

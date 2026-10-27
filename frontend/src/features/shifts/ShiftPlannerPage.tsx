@@ -16,10 +16,16 @@ import { formatDuration } from '../../lib/format'
 import { ConfirmDialog } from '../users/Dialogs'
 import { useAssignShifts, useClearShifts, useCopyWeek, usePlanner, useTemplates, type Cell, type Shift } from './api'
 import { CellDialog, type CellTarget } from './CellDialog'
-import { ShiftChip } from './ShiftChip'
+import { isLeave, leaveColors, leaveKinds, matchTemplate, netWorkMinutes, type LeaveKind } from './leave'
+import { LeaveChip, ShiftChip } from './ShiftChip'
 import { TemplatesSheet } from './TemplatesSheet'
 
-type Brush = { kind: 'template'; id: string } | { kind: 'custom'; start: string; end: string } | { kind: 'erase' } | null
+type Brush =
+  | { kind: 'template'; id: string }
+  | { kind: 'custom'; start: string; end: string }
+  | { kind: 'leave'; leave: LeaveKind }
+  | { kind: 'erase' }
+  | null
 
 const cellKey = (c: Cell) => `${c.userId}|${c.date}`
 
@@ -69,6 +75,8 @@ export function ShiftPlannerPage() {
         if (filled.length) clear.mutate(filled, { onError: handleError })
       } else if (b.kind === 'template') {
         assign.mutate({ cells, templateId: b.id }, { onError: handleError })
+      } else if (b.kind === 'leave') {
+        assign.mutate({ cells, kind: b.leave }, { onError: handleError })
       } else {
         assign.mutate({ cells, startTime: toApiTime(b.start), endTime: toApiTime(b.end) }, { onError: handleError })
       }
@@ -111,9 +119,16 @@ export function ShiftPlannerPage() {
 
   // ---- Toplamlar ----
   const dailyBreak = data?.dailyBreakMinutes ?? 60
-  const netMinutes = (s: Shift) => {
-    const gross = shiftMinutes(s.startTime, s.endTime)
-    return gross > dailyBreak ? gross - dailyBreak : gross
+  const netMinutes = (s: Shift) =>
+    isLeave(s.kind) ? 0 : netWorkMinutes(shiftMinutes(s.startTime, s.endTime), s.breakMinutes ?? dailyBreak)
+  const shiftName = (s: Shift) => {
+    const name = s.templateName ?? matchTemplate(s.startTime, s.endTime, tpls)?.name ?? s.note
+    // Mola varsayılandan farklıysa etikette göster
+    if (s.breakMinutes != null && s.breakMinutes !== dailyBreak) {
+      const b = t('shifts.chipBreak', { minutes: s.breakMinutes })
+      return name ? `${name} · ${b}` : b
+    }
+    return name
   }
 
   const activeTemplate = brush?.kind === 'template' ? tpls.find((x) => x.id === brush.id) : undefined
@@ -192,6 +207,18 @@ export function ShiftPlannerPage() {
               </>
             }
           />
+          <span className="mx-1 h-6 w-px bg-line" />
+          <span className="text-xs text-ink-soft">{t('shifts.leave')}</span>
+          {leaveKinds.map((lk) => (
+            <BrushButton
+              key={lk}
+              active={brush?.kind === 'leave' && brush.leave === lk}
+              onClick={() => setBrush({ kind: 'leave', leave: lk })}
+              color={leaveColors[lk]}
+              label={<span>{t(`shifts.kinds.${lk}`)}</span>}
+            />
+          ))}
+          <span className="mx-1 h-6 w-px bg-line" />
           <BrushButton
             active={brush?.kind === 'erase'}
             onClick={() => setBrush({ kind: 'erase' })}
@@ -235,10 +262,9 @@ export function ShiftPlannerPage() {
 
             {/* Personel satırları */}
             {data?.staff.map((person) => {
-              const planned = days.reduce((sum, d) => {
-                const s = shiftsByCell.get(`${person.id}|${d}`)
-                return s ? sum + netMinutes(s) : sum
-              }, 0)
+              const rowShifts = days.map((d) => shiftsByCell.get(`${person.id}|${d}`)).filter((s): s is Shift => !!s)
+              const planned = rowShifts.reduce((sum, s) => sum + netMinutes(s), 0)
+              const leaves = rowShifts.filter((s) => isLeave(s.kind)).length
               const target = data.weeklyWorkMinutes
               const ratio = Math.min(1.2, planned / Math.max(1, target))
               return (
@@ -249,6 +275,7 @@ export function ShiftPlannerPage() {
                       <p className={`truncate text-sm font-medium ${person.isActive ? '' : 'text-ink-soft'}`}>{person.fullName}</p>
                       <p className="tabular text-xs text-ink-soft" title={t('shifts.plannedHint')}>
                         {t('shifts.planned', { planned: formatDuration(planned), target: formatDuration(target) })}
+                        {leaves > 0 && <> · {t('shifts.leaveCount', { count: leaves })}</>}
                       </p>
                       <div className="mt-1 h-1 overflow-hidden rounded-full bg-panel-2">
                         <motion.div
@@ -290,7 +317,11 @@ export function ShiftPlannerPage() {
                         className={`group relative h-16 border-b border-l border-line p-1.5 text-left transition-colors ${d === today ? 'bg-signal-soft/25' : ''} ${isPainted ? 'bg-signal-soft' : 'hover:bg-panel-2'} ${brush ? 'cursor-crosshair' : 'cursor-pointer'}`}
                       >
                         <AnimatePresence mode="popLayout" initial={false}>
-                          {isPainted && brush && brush.kind !== 'erase' ? (
+                          {isPainted && brush?.kind === 'leave' ? (
+                            <motion.span key="preview-leave" className="block h-full" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+                              <LeaveChip label={t(`shifts.kinds.${brush.leave}`)} color={leaveColors[brush.leave]} pending />
+                            </motion.span>
+                          ) : isPainted && brush && brush.kind !== 'erase' ? (
                             <motion.span key="preview" className="block h-full" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                               <ShiftChip
                                 start={activeTemplate?.startTime ?? (brush.kind === 'custom' ? brush.start : '')}
@@ -302,7 +333,7 @@ export function ShiftPlannerPage() {
                             </motion.span>
                           ) : shift && !(isPainted && brush?.kind === 'erase') ? (
                             <motion.span
-                              key={shift.id + shift.startTime + shift.endTime}
+                              key={shift.id + shift.kind + shift.startTime + shift.endTime}
                               className="block h-full"
                               initial={{ scale: 0.92, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
@@ -310,13 +341,17 @@ export function ShiftPlannerPage() {
                               transition={{ type: 'spring', stiffness: 500, damping: 32 }}
                               title={shift.note ?? undefined}
                             >
-                              <ShiftChip
-                                start={shift.startTime}
-                                end={shift.endTime}
-                                name={shift.templateName ?? shift.note}
-                                color={shift.color}
-                                pending={shift.id.startsWith('tmp-')}
-                              />
+                              {isLeave(shift.kind) ? (
+                                <LeaveChip label={t(`shifts.kinds.${shift.kind}`)} color={leaveColors[shift.kind]} pending={shift.id.startsWith('tmp-')} />
+                              ) : (
+                                <ShiftChip
+                                  start={shift.startTime}
+                                  end={shift.endTime}
+                                  name={shiftName(shift)}
+                                  color={shift.color}
+                                  pending={shift.id.startsWith('tmp-')}
+                                />
+                              )}
                             </motion.span>
                           ) : (
                             <span key="empty" className="grid h-full place-items-center rounded-lg border border-dashed border-transparent text-ink-soft/0 transition-colors group-hover:border-line group-hover:text-ink-soft/60">
@@ -334,7 +369,7 @@ export function ShiftPlannerPage() {
             {/* Günlük kişi sayısı */}
             <div className="sticky left-0 z-[1] bg-panel px-4 py-3 text-sm text-ink-soft">{t('shifts.headcount')}</div>
             {days.map((d) => {
-              const count = data?.shifts.filter((s) => s.date === d).length ?? 0
+              const count = data?.shifts.filter((s) => s.date === d && !isLeave(s.kind)).length ?? 0
               return (
                 <div key={d} className="tabular border-l border-line px-3 py-3 text-center text-sm font-medium">
                   {count || '–'}
@@ -348,13 +383,21 @@ export function ShiftPlannerPage() {
       <CellDialog
         target={editing}
         templates={tpls}
-        onClose={() => setEditing(null)}
-        onTemplate={(templateId) => {
-          assign.mutate({ cells: [editing!], templateId }, { onError: handleError })
+        dailyBreak={dailyBreak}
+        onLeave={(kind) => {
+          assign.mutate({ cells: [editing!], kind }, { onError: handleError })
           setEditing(null)
         }}
-        onCustom={(start, end, note) => {
-          assign.mutate({ cells: [editing!], startTime: toApiTime(start), endTime: toApiTime(end), note: note || null }, { onError: handleError })
+        onClose={() => setEditing(null)}
+        onTemplate={(templateId, breakMinutes) => {
+          assign.mutate({ cells: [editing!], templateId, breakMinutes }, { onError: handleError })
+          setEditing(null)
+        }}
+        onCustom={(start, end, note, breakMinutes) => {
+          assign.mutate(
+            { cells: [editing!], startTime: toApiTime(start), endTime: toApiTime(end), note: note || null, breakMinutes },
+            { onError: handleError },
+          )
           setEditing(null)
         }}
         onRemove={() => {

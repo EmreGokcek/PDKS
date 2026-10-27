@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
+using Pdks.Domain.Enums;
 using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
@@ -61,7 +62,7 @@ public class AttendanceController(
         return new ScanResponse(recorded!.Type, recorded.OccurredAt, kiosk.Name, status);
     }
 
-    /// <summary>Bugünkü vardiya ve henüz başlamamış ilk vardiya.</summary>
+    /// <summary>Bugünkü plan (vardiya ya da izin) ve henüz başlamamış ilk çalışma vardiyası.</summary>
     private async Task<AttendanceStatusDto> WithShiftsAsync(AttendanceStatusDto status, Guid userId, CancellationToken ct)
     {
         var today = status.Today.Date;
@@ -75,7 +76,7 @@ public class AttendanceController(
         var localNow = TimeZoneInfo.ConvertTime(status.ServerNow, tz).DateTime;
 
         var todayShift = shifts.FirstOrDefault(s => s.Date == today);
-        var nextShift = shifts.FirstOrDefault(s => s.Date.ToDateTime(s.StartTime) > localNow);
+        var nextShift = shifts.FirstOrDefault(s => s.Kind == ShiftKind.Work && s.Date.ToDateTime(s.StartTime) > localNow);
 
         return status with
         {

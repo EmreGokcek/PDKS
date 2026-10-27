@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Role } from '../../auth/types'
 import { api, json } from '../../lib/api'
 import type { WeekDayName } from '../../lib/dates'
+import type { ShiftKind } from './leave'
 
 export interface ShiftTemplate {
   id: string
@@ -16,6 +17,7 @@ export interface Shift {
   id: string
   userId: string
   date: string
+  kind: ShiftKind
   startTime: string
   endTime: string
   templateId: string | null
@@ -23,6 +25,8 @@ export interface Shift {
   color: string
   note: string | null
   durationMinutes: number
+  /** Boşsa çalışma kurallarındaki günlük mola geçerli. */
+  breakMinutes: number | null
 }
 
 export interface Planner {
@@ -40,9 +44,10 @@ export interface Cell {
   date: string
 }
 
-export type AssignInput = { cells: Cell[]; note?: string | null } & (
-  | { templateId: string; startTime?: undefined; endTime?: undefined }
-  | { templateId?: undefined; startTime: string; endTime: string }
+export type AssignInput = { cells: Cell[]; note?: string | null; breakMinutes?: number | null } & (
+  | { kind?: 'Work'; templateId: string; startTime?: undefined; endTime?: undefined }
+  | { kind?: 'Work'; templateId?: undefined; startTime: string; endTime: string }
+  | { kind: Exclude<ShiftKind, 'Work'>; templateId?: undefined; startTime?: undefined; endTime?: undefined }
 )
 
 const plannerKey = (from: string) => ['planner', from] as const
@@ -81,13 +86,15 @@ export function useAssignShifts(from: string, templates: ShiftTemplate[]) {
       await qc.cancelQueries({ queryKey: key })
       const previous = qc.getQueryData<Planner>(key)
       if (previous) {
+        const kind = input.kind ?? 'Work'
         const tpl = input.templateId ? templates.find((t) => t.id === input.templateId) : undefined
-        const start = tpl?.startTime ?? input.startTime!
-        const end = tpl?.endTime ?? input.endTime!
+        const start = kind === 'Work' ? (tpl?.startTime ?? input.startTime!) : '00:00:00'
+        const end = kind === 'Work' ? (tpl?.endTime ?? input.endTime!) : '00:00:00'
         const optimistic: Shift[] = input.cells.map((c) => ({
           id: `tmp-${c.userId}-${c.date}`,
           userId: c.userId,
           date: c.date,
+          kind,
           startTime: start,
           endTime: end,
           templateId: tpl?.id ?? null,
@@ -95,6 +102,7 @@ export function useAssignShifts(from: string, templates: ShiftTemplate[]) {
           color: tpl?.color ?? '#64748b',
           note: input.note ?? null,
           durationMinutes: 0,
+          breakMinutes: kind === 'Work' ? (input.breakMinutes ?? null) : null,
         }))
         qc.setQueryData<Planner>(key, {
           ...previous,

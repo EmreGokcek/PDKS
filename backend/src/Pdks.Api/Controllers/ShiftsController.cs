@@ -51,29 +51,42 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             staff, shifts.Select(ShiftDto.From).ToList());
     }
 
-    /// <summary>Hücrelere şablon ya da özel saat atar; dolu hücrenin vardiyası değiştirilir.</summary>
+    /// <summary>Hücrelere şablon, özel saat ya da izin atar; dolu hücrenin kaydı değiştirilir.</summary>
     [HttpPost("assign")]
     public async Task<ActionResult<List<ShiftDto>>> Assign(AssignShiftsRequest request, CancellationToken ct)
     {
+        var isWork = request.Kind == ShiftKind.Work;
         ShiftTemplate? template = null;
-        TimeOnly start, end;
-        if (request.TemplateId is { } templateId)
-        {
-            template = await db.ShiftTemplates.FirstOrDefaultAsync(t => t.Id == templateId && t.IsActive, ct);
-            if (template is null) return this.ApiError(400, "invalid_template", "Vardiya şablonu bulunamadı.");
-            (start, end) = (template.StartTime, template.EndTime);
-        }
-        else if (request.StartTime is { } s && request.EndTime is { } e)
-        {
-            (start, end) = (s, e);
-        }
-        else
-        {
-            return this.ApiError(400, "shift_times_required", "Şablon ya da başlangıç ve bitiş saati seçilmeli.");
-        }
+        TimeOnly start = default, end = default;
 
-        if (ShiftMath.Validate(start, end) is { } timeError)
-            return this.ApiError(400, timeError, "Vardiya saatleri geçersiz.");
+        if (isWork)
+        {
+            if (request.TemplateId is { } templateId)
+            {
+                template = await db.ShiftTemplates.FirstOrDefaultAsync(t => t.Id == templateId && t.IsActive, ct);
+                if (template is null) return this.ApiError(400, "invalid_template", "Vardiya şablonu bulunamadı.");
+                (start, end) = (template.StartTime, template.EndTime);
+            }
+            else if (request.StartTime is { } s && request.EndTime is { } e)
+            {
+                (start, end) = (s, e);
+                // Özel saat bir şablonla birebir aynıysa o şablon sayılır (ör. 09:00–18:00 → "Tam gün").
+                template = await db.ShiftTemplates
+                    .Where(t => t.IsActive && t.StartTime == start && t.EndTime == end)
+                    .OrderBy(t => t.CreatedAt)
+                    .FirstOrDefaultAsync(ct);
+            }
+            else
+            {
+                return this.ApiError(400, "shift_times_required", "Şablon ya da başlangıç ve bitiş saati seçilmeli.");
+            }
+
+            if (ShiftMath.Validate(start, end) is { } timeError)
+                return this.ApiError(400, timeError, "Vardiya saatleri geçersiz.");
+
+            if (request.BreakMinutes is { } brk && TimeSpan.FromMinutes(brk) >= ShiftMath.Duration(start, end))
+                return this.ApiError(400, "break_too_long", "Mola süresi vardiya süresinden kısa olmalı.");
+        }
 
         var cells = request.Cells.Distinct().ToList();
         var userIds = cells.Select(c => c.UserId).Distinct().ToList();
@@ -87,21 +100,26 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             .Where(x => userIds.Contains(x.UserId) && x.Date >= minDate && x.Date <= maxDate)
             .ToListAsync(ct);
 
-        // Çakışma kontrolü: aynı kişinin önceki / sonraki günkü vardiyasıyla (gece vardiyaları ertesi güne taşar).
-        var planned = existing.ToDictionary(x => (x.UserId, x.Date), x => (x.Date, x.StartTime, x.EndTime));
-        foreach (var c in cells) planned[(c.UserId, c.Date)] = (c.Date, start, end);
-        foreach (var c in cells)
+        if (isWork)
         {
-            var mine = planned[(c.UserId, c.Date)];
-            foreach (var neighbour in new[] { c.Date.AddDays(-1), c.Date.AddDays(1) })
+            // Çakışma kontrolü: aynı kişinin önceki / sonraki günkü çalışma vardiyasıyla (gece vardiyaları ertesi güne taşar).
+            var planned = existing
+                .Where(x => x.Kind == ShiftKind.Work)
+                .ToDictionary(x => (x.UserId, x.Date), x => (x.Date, x.StartTime, x.EndTime));
+            foreach (var c in cells) planned[(c.UserId, c.Date)] = (c.Date, start, end);
+            foreach (var c in cells)
             {
-                if (planned.TryGetValue((c.UserId, neighbour), out var other) && ShiftMath.Overlaps(mine, other))
+                var mine = planned[(c.UserId, c.Date)];
+                foreach (var neighbour in new[] { c.Date.AddDays(-1), c.Date.AddDays(1) })
                 {
-                    var problem = this.ApiError(409, "shift_overlap",
-                        $"{users[c.UserId].FullName} için {c.Date:dd.MM} vardiyası bir önceki/sonraki günle çakışıyor.");
-                    ((ProblemDetails)problem.Value!).Extensions["userId"] = c.UserId;
-                    ((ProblemDetails)problem.Value!).Extensions["date"] = c.Date;
-                    return problem;
+                    if (planned.TryGetValue((c.UserId, neighbour), out var other) && ShiftMath.Overlaps(mine, other))
+                    {
+                        var problem = this.ApiError(409, "shift_overlap",
+                            $"{users[c.UserId].FullName} için {c.Date:dd.MM} vardiyası bir önceki/sonraki günle çakışıyor.");
+                        ((ProblemDetails)problem.Value!).Extensions["userId"] = c.UserId;
+                        ((ProblemDetails)problem.Value!).Extensions["date"] = c.Date;
+                        return problem;
+                    }
                 }
             }
         }
@@ -121,6 +139,9 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
                 };
                 db.Shifts.Add(shift);
             }
+            shift.Kind = request.Kind;
+            // Mola belirtilmezse boş kalır ve çalışma kurallarındaki günlük mola (ör. 60 dk) geçerli olur.
+            shift.BreakMinutes = isWork ? request.BreakMinutes : null;
             shift.StartTime = start;
             shift.EndTime = end;
             shift.ShiftTemplateId = template?.Id;
@@ -134,7 +155,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 
         audit.Log("shifts.assigned", nameof(Shift), null, newValues: new
         {
-            Count = cells.Count, Start = start, End = end, TemplateId = template?.Id,
+            Count = cells.Count, Kind = request.Kind.ToString(), Start = start, End = end, TemplateId = template?.Id, request.BreakMinutes,
             Cells = cells.Select(c => new { c.UserId, c.Date })
         });
         await db.SaveChangesAsync(ct);
@@ -187,6 +208,8 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             if (target.TryGetValue((s.UserId, date), out var existing))
             {
                 if (!request.Overwrite) { skipped++; continue; }
+                existing.Kind = s.Kind;
+                existing.BreakMinutes = s.BreakMinutes;
                 existing.StartTime = s.StartTime;
                 existing.EndTime = s.EndTime;
                 existing.ShiftTemplateId = s.ShiftTemplateId;
@@ -199,6 +222,8 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
                     UserId = s.UserId,
                     BranchId = s.BranchId,
                     Date = date,
+                    Kind = s.Kind,
+                    BreakMinutes = s.BreakMinutes,
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
                     ShiftTemplateId = s.ShiftTemplateId,

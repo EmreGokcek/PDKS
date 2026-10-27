@@ -33,6 +33,8 @@ export interface AttendanceStatus {
 
 export interface ShiftInfo {
   date: string
+  kind: 'Work' | 'WeeklyOff' | 'AnnualLeave' | 'SickLeave' | 'ExcusedLeave'
+  durationMinutes: number
   startTime: string
   endTime: string
   templateName: string | null

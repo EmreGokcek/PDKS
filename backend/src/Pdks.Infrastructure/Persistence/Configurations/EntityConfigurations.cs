@@ -78,6 +78,7 @@ internal class ShiftConfiguration : IEntityTypeConfiguration<Shift>
     public void Configure(EntityTypeBuilder<Shift> b)
     {
         b.Property(x => x.Note).HasMaxLength(500);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20).HasDefaultValueSql("'Work'");
         b.HasIndex(x => new { x.CompanyId, x.BranchId, x.Date });
         // Kişi başına günde en fazla bir vardiya.
         b.HasIndex(x => new { x.UserId, x.Date }).IsUnique();

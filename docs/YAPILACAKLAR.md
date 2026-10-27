@@ -23,6 +23,13 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] 00:00'da başlayan vardiyada bir önceki gün 23:55'te okutulan giriş önceki güne yazılıyor; vardiyaya yakınlığa göre eşleştirme yapılmalı.
 - [ ] Raporlarda pasif personelin geçmiş kayıtları: şu an yalnızca okutma kaydı olan pasif kişiler listeleniyor.
 
+## Talepler ve düzeltmeler
+
+- [ ] Talep onaylanınca / reddedilince personele bildirim (Adım 8: bildirimler).
+- [ ] Düzeltme penceresinde tarih / saat tarayıcının saat dilimiyle gösteriliyor; şube saat dilimiyle aynı varsayılıyor. Farklı saat diliminden bakan yönetici için şube saatine çevrilmeli.
+- [ ] İzin bakiyesi (kalan yıllık izin günü) ve izin talebinde bakiye kontrolü.
+- [ ] Onaylanan izin yayınlanmış bir haftaya düşerse plana yazılıyor; müdüre "plan değişti" bilgisi gösterilebilir.
+
 ## Vardiya planı
 
 - [ ] Hafta başlangıç günü yayınlanmış haftalar varken değiştirilirse eski yayın kayıtları yeni haftalarla eşleşmez. Değişiklik sırasında uyarı ya da dönüştürme gerekli.

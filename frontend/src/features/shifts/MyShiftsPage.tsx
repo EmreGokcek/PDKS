@@ -6,17 +6,18 @@ import { PageHeader } from '../../components/AppShell'
 import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
 import { api } from '../../lib/api'
-import { addDays, formatDay, hhmm, parseDate, todayIso, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
-import { formatDuration } from '../../lib/format'
+import { addDays, formatDay, hhmm, parseDate, shiftMinutes, todayIso, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
+import { formatDuration, formatMinutes } from '../../lib/format'
 import { useMyShifts, type Shift } from './api'
-import { ShiftChip } from './ShiftChip'
+import { isLeave, leaveColors, netWorkMinutes } from './leave'
+import { LeaveChip, ShiftChip } from './ShiftChip'
 
 /** Personelin bu hafta ve gelecek haftaki vardiyaları. */
 export function MyShiftsPage() {
   const { t } = useTranslation()
   const rules = useQuery({
     queryKey: ['work-rules'],
-    queryFn: () => api<{ weekStartsOn: WeekDayName }>('/settings/work-rules'),
+    queryFn: () => api<{ weekStartsOn: WeekDayName; dailyBreakMinutes: number }>('/settings/work-rules'),
   })
   const today = todayIso()
   const start = weekStartOf(today, rules.data?.weekStartsOn ?? 'Monday')
@@ -25,7 +26,10 @@ export function MyShiftsPage() {
   const now = useNow(30_000)
 
   const byDate = new Map((shifts.data ?? []).map((s) => [s.date, s]))
-  const next = (shifts.data ?? []).find((s) => startOf(s) > now)
+  const next = (shifts.data ?? []).find((s) => !isLeave(s.kind) && startOf(s) > now)
+  const dailyBreak = rules.data?.dailyBreakMinutes ?? 60
+  const workOf = (s: Shift) => netWorkMinutes(shiftMinutes(s.startTime, s.endTime), dailyBreak)
+  const breakOf = (s: Shift) => (shiftMinutes(s.startTime, s.endTime) > dailyBreak ? dailyBreak : 0)
 
   return (
     <>
@@ -37,13 +41,21 @@ export function MyShiftsPage() {
         </div>
       ) : (
         <>
-          <NextShiftCard shift={next} now={now} />
+          <NextShiftCard shift={next} now={now} work={next ? workOf(next) : 0} brk={next ? breakOf(next) : 0} />
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
-            {[start, addDays(start, 7)].map((ws, wi) => (
+            {[start, addDays(start, 7)].map((ws, wi) => {
+              const weekShifts = weekDays(ws).map((d) => byDate.get(d)).filter((s): s is Shift => !!s && !isLeave(s.kind))
+              const weekWork = weekShifts.reduce((sum, s) => sum + workOf(s), 0)
+              return (
               <section key={ws} className="rounded-2xl bg-panel p-2 ring-1 ring-line">
-                <h2 className="px-3 pt-3 pb-2 text-sm font-medium text-ink-soft">
-                  {wi === 0 ? t('shifts.thisWeek') : t('shifts.nextWeek')}
-                </h2>
+                <div className="flex items-baseline justify-between gap-3 px-3 pt-3 pb-2">
+                  <h2 className="text-sm font-medium text-ink-soft">{wi === 0 ? t('shifts.thisWeek') : t('shifts.nextWeek')}</h2>
+                  {weekShifts.length > 0 && (
+                    <p className="tabular text-sm text-ink-soft">
+                      {t('shifts.weekSummary', { days: weekShifts.length, work: formatDuration(weekWork) })}
+                    </p>
+                  )}
+                </div>
                 <ul>
                   {weekDays(ws).map((d, i) => {
                     const s = byDate.get(d)
@@ -63,9 +75,20 @@ export function MyShiftsPage() {
                           </p>
                           <p className="tabular text-lg font-semibold">{formatDay(d, { day: 'numeric' })}</p>
                         </div>
-                        <div className="h-12 flex-1">
-                          {s ? (
-                            <ShiftChip start={s.startTime} end={s.endTime} name={s.templateName ?? s.note} color={s.color} />
+                        <div className="flex min-h-12 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                          {s && isLeave(s.kind) ? (
+                            <div className="h-12 w-full">
+                              <LeaveChip label={t(`shifts.kinds.${s.kind}`)} color={leaveColors[s.kind]} />
+                            </div>
+                          ) : s ? (
+                            <>
+                              <div className="h-12 w-full sm:max-w-56">
+                                <ShiftChip start={s.startTime} end={s.endTime} name={s.templateName ?? s.note} color={s.color} />
+                              </div>
+                              <p className="tabular text-xs text-ink-soft sm:text-sm">
+                                {t('shifts.workAndBreak', { work: formatDuration(workOf(s)), break: formatMinutes(breakOf(s)) })}
+                              </p>
+                            </>
                           ) : (
                             <span className="flex h-full items-center rounded-lg border border-dashed border-line px-3 text-sm text-ink-soft">
                               {t('shifts.off')}
@@ -77,7 +100,8 @@ export function MyShiftsPage() {
                   })}
                 </ul>
               </section>
-            ))}
+              )
+            })}
           </div>
         </>
       )}
@@ -92,7 +116,7 @@ function startOf(s: Shift) {
   return d
 }
 
-function NextShiftCard({ shift, now }: { shift: Shift | undefined; now: Date }) {
+function NextShiftCard({ shift, now, work, brk }: { shift: Shift | undefined; now: Date; work: number; brk: number }) {
   const { t } = useTranslation()
   if (!shift) {
     return (
@@ -122,6 +146,7 @@ function NextShiftCard({ shift, now }: { shift: Shift | undefined; now: Date }) 
         {shift.templateName && <>{shift.templateName} · </>}
         {t('shifts.in', { time: formatDuration(minutes) })}
       </p>
+      <p className="mt-1 text-on-brand/70">{t('shifts.workAndBreak', { work: formatDuration(work), break: formatMinutes(brk) })}</p>
     </motion.section>
   )
 }

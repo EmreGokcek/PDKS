@@ -10,7 +10,7 @@ import { useNow } from '../../hooks/useNow'
 import { addDays, formatDay, hhmm } from '../../lib/dates'
 import { locale } from '../../i18n'
 import { errorMessage } from '../../lib/api'
-import { formatClock, formatMinutes, formatSeconds, formatTime } from '../../lib/format'
+import { formatClock, formatDuration, formatMinutes, formatSeconds, formatTime } from '../../lib/format'
 import { availableActions, useAttendance, useScan, type AttendanceAction, type AttendanceState, type AttendanceStatus } from './api'
 import { QrScannerSheet } from './QrScannerSheet'
 import { SuccessOverlay } from './SuccessOverlay'
@@ -215,19 +215,36 @@ export function TodayPage() {
   )
 }
 
-/** Bugünkü vardiya; yoksa sıradaki vardiya. */
+/** Bugünkü vardiya (çalışma + mola) ya da izin; bugün plan yoksa sıradaki vardiya. */
 function ShiftLine({ status }: { status: AttendanceStatus }) {
   const { t } = useTranslation()
-  const shift = status.todayShift ?? status.nextShift
-  if (!shift) return null
   const today = status.today.date
-  const day = shift.date === today ? t('shifts.today').toLocaleLowerCase() : shift.date === addDays(today, 1) ? t('shifts.tomorrow').toLocaleLowerCase() : formatDay(shift.date, { weekday: 'long' })
+  const todayShift = status.todayShift
+  const shift = todayShift ?? status.nextShift
+  if (!shift) return null
+
+  const brk = Math.round(status.today.breakAllowanceSeconds / 60)
+  let text: string
+  if (todayShift && todayShift.kind !== 'Work') {
+    text = t('shifts.onLeaveToday', { kind: t(`shifts.kinds.${todayShift.kind}`) })
+  } else if (todayShift) {
+    const gross = todayShift.durationMinutes
+    text = t('shifts.todayShiftFull', {
+      start: hhmm(todayShift.startTime),
+      end: hhmm(todayShift.endTime),
+      work: formatDuration(gross > brk ? gross - brk : gross),
+      break: formatMinutes(gross > brk ? brk : 0),
+    })
+  } else {
+    const day =
+      shift.date === addDays(today, 1) ? t('shifts.tomorrow').toLocaleLowerCase() : formatDay(shift.date, { weekday: 'long' })
+    text = t('shifts.nextShiftHint', { day, start: hhmm(shift.startTime) })
+  }
+
   return (
     <p className="mt-2 flex items-center gap-2 text-sm text-on-brand/60">
-      <span className="size-2 rounded-full" style={{ backgroundColor: shift.color }} />
-      {status.todayShift
-        ? t('shifts.todayShift', { start: hhmm(shift.startTime), end: hhmm(shift.endTime) })
-        : t('shifts.nextShiftHint', { day, start: hhmm(shift.startTime) })}
+      <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: shift.color }} />
+      {text}
     </p>
   )
 }

@@ -47,8 +47,14 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
   })
   const lastRef = useRef<{ token: string; at: number } | null>(null)
 
+  const [attempt, setAttempt] = useState(0)
+
   useEffect(() => {
     if (!window.isSecureContext || !videoRef.current) return
+    let disposed = false
+    let retries = 0
+    let retryTimer: ReturnType<typeof setTimeout> | undefined
+
     const scanner = new QrScanner(
       videoRef.current,
       (result) => {
@@ -61,18 +67,35 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
       },
       { preferredCamera: 'environment', highlightScanRegion: false, maxScansPerSecond: 8, returnDetailedScanResult: true },
     )
-    scanner
-      .start()
-      .then(() => setCamera('ready'))
-      .catch((err: unknown) => {
-        const name = err instanceof Error ? err.name : String(err)
-        setCamera(/NotAllowed|Permission/i.test(name) ? 'denied' : 'unavailable')
-      })
+
+    // Bir önceki okutmadan sonra kamera birkaç yüz milisaniye "meşgul" kalabiliyor
+    // (özellikle telefonlarda). Bu durumda kısa aralıklarla yeniden denenir.
+    const start = () => {
+      scanner
+        .start()
+        .then(() => !disposed && setCamera('ready'))
+        .catch((err: unknown) => {
+          if (disposed) return
+          const message = err instanceof Error ? `${err.name} ${err.message}` : String(err)
+          if (/NotAllowed|Permission|denied/i.test(message)) return setCamera('denied')
+          if (retries < 4) {
+            retries += 1
+            retryTimer = setTimeout(start, 350 * retries)
+            return
+          }
+          setCamera('unavailable')
+        })
+    }
+    // Panelin açılış animasyonu ve önceki kameranın kapanması için kısa bekleme
+    retryTimer = setTimeout(start, 200)
+
     return () => {
+      disposed = true
+      clearTimeout(retryTimer)
       scanner.stop()
       scanner.destroy()
     }
-  }, [])
+  }, [attempt])
 
   const problem =
     camera === 'denied' ? t('attendance.cameraDenied')
@@ -112,6 +135,18 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-brand p-8 text-center text-on-brand">
             <CameraOff className="size-10 opacity-70" />
             <p>{problem}</p>
+            {camera === 'unavailable' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCamera('starting')
+                  setAttempt((a) => a + 1)
+                }}
+                className="mt-2 rounded-xl bg-on-brand/15 px-4 py-2 text-sm font-medium ring-1 ring-on-brand/25 hover:bg-on-brand/20"
+              >
+                {t('common.retry')}
+              </button>
+            )}
           </div>
         )}
       </div>

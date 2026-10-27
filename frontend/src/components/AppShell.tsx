@@ -28,6 +28,7 @@ function useNavItems(role: Role): NavItem[] {
     case 'Manager':
       return [
         { to: '/mudur', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
+        { to: '/mudur/bugunum', label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
         { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
         { to: '/mudur/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]

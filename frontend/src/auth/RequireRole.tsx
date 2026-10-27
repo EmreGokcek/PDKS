@@ -14,7 +14,7 @@ export function RequireRole({ roles, children }: { roles?: Role[]; children: Rea
   const location = useLocation()
 
   if (isLoading) return <FullPageLoader />
-  if (!user) return <Navigate to="/giris" replace state={{ from: location.pathname }} />
+  if (!user) return <Navigate to="/giris" replace state={{ from: location.pathname + location.search }} />
 
   if (user.mustChangePassword && location.pathname !== '/sifre-degistir')
     return <Navigate to="/sifre-degistir" replace />

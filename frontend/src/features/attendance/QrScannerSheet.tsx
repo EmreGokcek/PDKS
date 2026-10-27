@@ -1,0 +1,140 @@
+import { AnimatePresence, motion } from 'motion/react'
+import QrScanner from 'qr-scanner'
+import { CameraOff, Smartphone } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Spinner } from '../../components/ui/Spinner'
+import { Sheet } from '../../components/ui/Overlay'
+import { extractQrToken, type AttendanceAction } from './api'
+
+type CameraState = 'starting' | 'ready' | 'denied' | 'unavailable' | 'insecure'
+
+/** Kamerayı açıp kiosk QR'ını okuyan panel. Kod okununca onToken çağrılır. */
+export function QrScannerSheet({
+  action,
+  busy,
+  error,
+  onToken,
+  onClose,
+}: {
+  action: AttendanceAction | null
+  busy: boolean
+  error: string | null
+  onToken: (token: string) => void
+  onClose: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <Sheet
+      open={!!action}
+      onClose={onClose}
+      closeLabel={t('common.close')}
+      title={action ? t('attendance.scanTitle', { action: t(`attendance.actions.${action}`) }) : ''}
+      description={t('attendance.scanHint')}
+    >
+      {action && <Camera busy={busy} error={error} onToken={onToken} />}
+    </Sheet>
+  )
+}
+
+function Camera({ busy, error, onToken }: { busy: boolean; error: string | null; onToken: (token: string) => void }) {
+  const { t } = useTranslation()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [camera, setCamera] = useState<CameraState>(() => (window.isSecureContext ? 'starting' : 'insecure'))
+  const onTokenRef = useRef(onToken)
+  useEffect(() => {
+    onTokenRef.current = onToken
+  })
+  const lastRef = useRef<{ token: string; at: number } | null>(null)
+
+  useEffect(() => {
+    if (!window.isSecureContext || !videoRef.current) return
+    const scanner = new QrScanner(
+      videoRef.current,
+      (result) => {
+        const token = extractQrToken(result.data)
+        // Aynı kodu art arda göndermemek için kısa bir bekleme
+        const last = lastRef.current
+        if (last && last.token === token && Date.now() - last.at < 4000) return
+        lastRef.current = { token, at: Date.now() }
+        onTokenRef.current(token)
+      },
+      { preferredCamera: 'environment', highlightScanRegion: false, maxScansPerSecond: 8, returnDetailedScanResult: true },
+    )
+    scanner
+      .start()
+      .then(() => setCamera('ready'))
+      .catch((err: unknown) => {
+        const name = err instanceof Error ? err.name : String(err)
+        setCamera(/NotAllowed|Permission/i.test(name) ? 'denied' : 'unavailable')
+      })
+    return () => {
+      scanner.stop()
+      scanner.destroy()
+    }
+  }, [])
+
+  const problem =
+    camera === 'denied' ? t('attendance.cameraDenied')
+    : camera === 'unavailable' ? t('attendance.cameraUnavailable')
+    : camera === 'insecure' ? t('attendance.cameraInsecure')
+    : null
+
+  return (
+    <div className="space-y-4">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-brand">
+        <video ref={videoRef} className="size-full object-cover" muted playsInline />
+
+        {/* Hedef çerçevesi ve tarama çizgisi */}
+        {camera === 'ready' && (
+          <div className="pointer-events-none absolute inset-[14%]">
+            {['top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl', 'top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl', 'bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-2xl'].map((c) => (
+              <span key={c} className={`absolute size-10 border-white/90 ${c}`} />
+            ))}
+            <motion.span
+              className="absolute inset-x-3 h-0.5 rounded-full bg-signal shadow-[0_0_16px_2px] shadow-signal/70"
+              animate={{ top: ['8%', '92%', '8%'] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          </div>
+        )}
+
+        {(camera === 'starting' || busy) && (
+          <div className="absolute inset-0 grid place-items-center bg-brand/60 text-on-brand">
+            <div className="flex items-center gap-3">
+              <Spinner />
+              {busy ? t('attendance.sending') : t('attendance.cameraStarting')}
+            </div>
+          </div>
+        )}
+
+        {problem && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-brand p-8 text-center text-on-brand">
+            <CameraOff className="size-10 opacity-70" />
+            <p>{problem}</p>
+          </div>
+        )}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.p
+            key={error}
+            role="alert"
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-xl bg-overrun-soft px-4 py-3 text-sm text-overrun"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      <p className="flex items-center gap-2 text-sm text-ink-soft">
+        <Smartphone className="size-4 shrink-0" />
+        {t('attendance.nativeHint')}
+      </p>
+    </div>
+  )
+}

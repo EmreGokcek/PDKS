@@ -50,6 +50,19 @@ npm run dev
 
 Tarayıcıda http://localhost:5173 adresini aç.
 
+## Telefondan denemek
+
+Kamera yalnızca güvenli bağlantıda (https) çalışır. Web uygulamasını şu komutla başlat:
+
+```bash
+cd frontend
+npm run dev:phone
+```
+
+Çıktıdaki `Network: https://192.168.x.x:5173` adresini aynı Wi-Fi'deki telefonda aç. Tarayıcı sertifika uyarısı verir;
+geliştirme ortamı için "Gelişmiş → Yine de devam et" ile geçebilirsin. Kiosk ekranını bilgisayarda (`kiosk@pdks.local`),
+personel ekranını telefonda (`personel@pdks.local`) açıp QR okutmayı dene.
+
 ## Demo hesaplar
 
 Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçilebilir.
@@ -71,6 +84,8 @@ API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygul
 
 - **Çok firmalı yapı:** Her tablo `CompanyId` taşır. `PdksDbContext` içindeki global filtre sayesinde bir kullanıcı yalnızca kendi firmasının verisini görebilir.
 - **Şube hazırlığı:** Kayıtlar `BranchId` taşır; şimdilik tek şube kullanılıyor.
+- **Dinamik QR:** Kiosk QR'ı 30 saniyede bir değişir ve kioskun gizli anahtarıyla HMAC imzalıdır (`KioskQrTokens`). Bir önceki pencere de kabul edildiğinden bir kod en fazla ~60 sn geçerlidir.
+- **Süre hesabı:** `AttendanceCalculator` veritabanından bağımsız, saf bir sınıftır ve `backend/tests` altında testleri vardır.
 - **Süreler olaylardan hesaplanır:** Her QR okutması bir `AttendanceEvent` kaydıdır. Çalışma, mola ve fazla mesai bu kayıtlardan hesaplanır; kayıtlar silinmez, düzeltmeler `AuditLog`'a yazılır.
 - **Çalışma kuralları:** Haftalık normal süre, günlük mola hakkı (tek seferde) ve geç kalma toleransı firma bazında ayarlanır. Molalar çalışma süresinden düşülür; haftalık normal süreyi aşan kısım fazla mesaidir.
 
@@ -78,6 +93,6 @@ API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygul
 
 - [x] Adım 1 — Proje iskeleti, veri modeli, giriş ve roller
 - [x] Adım 2 — Admin: personel yönetimi, çalışma kuralları, tema ve dil seçenekleri
-- [ ] Adım 3 — Kiosk dinamik QR, personelin QR okutması
-- [ ] Adım 4 — Personel ekranı: anlık durum, kalan mola, toplam süreler
+- [x] Adım 3 — Kiosk dinamik QR, QR ile giriş-çıkış-mola, "Bugünüm" ekranı (anlık durum, kalan mola, haftalık süre, fazla mesai)
+- [ ] Adım 4 — PWA (telefona uygulama gibi kurulum), konum doğrulaması
 - [ ] Adım 5 — Müdür: vardiya planlama, canlı pano

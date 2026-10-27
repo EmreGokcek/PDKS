@@ -26,3 +26,23 @@ export function formatDuration(totalMinutes: number): string {
 export function formatMinutes(minutes: number): string {
   return new Intl.NumberFormat(locale(), { style: 'unit', unit: 'minute', unitDisplay: 'short' }).format(minutes)
 }
+
+/** 3725 → "1:02:05", 125 → "2:05". Canlı sayaçlar için. */
+export function formatClock(totalSeconds: number, alwaysHours = false): string {
+  const s = Math.max(0, Math.floor(totalSeconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(sec).padStart(2, '0')
+  return h > 0 || alwaysHours ? `${h}:${mm}:${ss}` : `${m}:${ss}`
+}
+
+/** Saniyeyi "7 sa. 45 dk." biçiminde yazar. */
+export function formatSeconds(totalSeconds: number): string {
+  return formatDuration(Math.floor(Math.max(0, totalSeconds) / 60))
+}
+
+export function formatTime(iso: string | Date): string {
+  return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso))
+}

@@ -7,7 +7,10 @@ import { ChangePasswordPage } from './features/account/ChangePasswordPage'
 import { WorkRulesPage } from './features/settings/WorkRulesPage'
 import { UsersPage } from './features/users/UsersPage'
 import { LoginPage } from './pages/LoginPage'
-import { EmployeeHomePage, KioskPage, ManagerHomePage } from './pages/RolePages'
+import { ScanLinkPage } from './features/attendance/ScanLinkPage'
+import { TodayPage } from './features/attendance/TodayPage'
+import { KioskPage } from './features/kiosk/KioskPage'
+import { ManagerHomePage } from './pages/RolePages'
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
@@ -30,14 +33,17 @@ export default function App() {
 
       <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
         <Route index element={<ManagerHomePage />} />
+        <Route path="bugunum" element={<TodayPage />} />
         <Route path="ekip" element={<UsersPage readOnly />} />
         <Route path="kurallar" element={<WorkRulesPage readOnly />} />
       </Route>
 
       <Route path="/personel" element={<RequireRole roles={['Employee']}><AppShell /></RequireRole>}>
-        <Route index element={<EmployeeHomePage />} />
+        <Route index element={<TodayPage />} />
       </Route>
 
+      {/* Telefonun kendi kamerasıyla kiosk QR'ı okutulunca açılan sayfa */}
+      <Route path="/okut" element={<RequireRole roles={['Admin', 'Manager', 'Employee']}><ScanLinkPage /></RequireRole>} />
       <Route path="/kiosk" element={<RequireRole roles={['Kiosk']}><KioskPage /></RequireRole>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>

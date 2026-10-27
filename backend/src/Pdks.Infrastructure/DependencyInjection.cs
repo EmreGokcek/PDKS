@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pdks.Domain.Entities;
+using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Persistence.Seed;
 using Pdks.Infrastructure.Services;
@@ -22,6 +23,9 @@ public static class DependencyInjection
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<DbSeeder>();
         services.AddScoped<AuditLogger>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<KioskQrTokens>();
+        services.AddScoped<AttendanceService>();
 
         return services;
     }

@@ -243,6 +243,44 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Kiosks");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Data")
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.HasIndex("UserId", "ReadAt");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Shift", b =>
                 {
                     b.Property<Guid>("Id")
@@ -468,6 +506,17 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("BloodType")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
                     b.Property<Guid?>("BranchId")
                         .HasColumnType("uuid");
 
@@ -482,6 +531,18 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmergencyContactName")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("EmergencyContactPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<string>("EmergencyContactRelation")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("EmployeeNumber")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
@@ -490,6 +551,12 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("HealthDataConsentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("HireDate")
+                        .HasColumnType("date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
@@ -513,6 +580,10 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<string>("Position")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Role")
                         .IsRequired()
@@ -621,6 +692,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.Shift", b =>

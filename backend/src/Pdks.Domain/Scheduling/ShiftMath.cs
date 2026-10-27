@@ -32,7 +32,7 @@ public static class ShiftMath
         : Duration(start, end) > MaxLength ? "shift_too_long"
         : null;
 
-    /// <summary>Planlanan net süre: vardiya süresinden günlük mola hakkı düşülür.</summary>
+    /// <summary>Planlanan net süre: vardiya süresinden günlük mola hakkı düşülür (vardiya moladan kısaysa düşülmez).</summary>
     public static TimeSpan NetDuration(TimeOnly start, TimeOnly end, TimeSpan dailyBreak)
     {
         var gross = Duration(start, end);

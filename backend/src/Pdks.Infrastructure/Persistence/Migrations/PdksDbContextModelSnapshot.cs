@@ -353,6 +353,41 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("ShiftTemplates");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.ShiftWeek", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PublishedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "WeekStart")
+                        .IsUnique();
+
+                    b.ToTable("ShiftWeeks");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -539,6 +574,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.ShiftTemplate", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.ShiftWeek", b =>
                 {
                     b.HasOne("Pdks.Domain.Entities.Branch", null)
                         .WithMany()

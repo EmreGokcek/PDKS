@@ -79,7 +79,8 @@ internal class ShiftConfiguration : IEntityTypeConfiguration<Shift>
     {
         b.Property(x => x.Note).HasMaxLength(500);
         b.HasIndex(x => new { x.CompanyId, x.BranchId, x.Date });
-        b.HasIndex(x => new { x.UserId, x.Date });
+        // Kişi başına günde en fazla bir vardiya.
+        b.HasIndex(x => new { x.UserId, x.Date }).IsUnique();
 
         b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.ShiftTemplate).WithMany().HasForeignKey(x => x.ShiftTemplateId).OnDelete(DeleteBehavior.SetNull);

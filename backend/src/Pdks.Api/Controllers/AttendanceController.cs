@@ -25,7 +25,7 @@ public class AttendanceController(
     {
         var user = await db.Users.FirstOrDefaultAsync(u => u.Id == currentUser.UserId, ct);
         if (user is null) return Unauthorized();
-        return AttendanceStatusDto.From(await attendance.GetSnapshotAsync(user, ct));
+        return await WithShiftsAsync(AttendanceStatusDto.From(await attendance.GetSnapshotAsync(user, ct)), user.Id, ct);
     }
 
     /// <summary>Kiosktaki QR okutularak giriş, çıkış veya mola kaydı.</summary>
@@ -57,7 +57,31 @@ public class AttendanceController(
             return this.ApiError(409, error, "Bu işlem şu anki durumunla uyuşmuyor.");
 
         var snapshot = await attendance.GetSnapshotAsync(user, ct);
-        return new ScanResponse(recorded!.Type, recorded.OccurredAt, kiosk.Name, AttendanceStatusDto.From(snapshot));
+        var status = await WithShiftsAsync(AttendanceStatusDto.From(snapshot), user.Id, ct);
+        return new ScanResponse(recorded!.Type, recorded.OccurredAt, kiosk.Name, status);
+    }
+
+    /// <summary>Bugünkü vardiya ve henüz başlamamış ilk vardiya.</summary>
+    private async Task<AttendanceStatusDto> WithShiftsAsync(AttendanceStatusDto status, Guid userId, CancellationToken ct)
+    {
+        var today = status.Today.Date;
+        var shifts = await db.Shifts.AsNoTracking()
+            .Include(s => s.ShiftTemplate)
+            .Where(s => s.UserId == userId && s.Date >= today && s.Date <= today.AddDays(14))
+            .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
+            .ToListAsync(ct);
+
+        var tz = await attendance.TimeZoneForAsync(currentUser.BranchId, ct);
+        var localNow = TimeZoneInfo.ConvertTime(status.ServerNow, tz).DateTime;
+
+        var todayShift = shifts.FirstOrDefault(s => s.Date == today);
+        var nextShift = shifts.FirstOrDefault(s => s.Date.ToDateTime(s.StartTime) > localNow);
+
+        return status with
+        {
+            TodayShift = todayShift is null ? null : ShiftDto.From(todayShift),
+            NextShift = nextShift is null ? null : ShiftDto.From(nextShift)
+        };
     }
 
     private ObjectResult InvalidQr() =>

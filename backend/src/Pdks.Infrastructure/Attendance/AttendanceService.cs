@@ -3,13 +3,14 @@ using Pdks.Domain.Attendance;
 using Pdks.Domain.Entities;
 using Pdks.Domain.Enums;
 using Pdks.Infrastructure.Persistence;
+using Pdks.Infrastructure.Scheduling;
 
 namespace Pdks.Infrastructure.Attendance;
 
 public record AttendanceSnapshot(AttendanceSummary Summary, IReadOnlyList<AttendanceEvent> TodayEvents, DateTimeOffset Now);
 
 /// <summary>Personelin olaylarını veritabanından okuyup hesaplayıcıya veren ve yeni okutmaları kaydeden servis.</summary>
-public class AttendanceService(PdksDbContext db, TimeProvider time)
+public class AttendanceService(PdksDbContext db, TimeProvider time, ShiftPublication publication)
 {
     public const string DefaultTimeZone = "Europe/Istanbul";
 
@@ -25,10 +26,10 @@ public class AttendanceService(PdksDbContext db, TimeProvider time)
         var fromUtc = LocalMidnightUtc(weekStart.AddDays(-1), tz);
 
         // O günün vardiyasında özel mola süresi varsa günlük mola hakkı odur.
-        var todayBreak = await db.Shifts.AsNoTracking()
+        var todayShifts = await db.Shifts.AsNoTracking()
             .Where(s => s.UserId == user.Id && s.Date == today && s.Kind == ShiftKind.Work)
-            .Select(s => s.BreakMinutes)
-            .FirstOrDefaultAsync(ct);
+            .ToListAsync(ct);
+        var todayBreak = (await publication.VisibleAsync(todayShifts, ct)).FirstOrDefault()?.BreakMinutes;
         var dailyBreakMinutes = todayBreak ?? rules.DailyBreakMinutes;
 
         var events = await db.AttendanceEvents.AsNoTracking()

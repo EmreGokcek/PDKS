@@ -9,6 +9,7 @@ using Pdks.Domain.Enums;
 using Pdks.Domain.Scheduling;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
+using Pdks.Infrastructure.Scheduling;
 using Pdks.Infrastructure.Services;
 
 namespace Pdks.Api.Controllers;
@@ -47,8 +48,94 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 
         var rules = await db.WorkRules.AsNoTracking().FirstOrDefaultAsync(ct) ?? new WorkRule();
 
+        // Yayın durumu: "from" haftanın ilk günüyse o haftanın yayın kaydı
+        var branchIds = await StaffScope().Where(u => u.IsActive && u.BranchId != null).Select(u => u.BranchId!.Value).Distinct().ToListAsync(ct);
+        var week = await db.ShiftWeeks.AsNoTracking()
+            .Where(w => w.WeekStart == from && branchIds.Contains(w.BranchId))
+            .OrderByDescending(w => w.PublishedAt)
+            .FirstOrDefaultAsync(ct);
+        var publishedBy = week is null ? null
+            : await db.Users.Where(u => u.Id == week.PublishedByUserId).Select(u => u.FirstName + " " + u.LastName).FirstOrDefaultAsync(ct);
+
         return new PlannerDto(from, to, rules.WeeklyWorkMinutes, rules.DailyBreakMinutes, rules.WeekStartsOn,
-            staff, shifts.Select(ShiftDto.From).ToList());
+            staff, shifts.Select(ShiftDto.From).ToList(), week?.PublishedAt, publishedBy);
+    }
+
+    /// <summary>
+    /// Haftanın planını yayınlar; personel ancak bundan sonra görür.
+    /// Her aktif kişinin her günü dolu olmalı (vardiya ya da izin); boş gün varsa liste döner.
+    /// </summary>
+    [HttpPost("publish")]
+    public async Task<ActionResult<PublishResult>> Publish(PublishWeekRequest request, CancellationToken ct)
+    {
+        var rules = await db.WorkRules.AsNoTracking().FirstOrDefaultAsync(ct) ?? new WorkRule();
+        if (request.WeekStart.DayOfWeek != rules.WeekStartsOn)
+            return this.ApiError(400, "invalid_range", "Hafta başlangıcı çalışma kurallarıyla uyuşmuyor.");
+
+        var weekEnd = request.WeekStart.AddDays(6);
+        var staff = await StaffScope().Where(u => u.IsActive).ToListAsync(ct);
+        var staffIds = staff.Select(u => u.Id).ToList();
+        var filled = (await db.Shifts.AsNoTracking()
+                .Where(x => staffIds.Contains(x.UserId) && x.Date >= request.WeekStart && x.Date <= weekEnd)
+                .Select(x => new { x.UserId, x.Date })
+                .ToListAsync(ct))
+            .Select(x => (x.UserId, x.Date))
+            .ToHashSet();
+
+        var days = Enumerable.Range(0, 7).Select(i => request.WeekStart.AddDays(i)).ToList();
+        var missing = staff
+            .Select(u => new MissingDaysDto(u.Id, u.FullName, days.Where(d => !filled.Contains((u.Id, d))).ToList()))
+            .Where(m => m.Dates.Count > 0)
+            .OrderBy(m => m.Name)
+            .ToList();
+
+        if (missing.Count > 0)
+        {
+            var problem = this.ApiError(409, "plan_incomplete", "Planda boş günler var. Her gün için vardiya ya da izin seçilmeli.");
+            ((ProblemDetails)problem.Value!).Extensions["missing"] = missing;
+            return problem;
+        }
+
+        var branchIds = staff.Where(u => u.BranchId != null).Select(u => u.BranchId!.Value).Distinct().ToList();
+        if (branchIds.Count == 0 && currentUser.BranchId is { } own) branchIds.Add(own);
+
+        var now = DateTimeOffset.UtcNow;
+        var existing = await db.ShiftWeeks
+            .Where(w => w.WeekStart == request.WeekStart && branchIds.Contains(w.BranchId))
+            .ToDictionaryAsync(w => w.BranchId, ct);
+        foreach (var branchId in branchIds)
+        {
+            if (!existing.TryGetValue(branchId, out var week))
+            {
+                week = new ShiftWeek { BranchId = branchId, WeekStart = request.WeekStart };
+                db.ShiftWeeks.Add(week);
+            }
+            week.PublishedAt = now;
+            week.PublishedByUserId = currentUser.UserId!.Value;
+        }
+
+        audit.Log("shifts.week_published", nameof(ShiftWeek), null, newValues: new { request.WeekStart, Branches = branchIds });
+        await db.SaveChangesAsync(ct);
+        return new PublishResult(now);
+    }
+
+    /// <summary>Yayını geri alır; personel bu haftanın vardiyalarını artık görmez.</summary>
+    [HttpPost("unpublish")]
+    public async Task<IActionResult> Unpublish(PublishWeekRequest request, CancellationToken ct)
+    {
+        var branchIds = await StaffScope().Where(u => u.BranchId != null).Select(u => u.BranchId!.Value).Distinct().ToListAsync(ct);
+        if (currentUser.BranchId is { } own && !branchIds.Contains(own)) branchIds.Add(own);
+
+        var weeks = await db.ShiftWeeks
+            .Where(w => w.WeekStart == request.WeekStart && branchIds.Contains(w.BranchId))
+            .ToListAsync(ct);
+        if (weeks.Count > 0)
+        {
+            db.ShiftWeeks.RemoveRange(weeks);
+            audit.Log("shifts.week_unpublished", nameof(ShiftWeek), null, oldValues: new { request.WeekStart });
+            await db.SaveChangesAsync(ct);
+        }
+        return NoContent();
     }
 
     /// <summary>Hücrelere şablon, özel saat ya da izin atar; dolu hücrenin kaydı değiştirilir.</summary>
@@ -250,11 +337,11 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
     }
 }
 
-/// <summary>Kişinin kendi vardiyaları.</summary>
+/// <summary>Kişinin kendi vardiyaları (yalnızca yayınlanmış haftalar).</summary>
 [ApiController]
 [Route("api/me/shifts")]
 [Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
-public class MyShiftsController(PdksDbContext db, ICurrentUser currentUser) : ControllerBase
+public class MyShiftsController(PdksDbContext db, ICurrentUser currentUser, ShiftPublication publication) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<ShiftDto>>> List([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
@@ -267,6 +354,7 @@ public class MyShiftsController(PdksDbContext db, ICurrentUser currentUser) : Co
             .Where(s => s.UserId == currentUser.UserId && s.Date >= from && s.Date <= to)
             .OrderBy(s => s.Date)
             .ToListAsync(ct);
-        return shifts.Select(ShiftDto.From).ToList();
+        // Yalnızca yayınlanmış haftalar
+        return (await publication.VisibleAsync(shifts, ct)).Select(ShiftDto.From).ToList();
     }
 }

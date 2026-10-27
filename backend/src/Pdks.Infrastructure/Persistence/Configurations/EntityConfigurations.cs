@@ -89,6 +89,15 @@ internal class ShiftConfiguration : IEntityTypeConfiguration<Shift>
     }
 }
 
+internal class ShiftWeekConfiguration : IEntityTypeConfiguration<ShiftWeek>
+{
+    public void Configure(EntityTypeBuilder<ShiftWeek> b)
+    {
+        b.HasIndex(x => new { x.BranchId, x.WeekStart }).IsUnique();
+        b.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal class AttendanceEventConfiguration : IEntityTypeConfiguration<AttendanceEvent>
 {
     public void Configure(EntityTypeBuilder<AttendanceEvent> b)

@@ -8,6 +8,7 @@ using Pdks.Domain.Enums;
 using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
+using Pdks.Infrastructure.Scheduling;
 
 namespace Pdks.Api.Controllers;
 
@@ -18,7 +19,8 @@ public class AttendanceController(
     PdksDbContext db,
     ICurrentUser currentUser,
     AttendanceService attendance,
-    KioskQrTokens qrTokens) : ControllerBase
+    KioskQrTokens qrTokens,
+    ShiftPublication publication) : ControllerBase
 {
     /// <summary>Bugünkü durum, süreler ve haftalık özet.</summary>
     [HttpGet("api/me/attendance")]
@@ -66,11 +68,12 @@ public class AttendanceController(
     private async Task<AttendanceStatusDto> WithShiftsAsync(AttendanceStatusDto status, Guid userId, CancellationToken ct)
     {
         var today = status.Today.Date;
-        var shifts = await db.Shifts.AsNoTracking()
+        var all = await db.Shifts.AsNoTracking()
             .Include(s => s.ShiftTemplate)
             .Where(s => s.UserId == userId && s.Date >= today && s.Date <= today.AddDays(14))
             .OrderBy(s => s.Date).ThenBy(s => s.StartTime)
             .ToListAsync(ct);
+        var shifts = await publication.VisibleAsync(all, ct);
 
         var tz = await attendance.TimeZoneForAsync(currentUser.BranchId, ct);
         var localNow = TimeZoneInfo.ConvertTime(status.ServerNow, tz).DateTime;

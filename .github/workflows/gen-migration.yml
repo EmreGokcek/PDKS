@@ -1,0 +1,32 @@
+# GEÇİCİ: İlk migration'ı üretmek için. Migration eklendikten sonra silinecek.
+name: Generate migration
+
+on:
+  push:
+    branches: [adim-1-iskelet]
+
+jobs:
+  migration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet tool install --global dotnet-ef --version 10.0.0
+      - run: dotnet build
+      - run: >
+          dotnet ef migrations add InitialCreate
+          --project src/Pdks.Infrastructure
+          --startup-project src/Pdks.Api
+          --output-dir Persistence/Migrations
+          --no-build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migrations
+          path: backend/src/Pdks.Infrastructure/Persistence/Migrations

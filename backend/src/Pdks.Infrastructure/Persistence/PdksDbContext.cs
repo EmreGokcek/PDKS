@@ -16,6 +16,7 @@ public class PdksDbContext(DbContextOptions<PdksDbContext> options, ICurrentUser
     public DbSet<Shift> Shifts => Set<Shift>();
     public DbSet<ShiftWeek> ShiftWeeks => Set<ShiftWeek>();
     public DbSet<StaffRequest> StaffRequests => Set<StaffRequest>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
     public DbSet<Kiosk> Kiosks => Set<Kiosk>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

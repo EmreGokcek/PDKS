@@ -21,7 +21,7 @@ namespace Pdks.Api.Controllers;
 [ApiController]
 [Route("api/shifts")]
 [Authorize(Roles = Roles.AdminOrManager)]
-public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit) : ControllerBase
+public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit, Notifier notifier, ShiftPublication publication) : ControllerBase
 {
     private const int MaxRangeDays = 42;
 
@@ -114,6 +114,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             week.PublishedByUserId = currentUser.UserId!.Value;
         }
 
+        notifier.Notify(staffIds, NotificationType.ShiftWeekPublished, new { weekStart = request.WeekStart });
         audit.Log("shifts.week_published", nameof(ShiftWeek), null, newValues: new { request.WeekStart, Branches = branchIds });
         await db.SaveChangesAsync(ct);
         return new PublishResult(now);
@@ -240,6 +241,8 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
         if (result.Any(r => r.BranchId == Guid.Empty))
             return this.ApiError(400, "invalid_branch", "Personelin şubesi tanımlı değil.");
 
+        await NotifyIfPublishedAsync(result.Select(r => (r.UserId, r.BranchId, r.Date)), ct);
+
         audit.Log("shifts.assigned", nameof(Shift), null, newValues: new
         {
             Count = cells.Count, Kind = request.Kind.ToString(), Start = start, End = end, TemplateId = template?.Id, request.BreakMinutes,
@@ -264,6 +267,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 
         if (toRemove.Count > 0)
         {
+            await NotifyIfPublishedAsync(toRemove.Select(r => (r.UserId, r.BranchId, r.Date)), ct);
             db.Shifts.RemoveRange(toRemove);
             audit.Log("shifts.cleared", nameof(Shift), null,
                 oldValues: toRemove.Select(s => new { s.UserId, s.Date, s.StartTime, s.EndTime }));
@@ -327,6 +331,18 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             await db.SaveChangesAsync(ct);
         }
         return new CopyWeekResult(copied, skipped);
+    }
+
+    /// <summary>Yayındaki bir haftada değişen vardiyalar için kişilere bildirim (kişi başına tek bildirim).</summary>
+    private async Task NotifyIfPublishedAsync(IEnumerable<(Guid UserId, Guid BranchId, DateOnly Date)> changes, CancellationToken ct)
+    {
+        var list = changes.ToList();
+        var published = await publication.PublishedDaysAsync(list.Select(c => (c.BranchId, c.Date)).Distinct().ToList(), ct);
+        foreach (var group in list.Where(c => published.Contains((c.BranchId, c.Date))).GroupBy(c => c.UserId))
+        {
+            var dates = group.Select(c => c.Date).Distinct().OrderBy(d => d).ToList();
+            notifier.Notify(group.Key, NotificationType.ShiftChanged, new { dates });
+        }
     }
 
     /// <summary>Planlanabilir kişiler: Personel ve Müdür. Müdür yalnızca kendi şubesini görür.</summary>

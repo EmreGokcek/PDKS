@@ -17,7 +17,9 @@ public record UserListItem(
     bool IsActive,
     bool MustChangePassword,
     DateTimeOffset? LastLoginAt,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? Position = null,
+    DateOnly? HireDate = null);
 
 public record SaveUserRequest(
     [Required, MaxLength(100)] string FirstName,
@@ -26,7 +28,9 @@ public record SaveUserRequest(
     [MaxLength(30)] string? Phone,
     [MaxLength(50)] string? EmployeeNumber,
     UserRole Role,
-    Guid? BranchId);
+    Guid? BranchId,
+    [MaxLength(100)] string? Position = null,
+    DateOnly? HireDate = null);
 
 /// <summary>Geçici şifre yalnızca bu yanıtta bir kez döner, hiçbir yerde düz metin saklanmaz.</summary>
 public record UserWithPasswordResponse(UserListItem User, string TemporaryPassword);

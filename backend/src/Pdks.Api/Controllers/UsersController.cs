@@ -58,7 +58,7 @@ public class UsersController(
             .Select(u => new UserListItem(
                 u.Id, u.FirstName, u.LastName, u.FirstName + " " + u.LastName, u.Email, u.Phone,
                 u.EmployeeNumber, u.Role, u.BranchId, u.Branch != null ? u.Branch.Name : null,
-                u.IsActive, u.MustChangePassword, u.LastLoginAt, u.CreatedAt))
+                u.IsActive, u.MustChangePassword, u.LastLoginAt, u.CreatedAt, u.Position, u.HireDate))
             .ToListAsync(ct);
     }
 
@@ -87,6 +87,8 @@ public class UsersController(
             EmployeeNumber = Clean(request.EmployeeNumber),
             Role = request.Role,
             BranchId = request.BranchId ?? currentUser.BranchId,
+            Position = Clean(request.Position),
+            HireDate = request.HireDate,
             MustChangePassword = true
         };
         user.PasswordHash = hasher.HashPassword(user, tempPassword);
@@ -115,6 +117,8 @@ public class UsersController(
         user.EmployeeNumber = Clean(request.EmployeeNumber);
         user.Role = request.Role;
         user.BranchId = request.BranchId ?? user.BranchId;
+        user.Position = Clean(request.Position);
+        user.HireDate = request.HireDate;
 
         audit.Log("user.updated", nameof(User), user.Id, before, Snapshot(user));
         await db.SaveChangesAsync(ct);
@@ -201,10 +205,10 @@ public class UsersController(
 
     private static object Snapshot(User u) => new
     {
-        u.FirstName, u.LastName, u.Email, u.Phone, u.EmployeeNumber, Role = u.Role.ToString(), u.BranchId
+        u.FirstName, u.LastName, u.Email, u.Phone, u.EmployeeNumber, Role = u.Role.ToString(), u.BranchId, u.Position, u.HireDate
     };
 
     private static UserListItem ToItem(User u) => new(
         u.Id, u.FirstName, u.LastName, u.FullName, u.Email, u.Phone, u.EmployeeNumber, u.Role,
-        u.BranchId, u.Branch?.Name, u.IsActive, u.MustChangePassword, u.LastLoginAt, u.CreatedAt);
+        u.BranchId, u.Branch?.Name, u.IsActive, u.MustChangePassword, u.LastLoginAt, u.CreatedAt, u.Position, u.HireDate);
 }

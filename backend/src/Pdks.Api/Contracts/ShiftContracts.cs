@@ -28,14 +28,16 @@ public record ShiftDto(
     string? TemplateName,
     string Color,
     string? Note,
-    int DurationMinutes)
+    int DurationMinutes,
+    int? BreakMinutes)
 {
     public const string DefaultColor = "#64748b";
 
     public static ShiftDto From(Shift s) => new(
         s.Id, s.UserId, s.Date, s.Kind, s.StartTime, s.EndTime, s.ShiftTemplateId,
         s.ShiftTemplate?.Name, s.ShiftTemplate?.Color ?? DefaultColor, s.Note,
-        s.Kind == ShiftKind.Work ? (int)ShiftMath.Duration(s.StartTime, s.EndTime).TotalMinutes : 0);
+        s.Kind == ShiftKind.Work ? (int)ShiftMath.Duration(s.StartTime, s.EndTime).TotalMinutes : 0,
+        s.Kind == ShiftKind.Work ? s.BreakMinutes : null);
 }
 
 public record PlannerStaffDto(Guid Id, string FullName, UserRole Role, bool IsActive);
@@ -61,7 +63,8 @@ public record AssignShiftsRequest(
     TimeOnly? StartTime,
     TimeOnly? EndTime,
     [MaxLength(500)] string? Note,
-    ShiftKind Kind = ShiftKind.Work);
+    ShiftKind Kind = ShiftKind.Work,
+    [Range(0, 240)] int? BreakMinutes = null);
 
 public record ClearShiftsRequest([Required, MinLength(1), MaxLength(500)] List<ShiftCell> Cells);
 

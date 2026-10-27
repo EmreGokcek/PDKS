@@ -83,6 +83,9 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 
             if (ShiftMath.Validate(start, end) is { } timeError)
                 return this.ApiError(400, timeError, "Vardiya saatleri geçersiz.");
+
+            if (request.BreakMinutes is { } brk && TimeSpan.FromMinutes(brk) >= ShiftMath.Duration(start, end))
+                return this.ApiError(400, "break_too_long", "Mola süresi vardiya süresinden kısa olmalı.");
         }
 
         var cells = request.Cells.Distinct().ToList();
@@ -137,6 +140,8 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
                 db.Shifts.Add(shift);
             }
             shift.Kind = request.Kind;
+            // Mola belirtilmezse boş kalır ve çalışma kurallarındaki günlük mola (ör. 60 dk) geçerli olur.
+            shift.BreakMinutes = isWork ? request.BreakMinutes : null;
             shift.StartTime = start;
             shift.EndTime = end;
             shift.ShiftTemplateId = template?.Id;
@@ -150,7 +155,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 
         audit.Log("shifts.assigned", nameof(Shift), null, newValues: new
         {
-            Count = cells.Count, Kind = request.Kind.ToString(), Start = start, End = end, TemplateId = template?.Id,
+            Count = cells.Count, Kind = request.Kind.ToString(), Start = start, End = end, TemplateId = template?.Id, request.BreakMinutes,
             Cells = cells.Select(c => new { c.UserId, c.Date })
         });
         await db.SaveChangesAsync(ct);
@@ -204,6 +209,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
             {
                 if (!request.Overwrite) { skipped++; continue; }
                 existing.Kind = s.Kind;
+                existing.BreakMinutes = s.BreakMinutes;
                 existing.StartTime = s.StartTime;
                 existing.EndTime = s.EndTime;
                 existing.ShiftTemplateId = s.ShiftTemplateId;
@@ -217,6 +223,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
                     BranchId = s.BranchId,
                     Date = date,
                     Kind = s.Kind,
+                    BreakMinutes = s.BreakMinutes,
                     StartTime = s.StartTime,
                     EndTime = s.EndTime,
                     ShiftTemplateId = s.ShiftTemplateId,

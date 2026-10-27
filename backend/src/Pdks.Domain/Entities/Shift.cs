@@ -17,6 +17,9 @@ public class Shift : TenantEntity
     public TimeOnly StartTime { get; set; }
     /// <summary>StartTime'dan küçükse vardiya ertesi güne taşar.</summary>
     public TimeOnly EndTime { get; set; }
+    /// <summary>Bu vardiyadaki mola hakkı (dakika). Boşsa çalışma kurallarındaki günlük mola geçerlidir.</summary>
+    public int? BreakMinutes { get; set; }
+
     public string? Note { get; set; }
 
     public Guid CreatedByUserId { get; set; }

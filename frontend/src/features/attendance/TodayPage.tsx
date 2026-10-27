@@ -7,6 +7,7 @@ import { PageHeader } from '../../components/AppShell'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
+import { addDays, formatDay, hhmm } from '../../lib/dates'
 import { locale } from '../../i18n'
 import { errorMessage } from '../../lib/api'
 import { formatClock, formatMinutes, formatSeconds, formatTime } from '../../lib/format'
@@ -137,6 +138,7 @@ export function TodayPage() {
                   ? t('attendance.stateHints.Working', { time: formatTime(status.sessionStartedAt!) })
                   : t('attendance.stateHints.OnBreak', { time: formatTime(status.breakStartedAt!) })}
             </p>
+            <ShiftLine status={status} />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
@@ -210,6 +212,23 @@ export function TodayPage() {
       />
       <SuccessOverlay result={success} onDone={clearSuccess} />
     </>
+  )
+}
+
+/** Bugünkü vardiya; yoksa sıradaki vardiya. */
+function ShiftLine({ status }: { status: AttendanceStatus }) {
+  const { t } = useTranslation()
+  const shift = status.todayShift ?? status.nextShift
+  if (!shift) return null
+  const today = status.today.date
+  const day = shift.date === today ? t('shifts.today').toLocaleLowerCase() : shift.date === addDays(today, 1) ? t('shifts.tomorrow').toLocaleLowerCase() : formatDay(shift.date, { weekday: 'long' })
+  return (
+    <p className="mt-2 flex items-center gap-2 text-sm text-on-brand/60">
+      <span className="size-2 rounded-full" style={{ backgroundColor: shift.color }} />
+      {status.todayShift
+        ? t('shifts.todayShift', { start: hhmm(shift.startTime), end: hhmm(shift.endTime) })
+        : t('shifts.nextShiftHint', { day, start: hhmm(shift.startTime) })}
+    </p>
   )
 }
 

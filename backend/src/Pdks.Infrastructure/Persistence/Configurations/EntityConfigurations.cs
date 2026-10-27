@@ -98,6 +98,25 @@ internal class ShiftWeekConfiguration : IEntityTypeConfiguration<ShiftWeek>
     }
 }
 
+internal class StaffRequestConfiguration : IEntityTypeConfiguration<StaffRequest>
+{
+    public void Configure(EntityTypeBuilder<StaffRequest> b)
+    {
+        b.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.EventType).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.LeaveKind).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+        b.Property(x => x.ReviewNote).HasMaxLength(500);
+
+        b.HasIndex(x => new { x.CompanyId, x.BranchId, x.Status });
+        b.HasIndex(x => new { x.UserId, x.CreatedAt });
+
+        b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal class AttendanceEventConfiguration : IEntityTypeConfiguration<AttendanceEvent>
 {
     public void Configure(EntityTypeBuilder<AttendanceEvent> b)

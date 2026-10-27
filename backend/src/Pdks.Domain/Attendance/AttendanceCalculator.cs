@@ -205,4 +205,42 @@ public static class AttendanceRules
         AttendanceEventType.CheckOut when summary.State == AttendanceState.Out => "not_checked_in",
         _ => null
     };
+
+    /// <summary>
+    /// Elle düzeltme sonrası olay sırasının anlamlı olup olmadığını kontrol eder.
+    /// Hoşgörülü: çıkışsız yeni giriş (kapatılmamış oturum) kabul edilir; yönetici sonradan düzeltebilir.
+    /// Reddedilenler: girişsiz mola / çıkış, molasız mola bitişi, aynı anda iki kayıt.
+    /// </summary>
+    /// <returns>Hata kodu; geçerliyse null.</returns>
+    public static string? ValidateSequence(IEnumerable<EventPoint> events)
+    {
+        var state = AttendanceState.Out;
+        DateTimeOffset? previous = null;
+
+        foreach (var e in events.OrderBy(e => e.At))
+        {
+            if (previous == e.At) return "duplicate_time";
+            previous = e.At;
+
+            switch (e.Type)
+            {
+                case AttendanceEventType.CheckIn:
+                    state = AttendanceState.Working;
+                    break;
+                case AttendanceEventType.BreakStart:
+                    if (state != AttendanceState.Working) return "invalid_sequence";
+                    state = AttendanceState.OnBreak;
+                    break;
+                case AttendanceEventType.BreakEnd:
+                    if (state != AttendanceState.OnBreak) return "invalid_sequence";
+                    state = AttendanceState.Working;
+                    break;
+                case AttendanceEventType.CheckOut:
+                    if (state == AttendanceState.Out) return "invalid_sequence";
+                    state = AttendanceState.Out;
+                    break;
+            }
+        }
+        return null;
+    }
 }

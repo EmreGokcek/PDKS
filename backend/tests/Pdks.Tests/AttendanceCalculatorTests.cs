@@ -137,3 +137,30 @@ public class AttendanceRulesTests
         Assert.Equal("already_on_break", AttendanceRules.Validate(BreakStart, s));
     }
 }
+
+public class SequenceValidationTests
+{
+    private static DateTimeOffset At(int hour, int minute = 0) => new(2026, 10, 28, hour, minute, 0, TimeSpan.FromHours(3));
+    private static string? Check(params (AttendanceEventType Type, DateTimeOffset At)[] events) =>
+        AttendanceRules.ValidateSequence(events.Select(e => new EventPoint(e.Type, e.At)));
+
+    [Fact]
+    public void Normal_day_is_valid() =>
+        Assert.Null(Check((CheckIn, At(9)), (BreakStart, At(12)), (BreakEnd, At(13)), (CheckOut, At(18))));
+
+    [Fact]
+    public void Unclosed_session_followed_by_new_check_in_is_tolerated() =>
+        Assert.Null(Check((CheckIn, At(9)), (CheckIn, At(10)), (CheckOut, At(18))));
+
+    [Fact]
+    public void Check_out_without_check_in_is_rejected() =>
+        Assert.Equal("invalid_sequence", Check((CheckOut, At(18))));
+
+    [Fact]
+    public void Break_end_without_break_start_is_rejected() =>
+        Assert.Equal("invalid_sequence", Check((CheckIn, At(9)), (BreakEnd, At(13))));
+
+    [Fact]
+    public void Two_events_at_the_same_moment_are_rejected() =>
+        Assert.Equal("duplicate_time", Check((CheckIn, At(9)), (CheckOut, At(9))));
+}

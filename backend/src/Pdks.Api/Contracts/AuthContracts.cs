@@ -6,6 +6,10 @@ public record LoginRequest(
     [Required, EmailAddress] string Email,
     [Required] string Password);
 
+public record ChangePasswordRequest(
+    [Required] string CurrentPassword,
+    [Required] string NewPassword);
+
 public record UserDto(
     Guid Id,
     string FirstName,
@@ -16,6 +20,7 @@ public record UserDto(
     Guid CompanyId,
     string CompanyName,
     Guid? BranchId,
-    string? BranchName);
+    string? BranchName,
+    bool MustChangePassword);
 
 public record LoginResponse(string AccessToken, DateTimeOffset ExpiresAt, UserDto User);

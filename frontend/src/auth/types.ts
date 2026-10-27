@@ -11,6 +11,7 @@ export interface User {
   companyName: string
   branchId: string | null
   branchName: string | null
+  mustChangePassword: boolean
 }
 
 export interface LoginResponse {
@@ -19,16 +20,9 @@ export interface LoginResponse {
   user: User
 }
 
-export const roleLabels: Record<Role, string> = {
-  Admin: 'Yönetici',
-  Manager: 'Müdür',
-  Employee: 'Personel',
-  Kiosk: 'Giriş kiosku',
-}
-
 /** Girişten sonra her rolün açılacağı sayfa. */
 export const roleHome: Record<Role, string> = {
-  Admin: '/admin',
+  Admin: '/admin/personel',
   Manager: '/mudur',
   Employee: '/personel',
   Kiosk: '/kiosk',

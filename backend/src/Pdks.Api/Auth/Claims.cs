@@ -9,6 +9,8 @@ public static class PdksClaims
     public const string Role = "role";
     public const string CompanyId = "company_id";
     public const string BranchId = "branch_id";
+    /// <summary>Varsa kullanıcı şifresini değiştirmeden başka işlem yapamaz.</summary>
+    public const string MustChangePassword = "pwd_change";
 }
 
 /// <summary>[Authorize(Roles = ...)] için hazır rol grupları.</summary>

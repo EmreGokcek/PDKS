@@ -17,7 +17,11 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore
-      - run: dotnet build --no-restore -c Release -warnaserror:false
+      - run: dotnet build --no-restore -c Release
+      - name: Check vulnerable packages
+        run: |
+          dotnet list package --vulnerable --include-transitive | tee vuln.txt
+          if grep -q "has the following vulnerable packages" vuln.txt; then exit 1; fi
 
   frontend:
     runs-on: ubuntu-latest

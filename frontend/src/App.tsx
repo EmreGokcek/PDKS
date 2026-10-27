@@ -1,13 +1,17 @@
 import { Navigate, Route, Routes } from 'react-router'
 import { useAuth } from './auth/AuthContext'
-import { FullPageMessage, RequireRole } from './auth/RequireRole'
+import { FullPageLoader, RequireRole } from './auth/RequireRole'
 import { roleHome } from './auth/types'
+import { AppShell } from './components/AppShell'
+import { ChangePasswordPage } from './features/account/ChangePasswordPage'
+import { WorkRulesPage } from './features/settings/WorkRulesPage'
+import { UsersPage } from './features/users/UsersPage'
 import { LoginPage } from './pages/LoginPage'
-import { AdminPage, EmployeePage, KioskPage, ManagerPage } from './pages/RolePages'
+import { EmployeeHomePage, KioskPage, ManagerHomePage } from './pages/RolePages'
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
-  if (isLoading) return <FullPageMessage text="Yükleniyor…" />
+  if (isLoading) return <FullPageLoader />
   return <Navigate to={user ? roleHome[user.role] : '/giris'} replace />
 }
 
@@ -16,9 +20,24 @@ export default function App() {
     <Routes>
       <Route path="/" element={<HomeRedirect />} />
       <Route path="/giris" element={<LoginPage />} />
-      <Route path="/admin" element={<RequireRole roles={['Admin']}><AdminPage /></RequireRole>} />
-      <Route path="/mudur" element={<RequireRole roles={['Admin', 'Manager']}><ManagerPage /></RequireRole>} />
-      <Route path="/personel" element={<RequireRole roles={['Employee', 'Manager']}><EmployeePage /></RequireRole>} />
+      <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
+
+      <Route path="/admin" element={<RequireRole roles={['Admin']}><AppShell /></RequireRole>}>
+        <Route index element={<Navigate to="personel" replace />} />
+        <Route path="personel" element={<UsersPage />} />
+        <Route path="kurallar" element={<WorkRulesPage />} />
+      </Route>
+
+      <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
+        <Route index element={<ManagerHomePage />} />
+        <Route path="ekip" element={<UsersPage readOnly />} />
+        <Route path="kurallar" element={<WorkRulesPage readOnly />} />
+      </Route>
+
+      <Route path="/personel" element={<RequireRole roles={['Employee']}><AppShell /></RequireRole>}>
+        <Route index element={<EmployeeHomePage />} />
+      </Route>
+
       <Route path="/kiosk" element={<RequireRole roles={['Kiosk']}><KioskPage /></RequireRole>} />
       <Route path="*" element={<HomeRedirect />} />
     </Routes>

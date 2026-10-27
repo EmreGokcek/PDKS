@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Pdks.Domain.Entities;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Persistence.Seed;
+using Pdks.Infrastructure.Services;
 
 namespace Pdks.Infrastructure;
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
         services.AddScoped<DbSeeder>();
+        services.AddScoped<AuditLogger>();
 
         return services;
     }

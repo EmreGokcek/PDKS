@@ -8,7 +8,7 @@ Personelin işe giriş, çıkış ve molalarını QR kod okutarak kaydettiği; y
 |---|---|
 | API | ASP.NET Core (.NET 10), Entity Framework Core, JWT |
 | Veritabanı | PostgreSQL 17 |
-| Web | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router |
+| Web | React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router, Motion, i18next |
 
 ## Proje yapısı
 
@@ -61,6 +61,12 @@ Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçil
 | Personel | personel@pdks.local | /personel |
 | Kiosk | kiosk@pdks.local | /kiosk |
 
+## Veritabanı değişiklikleri (migration)
+
+Bir entity değiştiğinde migration'ı elle üretmek gerekmez: commit mesajına `[migration:DegisiklikAdi]` eklenip
+`main` dışındaki bir dala gönderildiğinde GitHub Actions migration'ı üretir ve aynı dala commit'ler.
+API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygular.
+
 ## Mimari notlar
 
 - **Çok firmalı yapı:** Her tablo `CompanyId` taşır. `PdksDbContext` içindeki global filtre sayesinde bir kullanıcı yalnızca kendi firmasının verisini görebilir.
@@ -71,7 +77,7 @@ Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçil
 ## Yol haritası
 
 - [x] Adım 1 — Proje iskeleti, veri modeli, giriş ve roller
-- [ ] Adım 2 — Admin: personel yönetimi, çalışma kuralları
+- [x] Adım 2 — Admin: personel yönetimi, çalışma kuralları, tema ve dil seçenekleri
 - [ ] Adım 3 — Kiosk dinamik QR, personelin QR okutması
 - [ ] Adım 4 — Personel ekranı: anlık durum, kalan mola, toplam süreler
 - [ ] Adım 5 — Müdür: vardiya planlama, canlı pano

@@ -1,32 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNow } from '../hooks/useNow'
+import { locale } from '../i18n'
 
-const timeFormat = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' })
-const secondFormat = new Intl.DateTimeFormat('tr-TR', { second: '2-digit' })
-const dateFormat = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' })
-
-export function useNow(intervalMs = 1000) {
-  const [now, setNow] = useState(() => new Date())
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervalMs)
-    return () => clearInterval(id)
-  }, [intervalMs])
-  return now
-}
-
-/** Giriş ekranındaki büyük saat. */
+/** Giriş ekranı ve kioskta görünen büyük saat. */
 export function LiveClock({ className = '' }: { className?: string }) {
   const now = useNow()
+  useTranslation() // dil değişince yeniden çizilsin
+  const loc = locale()
+
+  const formats = useMemo(
+    () => ({
+      time: new Intl.DateTimeFormat(loc, { hour: '2-digit', minute: '2-digit', hour12: false }),
+      date: new Intl.DateTimeFormat(loc, { weekday: 'long', day: 'numeric', month: 'long' }),
+    }),
+    [loc],
+  )
+
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+
   return (
     <div className={className}>
       <p className="tabular flex items-baseline font-semibold leading-none tracking-tight">
         <time dateTime={now.toISOString()} className="text-[clamp(4rem,11vw,9rem)]">
-          {timeFormat.format(now)}
+          {formats.time.format(now)}
         </time>
-        <span className="ml-3 text-[clamp(1.25rem,3vw,2.5rem)] opacity-50">
-          {secondFormat.format(now).padStart(2, '0')}
-        </span>
+        <span className="ml-3 text-[clamp(1.25rem,3vw,2.5rem)] opacity-45">{seconds}</span>
       </p>
-      <p className="mt-4 text-lg first-letter:uppercase opacity-80">{dateFormat.format(now)}</p>
+      <p className="mt-4 text-lg opacity-80 first-letter:uppercase">{formats.date.format(now)}</p>
     </div>
   )
 }

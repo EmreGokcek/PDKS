@@ -289,7 +289,8 @@ namespace Pdks.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ShiftTemplateId");
 
-                    b.HasIndex("UserId", "Date");
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
 
                     b.HasIndex("CompanyId", "BranchId", "Date");
 

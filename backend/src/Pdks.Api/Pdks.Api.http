@@ -1,0 +1,20 @@
+### VS Code "REST Client" eklentisi veya Visual Studio ile istek göndermek için.
+@api = http://localhost:5080
+
+### Sağlık kontrolü
+GET {{api}}/api/ping
+
+### Admin girişi
+# @name login
+POST {{api}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "admin@pdks.local", "password": "Pdks123!" }
+
+### Giriş yapan kullanıcı
+GET {{api}}/api/auth/me
+Authorization: Bearer {{login.response.body.accessToken}}
+
+### Sadece admin
+GET {{api}}/api/ping/admin
+Authorization: Bearer {{login.response.body.accessToken}}

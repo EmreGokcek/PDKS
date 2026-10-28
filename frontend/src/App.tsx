@@ -28,6 +28,7 @@ const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 
 const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
 const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
 const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage'), 'ProfileSetupPage')
+const LeavePage = named(() => import('./features/leave/LeavePage'), 'LeavePage')
 const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
@@ -74,6 +75,7 @@ export default function App() {
             <Route path="taleplerim" element={<Gate perm="attendance.self"><MyRequestsPage /></Gate>} />
             <Route path="talepler" element={<Gate perm="requests.review"><RequestsPage /></Gate>} />
             <Route path="vardiyalar" element={<Gate perm="shifts.plan"><ShiftPlannerPage /></Gate>} />
+            <Route path="izinler" element={<Gate perm="requests.review"><LeavePage /></Gate>} />
             <Route path="sureler" element={<Gate perm="reports.view"><TeamReportPage /></Gate>} />
             <Route path="puantaj" element={<Gate perm="timesheet.view"><TimesheetPage /></Gate>} />
             <Route path="personel" element={<Gate perm="staff.view"><UsersPage /></Gate>} />

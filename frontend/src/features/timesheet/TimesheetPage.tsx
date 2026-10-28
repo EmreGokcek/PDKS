@@ -18,17 +18,19 @@ const codeStyle: Partial<Record<TimesheetCode, string>> = {
   SickLeave: 'bg-[#fbe3e7] text-[#b0304a] dark:bg-[#43202a] dark:text-[#f19aab]',
   ExcusedLeave: 'bg-[#fbf1dc] text-[#8a5e10] dark:bg-[#3d321a] dark:text-[#e7c27a]',
   Absent: 'bg-overrun-soft text-overrun',
+  PublicHoliday: 'bg-[#ede7f6] text-[#5b3c99] dark:bg-[#2e2445] dark:text-[#c3b0f0]',
 }
 
-const legendCodes: Exclude<TimesheetCode, 'None'>[] = ['Work', 'WeeklyOff', 'AnnualLeave', 'SickLeave', 'ExcusedLeave', 'Absent', 'Off', 'Planned']
+const legendCodes: Exclude<TimesheetCode, 'None'>[] = ['Work', 'WeeklyOff', 'AnnualLeave', 'SickLeave', 'ExcusedLeave', 'PublicHoliday', 'Absent', 'Off', 'Planned']
 
-type TotalKey = 'workedDays' | 'workedHours' | 'plannedHours' | 'overtimeHours' | 'late' | 'early' | 'absent' | 'leave' | 'overrun'
+type TotalKey = 'workedDays' | 'workedHours' | 'plannedHours' | 'overtimeHours' | 'holidayWork' | 'late' | 'early' | 'absent' | 'leave' | 'overrun'
 
 const totalCols: { key: TotalKey; value: (x: TimesheetTotals) => number; hours?: boolean; tone?: string }[] = [
   { key: 'workedDays', value: (x) => x.workedDays },
   { key: 'workedHours', value: (x) => x.workedHours, hours: true },
   { key: 'plannedHours', value: (x) => x.plannedHours, hours: true },
   { key: 'overtimeHours', value: (x) => x.overtimeHours, hours: true, tone: 'text-pause' },
+  { key: 'holidayWork', value: (x) => x.holidayWorkHours, hours: true, tone: 'text-[#5b3c99] dark:text-[#c3b0f0]' },
   { key: 'late', value: (x) => x.lateCount, tone: 'text-overrun' },
   { key: 'early', value: (x) => x.earlyLeaveCount, tone: 'text-pause' },
   { key: 'absent', value: (x) => x.absentDays, tone: 'text-overrun' },

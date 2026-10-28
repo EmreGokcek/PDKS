@@ -71,7 +71,8 @@ export function CongratulateButton({ celebration: c }: { celebration: Celebratio
   )
 }
 
-export function celebrationText(c: Celebration, t: ReturnType<typeof useTranslation>['t']) {
+/** Kutlama cümlesi. (Çeviri anahtarları çok olduğu için t gevşek tiplenir.) */
+export function celebrationText(c: Celebration, t: (key: string, options?: Record<string, unknown>) => string) {
   if (c.isMe)
     return c.kind === 'Birthday' ? t('announcements.celebrations.meBirthday') : t('announcements.celebrations.meAnniversary', { years: c.years })
   return c.kind === 'Birthday'
@@ -94,7 +95,7 @@ export function TodayCelebration({ celebration: c }: { celebration: Celebration 
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate font-semibold">{c.isMe ? t('announcements.celebrations.you') : c.name}</p>
-        <p className="text-sm text-ink-soft">{celebrationText(c, t)}</p>
+        <p className="text-sm text-ink-soft">{celebrationText(c, t as unknown as (key: string, options?: Record<string, unknown>) => string)}</p>
         {c.congratulationCount > 0 && (
           <p className="tabular mt-0.5 text-xs text-ink-soft">{t('announcements.celebrations.count', { count: c.congratulationCount })}</p>
         )}

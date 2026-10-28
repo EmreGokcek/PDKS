@@ -24,7 +24,7 @@ interface AuditEntry {
   reason: string | null
 }
 
-const areas = ['all', 'user', 'attendance', 'shift', 'request', 'announcement', 'work_rule'] as const
+const areas = ['all', 'user', 'attendance', 'shift', 'request', 'announcement', 'leave', 'work_rule'] as const
 type Area = (typeof areas)[number]
 
 /** Denetim kaydı: kim, neyi, ne zaman, neden değiştirdi. Yalnızca okunur. */

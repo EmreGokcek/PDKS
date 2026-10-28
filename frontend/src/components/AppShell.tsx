@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -51,6 +51,7 @@ function useNavItems(user: User): NavItem[] {
     { show: has('requests.review'), to: at('talepler'), section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
     { show: true, to: at('duyurular'), section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
     { show: has('shifts.plan'), to: at('vardiyalar'), section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+    { show: has('requests.review'), to: at('izinler'), section: 'planning', label: t('nav.leave'), icon: <CalendarHeart className={icon} /> },
     { show: has('reports.view'), to: at('sureler'), section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
     { show: has('timesheet.view'), to: at('puantaj'), section: 'reports', tab: !has('shifts.plan'), label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
     { show: has('staff.view'), to: at('personel'), section: 'management', label: has('staff.manage') ? t('nav.staff') : t('nav.team'), icon: <Users className={icon} /> },

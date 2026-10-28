@@ -80,6 +80,36 @@ Bir entity değiştiğinde migration'ı elle üretmek gerekmez: commit mesajına
 `main` dışındaki bir dala gönderildiğinde GitHub Actions migration'ı üretir ve aynı dala commit'ler.
 API, geliştirme ortamında açılırken bekleyen migration'ları otomatik uygular.
 
+## Testler
+
+```bash
+cd backend && dotnet test          # birim testleri + API entegrasyon testleri (Docker gerekir)
+cd frontend && npm run e2e         # uçtan uca testler (API ve web çalışırken)
+```
+
+- **Entegrasyon testleri** (`backend/tests/Pdks.IntegrationTests`) her çalıştırmada Docker'da boş bir PostgreSQL açar, API'yi gerçek veritabanıyla başlatır: oturum, hesap kilidi, KVKK onayı, QR okutma, duyuru akışları.
+- **Uçtan uca testler** (`frontend/e2e`) Playwright ile gerçek tarayıcıda giriş, oturumun sürmesi, duyuru ve telefon görünümünü dener.
+- GitHub'da her PR'da üçü de otomatik çalışır.
+
+## Canlı ortam ayarları
+
+Gizli bilgiler depoda tutulmaz; sunucuda **ortam değişkeni** olarak verilir (iki alt çizgi `__` bölüm ayırıcıdır):
+
+| Değişken | Açıklama |
+| --- | --- |
+| `ASPNETCORE_ENVIRONMENT` | `Production` |
+| `ConnectionStrings__Default` | PostgreSQL bağlantısı (şifre dahil) |
+| `Jwt__SigningKey` | En az 32 karakterlik rastgele anahtar. Geliştirme anahtarıyla üretimde uygulama açılmaz. Üretmek için: `openssl rand -base64 48` |
+| `App__PublicUrl` | Uygulamanın genel adresi, ör. `https://pdks.firma.com`. Kiosk QR bağlantısı bununla üretilir. |
+| `Cors__Origins__0` | Web arayüzü API'den farklı adresteyse o adres |
+| `Database__MigrateOnStartup` | `true` ise açılışta veritabanı güncellenir |
+| `ReverseProxy__TrustForwardedHeaders` | Uygulama bir ters vekil (Nginx, barındırma platformu) arkasındaysa `true` |
+| `Seed__Enabled` | Üretimde `false` (demo hesaplar oluşturulmasın). Canlı demo için `true` + `Seed__DefaultPassword` |
+
+Oturum ve giriş güvenliği ayarları (`Session`, `RateLimits`) ve KVKK aydınlatma metni sürümü (`Privacy__NoticeVersion`) `appsettings.json` içinde varsayılanlarıyla durur.
+
+> **KVKK aydınlatma metni** (`frontend/src/features/privacy/notice.ts`) bir şablondur; canlı kullanımdan önce hukuk danışmanına gözden geçirtilmelidir. Metin değişince sürüm numarası hem orada hem `Privacy__NoticeVersion` ayarında artırılır; herkes bir sonraki girişte yeniden onaylar.
+
 ## Mimari notlar
 
 - **Çok firmalı yapı:** Her tablo `CompanyId` taşır. `PdksDbContext` içindeki global filtre sayesinde bir kullanıcı yalnızca kendi firmasının verisini görebilir.
@@ -103,5 +133,6 @@ Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
 - [x] Adım 7 — Profilim (iletişim, kişisel, acil durum, iş bilgileri; KVKK açık rızası), uygulama içi bildirimler
 - [x] Adım 8 — Aylık puantaj cetveli, Excel (Puantaj + Detay) ve A4 yatay PDF / baskı
 - [x] Ek — Duyurular, doğum günü ve iş yıl dönümü kutlamaları
+- [x] Canlıya çıkış öncesi: giriş deneme sınırı ve hesap kilidi, "beni hatırla" ve sessiz oturum yenileme, gizli ayarlar, KVKK aydınlatma onayı, entegrasyon ve uçtan uca testler
 - [ ] Adım 9 — PWA (telefona uygulama gibi kurulum), anlık bildirimler, konum doğrulaması
 - [ ] Adım 10 — Sunucuya yükleme

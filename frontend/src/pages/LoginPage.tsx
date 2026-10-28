@@ -3,7 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
-import { roleHome } from '../auth/types'
+import { roleHome, type User } from '../auth/types'
 import { DayProgress, Greeting, LiveClock } from '../components/LiveClock'
 import { QuoteRotator } from '../components/QuoteRotator'
 import { LanguageMenu, ThemeSwitch } from '../components/PreferencesControls'
@@ -20,6 +20,13 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
+/** Girişten sonra gidilecek yer: önce şifre belirleme, sonra aydınlatma metni, sonra istenen sayfa. */
+function afterLogin(user: User, from?: string) {
+  if (user.mustChangePassword) return '/sifre-degistir'
+  if (!user.privacyNoticeAccepted) return '/aydinlatma'
+  return from ?? roleHome[user.role]
+}
+
 const ease = [0.22, 1, 0.36, 1] as const
 
 export function LoginPage() {
@@ -34,7 +41,7 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [shake, setShake] = useState(0)
 
-  if (user) return <Navigate to={user.mustChangePassword ? '/sifre-degistir' : roleHome[user.role]} replace />
+  if (user) return <Navigate to={afterLogin(user)} replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -43,7 +50,7 @@ export function LoginPage() {
     try {
       const loggedIn = await login(email, password, rememberMe)
       const from = (location.state as { from?: string } | null)?.from
-      navigate(loggedIn.mustChangePassword ? '/sifre-degistir' : (from ?? roleHome[loggedIn.role]), { replace: true })
+      navigate(afterLogin(loggedIn, from), { replace: true })
     } catch (err) {
       setError(errorMessage(err, t))
       setShake((s) => s + 1)

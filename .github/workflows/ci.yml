@@ -18,7 +18,15 @@ jobs:
           dotnet-version: 10.0.x
       - run: dotnet restore
       - run: dotnet build --no-restore -c Release
-      - run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
+      # Birim testleri + gerçek PostgreSQL (Docker) ile API entegrasyon testleri
+      - run: dotnet test --no-build -c Release --logger "console;verbosity=normal" --logger trx --results-directory TestResults
+      - name: Test summary
+        if: always()
+        run: |
+          for f in $(find TestResults -name '*.trx'); do
+            counters=$(grep -o '<Counters [^>]*>' "$f" | sed -E 's/.*total="([0-9]+)".*passed="([0-9]+)".*failed="([0-9]+)".*/toplam=\1 gecen=\2 kalan=\3/')
+            echo "::notice title=Testler::$(grep -o 'name="[^"]*Tests[^"]*\.dll' "$f" | head -n1 | sed 's/name="//') $counters"
+          done
       - name: Check vulnerable packages
         run: |
           dotnet list package --vulnerable --include-transitive | tee vuln.txt
@@ -39,3 +47,57 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+
+  # Uçtan uca: gerçek API + PostgreSQL + web arayüzü, Playwright ile tarayıcıda
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: pdks
+          POSTGRES_USER: pdks
+          POSTGRES_PASSWORD: pdks_dev_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pdks -d pdks"
+          --health-interval 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Start API
+        working-directory: backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          RateLimits__LoginPerMinute: "200"
+        run: |
+          dotnet run --project src/Pdks.Api --launch-profile http > ../api.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://localhost:5080/api/ping > /dev/null && break; sleep 2; done
+          curl -sf http://localhost:5080/api/ping
+      - name: Start web
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          nohup npm run dev -- --port 5173 > ../web.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:5173 > /dev/null && break; sleep 1; done
+      - name: Playwright
+        working-directory: frontend
+        env:
+          CI: "true"
+        run: npx playwright test
+      - name: Logs on failure
+        if: failure()
+        run: |
+          tail -n 80 api.log
+          grep -h -A3 "Error:" frontend/test-results/*/error-context.md 2>/dev/null | head -n 40 || true
+          for f in frontend/test-results/*/; do echo "::error title=E2E::$(basename "$f")"; done

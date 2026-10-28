@@ -5,15 +5,14 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Güvenlik
 
-- [ ] Girişte deneme sınırı (rate limiting): aynı IP / e-posta için kısa sürede çok sayıda hatalı deneme engellenmeli.
-- [ ] Yenileme token'ı (refresh token): Personel oturumu 8 saatte düşüyor. "Beni hatırla" ve sessiz yenileme eklenmeli.
-- [ ] Üretim ortamı gizli bilgileri: JWT anahtarı, veritabanı şifresi ortam değişkenlerinden okunmalı; geliştirme anahtarı kullanılmamalı.
+- [ ] Hesap kilidi mesajı hesabın var olduğunu belli ediyor (kilitli hesaplar için); gerekirse genel bir mesaja çevrilebilir.
+- [ ] Açık oturumlar listesi: kişinin hangi cihazlarda oturumu açık, uzaktan kapatabilme.
+- [ ] Şifremi unuttum (e-posta ile sıfırlama bağlantısı).
 - [ ] Cihaz eşleme: Personel hesabı tek telefona bağlanmalı, yeni cihaz yönetici onayıyla eklenmeli.
 - [ ] Konum doğrulama: QR okutma anında işyeri çevresinde olup olmadığının kontrolü (KVKK açık rızasıyla).
 
 ## Giriş-çıkış (QR)
 
-- [ ] Kiosk QR bağlantısındaki adres, kioskun açıldığı adresten alınıyor. Canlıda sabit bir genel adres (ör. `APP_PUBLIC_URL`) ayarı olmalı.
 - [ ] İzinli günde giriş okutulursa uyarı gösterilmeli ("Bugün yıllık izindesin, yine de giriş yapılsın mı?").
 - [ ] Kiosk ekranının internet kesintisinde ne yapacağı: personel tarafında çevrimdışı okutma kuyruğu.
 
@@ -33,7 +32,6 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 ## Talepler ve düzeltmeler
 
 - [ ] Talep onaylanınca / reddedilince personele bildirim (Adım 8: bildirimler).
-- [ ] Düzeltme penceresinde tarih / saat tarayıcının saat dilimiyle gösteriliyor; şube saat dilimiyle aynı varsayılıyor. Farklı saat diliminden bakan yönetici için şube saatine çevrilmeli.
 - [ ] İzin bakiyesi (kalan yıllık izin günü) ve izin talebinde bakiye kontrolü.
 - [ ] Onaylanan izin yayınlanmış bir haftaya düşerse plana yazılıyor; müdüre "plan değişti" bilgisi gösterilebilir.
 
@@ -70,12 +68,13 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Kalite
 
-- [ ] API entegrasyon testleri (gerçek PostgreSQL ile, Testcontainers).
-- [ ] Uçtan uca testler (Playwright): giriş, personel ekleme, vardiya planlama, QR okutma akışları.
+- [ ] Uçtan uca testleri genişlet: personel ekleme, vardiya planlama ve yayınlama, kamerasız QR okutma (bağlantıyla).
 - [ ] Erişilebilirlik turu: ekran okuyucu ile planlama tablosu, renk kontrastı kontrolleri.
 - [ ] Sunucu hata mesajlarının (title) da çok dilli olması; şu an arayüz "code" alanını çeviriyor, başlık Türkçe yedek.
 
 ## Tamamlananlar
+
+- [x] Giriş deneme sınırı ve hesap kilidi; yenileme token'ı ve "beni hatırla"; üretim gizli ayarları; `App__PublicUrl`; düzeltme ekranında şube saat dilimi; KVKK aydınlatma metni ve onayı; API entegrasyon testleri; Playwright uçtan uca testleri
 
 - [x] Duyurular (sabitleme, bitiş tarihi, kioskta gösterme, yeni duyuruda bildirim), doğum günü ve iş yıl dönümü kutlamaları, "Kutla" düğmesi
 

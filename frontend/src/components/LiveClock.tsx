@@ -1,40 +1,10 @@
-import { AnimatePresence, motion } from 'motion/react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNow } from '../hooks/useNow'
 import { locale } from '../i18n'
+import { SplitFlap } from './SplitFlap'
 
-/** Değişen rakam yukarı kayarak çıkar, yenisi aşağıdan gelir. */
-function RollingDigit({ value }: { value: string }) {
-  return (
-    <span className="relative inline-block overflow-hidden align-baseline" style={{ width: '0.62em', height: '1em' }}>
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.span
-          key={value}
-          className="absolute inset-0 text-center"
-          initial={{ y: '70%', opacity: 0, filter: 'blur(4px)' }}
-          animate={{ y: '0%', opacity: 1, filter: 'blur(0px)' }}
-          exit={{ y: '-70%', opacity: 0, filter: 'blur(4px)' }}
-          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-        >
-          {value}
-        </motion.span>
-      </AnimatePresence>
-    </span>
-  )
-}
-
-function Rolling({ text }: { text: string }) {
-  return (
-    <>
-      {[...text].map((ch, i) => (
-        <RollingDigit key={i} value={ch} />
-      ))}
-    </>
-  )
-}
-
-/** Giriş ekranı ve kioskta görünen büyük saat: kayan rakamlar, nefes alan iki nokta. */
+/** Giriş ekranı ve kioskta görünen pano saati: rakamlar kanatçık kanatçık döner. */
 export function LiveClock({ className = '', align = 'start', size = 'lg' }: { className?: string; align?: 'start' | 'center'; size?: 'lg' | 'md' }) {
   const now = useNow()
   useTranslation() // dil değişince yeniden çizilsin
@@ -50,24 +20,21 @@ export function LiveClock({ className = '', align = 'start', size = 'lg' }: { cl
       <time
         dateTime={now.toISOString()}
         aria-label={`${hh}:${mm}`}
-        className={`tabular flex flex-nowrap items-baseline leading-none font-semibold tracking-tight whitespace-nowrap ${align === 'center' ? 'justify-center' : ''}`}
+        className={`tabular flex flex-nowrap items-end whitespace-nowrap ${align === 'center' ? 'justify-center' : ''}`}
       >
-        <span className={size === 'lg' ? 'text-[clamp(4rem,11vw,9rem)]' : 'text-[clamp(3.5rem,7vw,6.5rem)]'}>
-          <Rolling text={hh} />
-          <motion.span
-            className="inline-block px-[0.02em] align-baseline"
-            animate={{ opacity: [1, 0.35, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          >
-            :
-          </motion.span>
-          <Rolling text={mm} />
+        <span className={`flex items-center ${size === 'lg' ? 'text-[clamp(4rem,10vw,8.5rem)]' : 'text-[clamp(3.25rem,6.5vw,6rem)]'}`}>
+          <SplitFlap text={hh} />
+          <span aria-hidden="true" className="clock-colon mx-[0.08em] flex flex-col gap-[0.16em]">
+            <span className="size-[0.1em] bg-accent" />
+            <span className="size-[0.1em] bg-accent" />
+          </span>
+          <SplitFlap text={mm} />
         </span>
-        <span className={`ml-3 opacity-45 ${size === 'lg' ? 'text-[clamp(1.25rem,3vw,2.5rem)]' : 'text-[clamp(1.1rem,2vw,1.75rem)]'}`}>
-          <Rolling text={ss} />
+        <span className={`ml-[0.4em] ${size === 'lg' ? 'text-[clamp(1.4rem,3vw,2.6rem)]' : 'text-[clamp(1.2rem,2vw,1.8rem)]'}`}>
+          <SplitFlap text={ss} className="text-accent" />
         </span>
       </time>
-      <p className="mt-4 text-lg opacity-80 first-letter:uppercase">{dateFormat.format(now)}</p>
+      <p className={`board-label mt-5 text-lg text-on-brand/70 ${align === 'center' ? 'text-center' : ''}`}>{dateFormat.format(now)}</p>
     </div>
   )
 }
@@ -77,31 +44,30 @@ export function Greeting({ className = '' }: { className?: string }) {
   const { t } = useTranslation()
   const h = useNow(60_000).getHours()
   const key = h >= 5 && h < 11 ? 'morning' : h >= 11 && h < 17 ? 'day' : h >= 17 && h < 22 ? 'evening' : 'night'
-  return (
-    <AnimatePresence mode="wait">
-      <motion.p key={key} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={className}>
-        {t(`login.greetings.${key}`)}
-      </motion.p>
-    </AnimatePresence>
-  )
+  return <p className={className}>{t(`login.greetings.${key}`)}</p>
 }
 
-/** Günün ne kadarının geçtiğini gösteren ince çubuk. */
+/** Günü 24 saatlik bir şerit olarak gösterir: geçen saatler dolu, içinde bulunulan saat yarım. */
 export function DayProgress({ className = '' }: { className?: string }) {
   const { t } = useTranslation()
   const now = useNow(30_000)
-  const percent = Math.floor(((now.getHours() * 60 + now.getMinutes()) / 1440) * 100)
+  const hour = now.getHours()
+  const percent = Math.floor(((hour * 60 + now.getMinutes()) / 1440) * 100)
   return (
     <div className={className}>
-      <div className="h-1 overflow-hidden rounded-full bg-on-brand/15">
-        <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-signal/60 to-signal"
-          initial={{ width: 0 }}
-          animate={{ width: `${percent}%` }}
-          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-        />
+      <div className="flex gap-[3px]" aria-hidden="true">
+        {Array.from({ length: 24 }, (_, i) => (
+          <span
+            key={i}
+            className={`h-3 flex-1 ${i < hour ? 'bg-accent' : i === hour ? 'bg-accent/45' : 'bg-on-brand/12'}`}
+          />
+        ))}
       </div>
-      <p className="tabular mt-2 text-sm text-on-brand/55">{t('login.dayProgress', { percent })}</p>
+      <div className="board-label mt-2 flex justify-between text-xs text-on-brand/50">
+        <span>00</span>
+        <span className="tabular text-on-brand/70">{t('login.dayProgress', { percent })}</span>
+        <span>24</span>
+      </div>
     </div>
   )
 }

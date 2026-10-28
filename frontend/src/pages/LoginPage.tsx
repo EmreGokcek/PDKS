@@ -20,8 +20,6 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
-const ease = [0.22, 1, 0.36, 1] as const
-
 export function LoginPage() {
   const { t } = useTranslation()
   const { user, login } = useAuth()
@@ -53,49 +51,25 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.15fr_1fr]">
-      <section className="relative flex flex-col justify-between gap-8 overflow-hidden bg-brand px-6 py-8 text-on-brand sm:px-12 sm:py-12 lg:min-h-[560px] lg:gap-10">
-        {/* Arka planda yavaşça dolaşan iki ışık halesi */}
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-40 -left-40 size-[34rem] rounded-full bg-signal/20 blur-3xl"
-          animate={{ x: [0, 120, 40, 0], y: [0, 80, 160, 0] }}
-          transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-48 -bottom-48 size-[30rem] rounded-full bg-[#2f80ed]/15 blur-3xl"
-          animate={{ x: [0, -100, -20, 0], y: [0, -120, -40, 0] }}
-          transition={{ duration: 34, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        {/* Kart okutma çizgisini anımsatan ince tarama ışığı */}
-        <motion.div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-signal/60 to-transparent"
-          initial={{ top: '0%' }}
-          animate={{ top: ['8%', '92%', '8%'] }}
-          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-        />
+      <section className="dark relative flex flex-col justify-between gap-8 overflow-hidden bg-brand px-6 py-8 text-on-brand sm:px-12 sm:py-12 lg:min-h-[560px] lg:gap-10">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <img src="/favicon.svg" alt="" className="size-9" />
+            <span className="font-display text-2xl font-semibold tracking-wide">PDKS</span>
+          </div>
+          <span className="board-label hidden text-xs text-on-brand/45 sm:block">{t('login.boardTitle')}</span>
+        </div>
 
-        <motion.div
-          className="relative flex items-center gap-3"
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease }}
-        >
-          <img src="/favicon.svg" alt="" className="size-9 rounded-xl ring-1 ring-on-brand/20" />
-          <span className="text-lg font-semibold">PDKS</span>
-        </motion.div>
-
-        <motion.div className="relative" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease }}>
-          <Greeting className="mb-3 text-xl font-medium text-signal" />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}>
+          <Greeting className="board-label mb-4 text-xl text-accent" />
           <LiveClock />
-          <DayProgress className="mt-8 max-w-sm max-lg:hidden" />
+          <DayProgress className="mt-10 max-w-md max-lg:hidden" />
         </motion.div>
 
-        <motion.div className="relative max-w-lg max-lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}>
+        <div className="max-w-xl max-lg:hidden">
           <QuoteRotator />
-          <p className="mt-8 text-sm text-on-brand/45">{t('login.tagline')}</p>
-        </motion.div>
+          <p className="mt-6 text-sm text-on-brand/45">{t('login.tagline')}</p>
+        </div>
       </section>
 
       <section className="relative flex items-center justify-center px-4 py-14 sm:px-12">
@@ -104,13 +78,9 @@ export function LoginPage() {
           <LanguageMenu />
         </div>
 
-        <motion.div
-          className="w-full max-w-sm"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, delay: 0.15, ease }}
-        >
-          <h1 className="text-2xl font-semibold tracking-tight">{t('login.title')}</h1>
+        <motion.div className="w-full max-w-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3, delay: 0.1 }}>
+          <span aria-hidden="true" className="mb-4 block h-1 w-10 bg-accent" />
+          <h1 className="font-display text-[2.1rem] leading-none font-semibold">{t('login.title')}</h1>
           <p className="mt-1.5 text-ink-soft">{t('login.subtitle')}</p>
 
           <motion.form
@@ -144,7 +114,7 @@ export function LoginPage() {
                 role="alert"
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
-                className="rounded-xl bg-overrun-soft px-3.5 py-2.5 text-sm text-overrun"
+                className="border-l-[3px] border-overrun bg-overrun-soft px-3.5 py-2.5 text-sm text-overrun"
               >
                 {error}
               </motion.p>
@@ -168,7 +138,7 @@ export function LoginPage() {
                       setPassword(DEMO_PASSWORD)
                       setError(null)
                     }}
-                    className={`rounded-full border px-3 py-1 text-sm transition-colors ${email === acc.email ? 'border-signal bg-signal-soft text-signal' : 'border-line bg-panel hover:border-ink-soft'}`}
+                    className={`rounded-sm border px-3 py-1 text-sm font-medium transition-colors ${email === acc.email ? 'border-ink bg-ink text-panel' : 'border-line bg-panel hover:border-ink-soft'}`}
                   >
                     {t(`roles.${acc.role}`)}
                   </button>

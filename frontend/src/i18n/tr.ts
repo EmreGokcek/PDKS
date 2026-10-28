@@ -47,6 +47,7 @@ const tr = {
     menu: 'Menü',
   },
   login: {
+    boardTitle: 'Personel giriş-çıkış panosu',
     greetings: { morning: 'Günaydın', day: 'İyi günler', evening: 'İyi akşamlar', night: 'İyi geceler' },
     dayProgress: 'Gün %{{percent}} tamamlandı',
     tagline: 'Giriş, çıkış ve molalar tek okutmayla kayıt altında.',
@@ -171,6 +172,8 @@ const tr = {
     hello: 'Merhaba, {{name}}',
   },
   kiosk: {
+    columns: { time: 'Saat', person: 'Personel', status: 'Durum' },
+    lastScan: 'Son okutma',
     qrSoon: 'QR kod burada olacak',
     signOut: 'Kiosk oturumunu kapat',
     instruction: 'Giriş, çıkış ve mola için okut',
@@ -321,6 +324,7 @@ const tr = {
     nextShiftHint: 'Sıradaki vardiyan {{day}} {{start}}.',
   },
   dashboard: {
+    columns: { person: 'Personel', shift: 'Vardiya', checkIn: 'Giriş', worked: 'Çalışma', status: 'Durum' },
     attendance: 'Bugünkü katılım',
     arrivedOf: '{{expected}} kişiden {{arrived}} kişi geldi',
     noneExpected: 'Bugün vardiyası olan kimse yok.',
@@ -548,6 +552,7 @@ const tr = {
     total: 'Toplam',
   },
   quotes: {
+    label: 'Duyuru',
     proverb: 'Atasözü',
     items: [
       { text: 'İşleyen demir ışıldar.', proverb: true },

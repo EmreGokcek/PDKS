@@ -58,8 +58,8 @@ export function ProfilePage() {
             <p className="font-medium text-pause">{t('profile.completeness', { percent })}</p>
             <p className="text-sm text-ink-soft">{t('profile.completenessHint')}</p>
           </div>
-          <div className="h-2 w-32 overflow-hidden rounded-full bg-panel">
-            <motion.div className="h-full rounded-full bg-pause" initial={{ width: 0 }} animate={{ width: `${percent}%` }} transition={{ duration: 0.8 }} />
+          <div className="h-2 w-32 overflow-hidden rounded-sm bg-panel">
+            <motion.div className="h-full rounded-sm bg-pause" initial={{ width: 0 }} animate={{ width: `${percent}%` }} transition={{ duration: 0.8 }} />
           </div>
         </motion.button>
       )}
@@ -138,7 +138,7 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
               maxLength={300}
               value={v.address ?? ''}
               onChange={(e) => set('address', e.target.value)}
-              className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink focus:border-signal focus:ring-4 focus:ring-signal/15 focus:outline-none"
+              className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink focus:border-ink focus:ring-2 focus:ring-accent/60 focus:outline-none"
             />
           )}
         </Field>
@@ -171,7 +171,7 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
           >
             <input
               type="checkbox"
-              className="mt-0.5 size-4 shrink-0 accent-[var(--color-signal)]"
+              className="mt-0.5 size-4 shrink-0 accent-[var(--color-ink)]"
               checked={v.healthDataConsent}
               onChange={(e) => set('healthDataConsent', e.target.checked)}
             />

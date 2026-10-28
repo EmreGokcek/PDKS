@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
 import { Avatar } from '../../components/ui/Avatar'
-import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { useNow } from '../../hooks/useNow'
 import { errorMessage } from '../../lib/api'
@@ -14,6 +13,7 @@ import { isLeave, leaveColors } from '../shifts/leave'
 import { useLiveDashboard, type LivePerson } from './api'
 import { statusTone } from './status'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { SplitFlap } from '../../components/SplitFlap'
 
 type Tile = 'inside' | 'onBreak' | 'notArrived' | 'late' | 'onLeave' | 'done' | 'upcoming'
 
@@ -24,7 +24,7 @@ const tiles: { key: Tile; dot: string; match: (p: LivePerson) => boolean }[] = [
   { key: 'late', dot: 'bg-overrun', match: (p) => p.today.lateMinutes > 0 },
   { key: 'upcoming', dot: 'bg-ink-soft', match: (p) => p.today.status === 'Upcoming' },
   { key: 'done', dot: 'bg-ink-soft', match: (p) => p.today.status === 'Present' && p.state === 'Out' },
-  { key: 'onLeave', dot: 'bg-[#0ea5b7]', match: (p) => p.today.status === 'OnLeave' },
+  { key: 'onLeave', dot: 'bg-[#4f8fd6]', match: (p) => p.today.status === 'OnLeave' },
 ]
 
 /** Önce ilgilenilmesi gerekenler: gelmeyen, molası aşan, molada, içeride... */
@@ -106,15 +106,17 @@ export function LiveDashboardPage() {
         }
       />
 
-      {/* Üst bölüm: katılım halkası + dört ana sayaç; ikincil durumlar küçük süzgeç olarak */}
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-4">
-        <AttendanceRing people={data.people} />
-        <div className="grid grid-cols-2 gap-3 lg:gap-4">
-          {tiles.slice(0, 4).map((tile, i) => (
-            <TileButton key={tile.key} tile={tile} index={i} count={data.people.filter(tile.match).length} selected={filter === tile.key} onClick={() => setFilter(filter === tile.key ? null : tile.key)} />
-          ))}
+      {/* Pano başlığı: katılım + dört ana sayaç (dokununca liste süzülür) */}
+      <section className="dark overflow-hidden rounded-lg bg-brand text-on-brand ring-1 ring-line">
+        <div className="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,2fr)]">
+          <AttendanceStrip people={data.people} />
+          <div className="grid grid-cols-4 border-on-brand/10 max-lg:border-t lg:border-l">
+            {tiles.slice(0, 4).map((tile, i) => (
+              <TileButton key={tile.key} tile={tile} index={i} count={data.people.filter(tile.match).length} selected={filter === tile.key} onClick={() => setFilter(filter === tile.key ? null : tile.key)} />
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {tiles.slice(4).map((tile) => {
           const count = data.people.filter(tile.match).length
@@ -125,11 +127,11 @@ export function LiveDashboardPage() {
               type="button"
               aria-pressed={selected}
               onClick={() => setFilter(selected ? null : tile.key)}
-              className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm ring-1 transition-colors ${selected ? 'bg-brand text-on-brand ring-brand' : 'bg-panel text-ink-soft ring-line hover:text-ink'}`}
+              className={`board-label flex items-center gap-2 rounded-sm px-3 py-1.5 text-[13px] ring-1 transition-colors ${selected ? 'bg-ink text-panel ring-ink' : 'bg-panel text-ink-soft ring-line hover:text-ink'}`}
             >
-              <span className={`size-2 rounded-full ${tile.dot}`} />
+              <span className={`size-2 ${tile.dot}`} />
               {t(`dashboard.tiles.${tile.key}`)}
-              <span className="tabular font-semibold text-ink">{count}</span>
+              <span className={`tabular ${selected ? '' : 'text-ink'}`}>{count}</span>
             </button>
           )
         })}
@@ -143,38 +145,43 @@ export function LiveDashboardPage() {
       )}
 
       {data.people.length === 0 ? (
-        <p className="mt-6 rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('dashboard.noStaff')}</p>
+        <p className="mt-6 rounded-lg bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('dashboard.noStaff')}</p>
       ) : visible.length === 0 ? (
-        <p className="mt-6 rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('dashboard.empty')}</p>
+        <p className="mt-6 rounded-lg bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('dashboard.empty')}</p>
       ) : (
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          <AnimatePresence initial={false}>
-            {visible.map(({ person: p, worked, breakRemaining, breakOverrun }) => (
-              <motion.li
-                key={p.userId}
-                layout
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 34 }}
-              >
-                <PersonCard person={p} worked={worked} breakRemaining={breakRemaining} breakOverrun={breakOverrun} />
-              </motion.li>
-            ))}
-          </AnimatePresence>
-        </ul>
+        <div className="mt-6 overflow-hidden rounded-lg bg-panel ring-1 ring-line">
+          <div className={`${rowGrid} board-label border-b border-line bg-panel-2 px-4 py-2.5 text-[11px] text-ink-soft max-md:hidden`}>
+            <span>{t('dashboard.columns.person')}</span>
+            <span>{t('dashboard.columns.shift')}</span>
+            <span>{t('dashboard.columns.checkIn')}</span>
+            <span className="text-right">{t('dashboard.columns.worked')}</span>
+            <span className="text-right">{t('dashboard.columns.status')}</span>
+          </div>
+          <ul className="divide-y divide-line">
+            <AnimatePresence initial={false}>
+              {visible.map(({ person: p, worked, breakRemaining, breakOverrun }) => (
+                <motion.li key={p.userId} layout="position" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+                  <PersonRow person={p} worked={worked} breakRemaining={breakRemaining} breakOverrun={breakOverrun} />
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </div>
       )}
     </>
   )
 }
 
-const tileAccent: Record<string, string> = {
-  inside: 'from-signal/15 text-signal',
-  onBreak: 'from-pause/15 text-pause',
-  notArrived: 'from-overrun/15 text-overrun',
-  late: 'from-overrun/10 text-overrun',
+const rowGrid = 'md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.2fr)_4.5rem_6.5rem_minmax(0,1.1fr)] md:items-center md:gap-4'
+
+const tileText: Record<string, string> = {
+  inside: 'text-signal',
+  onBreak: 'text-pause',
+  notArrived: 'text-overrun',
+  late: 'text-overrun',
 }
 
+/** Pano sütunu: etiket ve kanatçıklı sayı. Seçiliyken altı sarı çizgili. */
 function TileButton({
   tile,
   index,
@@ -190,74 +197,65 @@ function TileButton({
 }) {
   const { t } = useTranslation()
   return (
-    <motion.button
+    <button
       type="button"
       aria-pressed={selected}
       onClick={onClick}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04 }}
-      whileTap={{ scale: 0.98 }}
-      className={`relative overflow-hidden rounded-2xl p-4 text-left ring-1 transition-colors sm:p-5 ${selected ? 'bg-brand text-on-brand ring-brand' : 'bg-panel ring-line hover:bg-panel-2'}`}
+      className={`relative min-w-0 px-3 py-4 text-left transition-colors sm:p-5 ${index > 0 ? 'border-l border-on-brand/10' : ''} ${selected ? 'bg-on-brand/[0.07]' : 'hover:bg-on-brand/[0.04]'}`}
     >
-      {!selected && <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-br to-transparent to-60% ${tileAccent[tile.key]?.split(' ')[0] ?? ''}`} />}
-      <span className="relative flex items-center gap-2 text-sm opacity-80">
-        <span className={`size-2 rounded-full ${tile.dot}`} />
+      <span className="board-label flex items-center gap-1.5 truncate text-[11px] text-on-brand/60 sm:gap-2 sm:text-xs">
+        <span className={`size-2 shrink-0 ${tile.dot}`} />
         {t(`dashboard.tiles.${tile.key}`)}
       </span>
-      <motion.span
-        key={count}
-        initial={{ y: 8, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className={`tabular relative mt-3 block text-4xl font-semibold tracking-tight sm:text-5xl ${selected ? '' : count > 0 ? (tileAccent[tile.key]?.split(' ')[1] ?? '') : 'text-ink-soft/50'}`}
-      >
-        {count}
-      </motion.span>
-    </motion.button>
+      <SplitFlap
+        text={String(Math.min(99, count)).padStart(2, '0')}
+        label={String(count)}
+        className={`mt-3 text-[2rem] sm:text-[2.6rem] ${count > 0 ? (tileText[tile.key] ?? '') : 'text-on-brand/35'}`}
+      />
+      {selected && <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1 bg-accent" />}
+    </button>
   )
 }
 
-/** Bugün vardiyası olanların kaçı geldi: halka grafik. */
-function AttendanceRing({ people }: { people: LivePerson[] }) {
+/** Bugün vardiyası olanların kaçı geldi: her kişi bir kutucuk. */
+function AttendanceStrip({ people }: { people: LivePerson[] }) {
   const { t } = useTranslation()
   const expected = people.filter((p) => p.today.plan?.kind === 'Work')
   const arrived = expected.filter((p) => p.today.firstIn).length
-  const ratio = expected.length ? arrived / expected.length : 0
-  const r = 44
-  const c = 2 * Math.PI * r
+  const percent = expected.length ? Math.round((arrived / expected.length) * 100) : 0
 
   return (
-    <section className="flex items-center gap-6 rounded-2xl bg-brand p-5 text-on-brand sm:p-6 dark:ring-1 dark:ring-line">
-      <div className="relative grid size-32 shrink-0 place-items-center sm:size-36">
-        <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden="true">
-          <circle cx="50" cy="50" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="9" />
-          <motion.circle
-            cx="50"
-            cy="50"
-            r={r}
-            fill="none"
-            strokeWidth="9"
-            strokeLinecap="round"
-            className="stroke-signal"
-            strokeDasharray={c}
-            initial={{ strokeDashoffset: c }}
-            animate={{ strokeDashoffset: c * (1 - ratio) }}
-            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </svg>
-        <span className="tabular text-3xl font-semibold">{expected.length ? `%${Math.round(ratio * 100)}` : '–'}</span>
+    <div className="p-5 sm:p-6">
+      <h2 className="board-label text-xs text-on-brand/60">{t('dashboard.attendance')}</h2>
+      <div className="mt-3 flex items-end gap-3">
+        <SplitFlap text={String(arrived).padStart(2, '0')} className="text-[2.6rem]" />
+        <span className="pb-1 font-display text-2xl font-semibold text-on-brand/40">/ {expected.length}</span>
+        {expected.length > 0 && <span className="ml-auto pb-1 font-display text-2xl font-semibold text-accent">%{percent}</span>}
       </div>
-      <div className="min-w-0">
-        <h2 className="text-sm text-on-brand/70">{t('dashboard.attendance')}</h2>
-        <p className="mt-1 text-xl leading-snug font-semibold">
-          {expected.length ? t('dashboard.arrivedOf', { arrived, expected: expected.length }) : t('dashboard.noneExpected')}
-        </p>
-      </div>
-    </section>
+      {expected.length > 0 ? (
+        <div className="mt-4 flex gap-[3px]" aria-hidden="true">
+          {expected.map((p) => (
+            <span key={p.userId} title={p.name} className={`h-2.5 flex-1 ${p.today.firstIn ? 'bg-accent' : 'bg-on-brand/12'}`} />
+          ))}
+        </div>
+      ) : null}
+      <p className="mt-3 text-sm text-on-brand/60">
+        {expected.length ? t('dashboard.arrivedOf', { arrived, expected: expected.length }) : t('dashboard.noneExpected')}
+      </p>
+    </div>
   )
 }
 
-function PersonCard({
+const toneText = {
+  signal: 'text-signal',
+  pause: 'text-pause',
+  overrun: 'text-overrun',
+  neutral: 'text-ink-soft',
+  brand: 'text-ink',
+} as const
+
+/** Kalkış tablosu satırı: kişi, vardiya, giriş, çalışma süresi, durum. */
+function PersonRow({
   person: p,
   worked,
   breakRemaining,
@@ -274,59 +272,65 @@ function PersonCard({
 
   const statusLabel =
     p.state === 'OnBreak' ? t('dashboard.onBreak') : p.state === 'Working' ? t('dashboard.working') : t(`dashboard.status.${p.today.status}`)
-  const tone = p.state === 'OnBreak' ? 'pause' : statusTone[p.today.status]
-  const accent =
-    p.today.status === 'NotArrived' || breakOverrun > 0 ? 'ring-overrun/40' : p.state === 'OnBreak' ? 'ring-pause/40' : 'ring-line'
+  const tone = p.state === 'OnBreak' ? (breakOverrun > 0 ? 'overrun' : 'pause') : statusTone[p.today.status]
+  const lamp =
+    p.today.status === 'NotArrived' || breakOverrun > 0 ? 'bg-overrun' : p.state === 'OnBreak' ? 'bg-pause' : p.state === 'Working' ? 'bg-signal' : 'bg-transparent'
 
   return (
-    <article className={`h-full rounded-2xl bg-panel p-4 ring-1 ${accent}`}>
-      <header className="flex items-center gap-3">
+    <div className={`relative px-4 py-3 ${rowGrid} max-md:grid max-md:grid-cols-[1fr_auto] max-md:gap-x-3 max-md:gap-y-1`}>
+      <span aria-hidden="true" className={`absolute top-0 bottom-0 left-0 w-[3px] ${lamp}`} />
+
+      <div className="flex min-w-0 items-center gap-3">
         <Avatar name={p.name} size="sm" muted={p.today.status === 'Off' || !!leave} />
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           <p className="truncate font-medium">{p.name}</p>
-          <p className="text-xs text-ink-soft">
-            {leave
-              ? t(`shifts.kinds.${plan!.kind}`)
-              : plan
-                ? `${hhmm(plan.startTime)}–${hhmm(plan.endTime)}${plan.name ? ` · ${plan.name}` : ''}`
-                : t('dashboard.noShift')}
-          </p>
-        </div>
-        <Badge tone={tone} dot>
-          {statusLabel}
-        </Badge>
-      </header>
-
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm">
-        {p.today.firstIn && <span className="tabular text-ink-soft">{t('dashboard.checkIn', { time: formatTime(p.today.firstIn) })}</span>}
-        {p.today.lastOut && p.state === 'Out' && (
-          <span className="tabular text-ink-soft">{t('dashboard.checkOut', { time: formatTime(p.today.lastOut) })}</span>
-        )}
-        {p.today.lateMinutes > 0 && <Badge tone="overrun">{t('dashboard.lateBy', { minutes: p.today.lateMinutes })}</Badge>}
-        {p.today.earlyLeaveMinutes > 0 && <Badge tone="pause">{t('dashboard.earlyBy', { minutes: p.today.earlyLeaveMinutes })}</Badge>}
-      </div>
-
-      {(worked > 0 || p.state !== 'Out') && (
-        <div className="mt-3 flex items-end justify-between gap-3">
-          <p className="tabular text-2xl font-semibold tracking-tight">{formatClock(worked, true)}</p>
-          {p.state === 'OnBreak' && (
-            <p className={`tabular text-sm font-medium ${breakOverrun > 0 ? 'text-overrun' : 'text-pause'}`}>
-              {breakOverrun > 0
-                ? t('dashboard.breakOver', { time: formatClock(breakOverrun) })
-                : t('dashboard.breakLeft', { time: formatClock(breakRemaining) })}
+          {p.today.hasUnclosedSession && (
+            <p className="flex items-center gap-1 text-xs text-pause">
+              <AlertTriangle className="size-3" />
+              {t('dashboard.unclosed')}
             </p>
           )}
         </div>
-      )}
+      </div>
 
-      {leave && <span className="mt-3 block h-1.5 rounded-full" style={{ backgroundColor: leaveColors[plan!.kind as keyof typeof leaveColors] }} />}
+      <div className="min-w-0 text-sm text-ink-soft max-md:col-start-1 max-md:pl-11">
+        {leave ? (
+          <span className="flex items-center gap-2">
+            <span className="h-3 w-1" style={{ backgroundColor: leaveColors[plan!.kind as keyof typeof leaveColors] }} />
+            {t(`shifts.kinds.${plan!.kind}`)}
+          </span>
+        ) : plan ? (
+          <span className="truncate">
+            <span className="tabular font-display text-base font-semibold text-ink">{`${hhmm(plan.startTime)}–${hhmm(plan.endTime)}`}</span>
+            {plan.name ? ` · ${plan.name}` : ''}
+          </span>
+        ) : (
+          t('dashboard.noShift')
+        )}
+      </div>
 
-      {p.today.hasUnclosedSession && (
-        <p className="mt-3 flex items-center gap-1.5 text-xs text-pause">
-          <AlertTriangle className="size-3.5" />
-          {t('dashboard.unclosed')}
-        </p>
-      )}
-    </article>
+      <div className="tabular font-display text-lg font-semibold max-md:hidden">
+        {p.today.firstIn ? formatTime(p.today.firstIn) : <span className="text-ink-soft/50">--:--</span>}
+      </div>
+
+      <div className="tabular text-right font-display text-xl font-semibold max-md:col-start-2 max-md:row-start-1">
+        {worked > 0 || p.state !== 'Out' ? formatClock(worked, true) : <span className="text-ink-soft/50">–</span>}
+      </div>
+
+      <div className="flex flex-col items-end gap-0.5 text-right max-md:col-start-2 max-md:row-start-2">
+        <span className={`board-label text-sm ${toneText[tone]}`}>{statusLabel}</span>
+        {p.state === 'OnBreak' ? (
+          <span className={`tabular text-xs ${breakOverrun > 0 ? 'text-overrun' : 'text-pause'}`}>
+            {breakOverrun > 0 ? t('dashboard.breakOver', { time: formatClock(breakOverrun) }) : t('dashboard.breakLeft', { time: formatClock(breakRemaining) })}
+          </span>
+        ) : p.today.lateMinutes > 0 ? (
+          <span className="text-xs text-overrun">{t('dashboard.lateBy', { minutes: p.today.lateMinutes })}</span>
+        ) : p.today.earlyLeaveMinutes > 0 ? (
+          <span className="text-xs text-pause">{t('dashboard.earlyBy', { minutes: p.today.earlyLeaveMinutes })}</span>
+        ) : p.today.lastOut && p.state === 'Out' ? (
+          <span className="tabular text-xs text-ink-soft">{t('dashboard.checkOut', { time: formatTime(p.today.lastOut) })}</span>
+        ) : null}
+      </div>
+    </div>
   )
 }

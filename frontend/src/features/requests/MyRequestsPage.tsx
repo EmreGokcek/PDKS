@@ -174,7 +174,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={type === 'Correction' ? t('requests.reasonCorrection') : t('requests.reasonLeave')}
-            className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 focus:border-signal focus:ring-4 focus:ring-signal/15 focus:outline-none"
+            className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 focus:border-ink focus:ring-2 focus:ring-accent/60 focus:outline-none"
           />
         )}
       </Field>

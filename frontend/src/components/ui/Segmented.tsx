@@ -33,12 +33,12 @@ export function Segmented<T extends string>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(opt.value)}
-            className={`relative flex items-center gap-1.5 rounded-lg font-medium transition-colors ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${active ? 'text-panel' : 'text-ink-soft hover:text-ink'}`}
+            className={`relative flex items-center gap-1.5 rounded-lg font-medium transition-colors ${size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} ${active ? 'text-ink' : 'text-ink-soft hover:text-ink'}`}
           >
             {active && (
               <motion.span
                 layoutId={layoutId}
-                className="absolute inset-0 rounded-lg bg-ink"
+                className="absolute inset-0 rounded-lg bg-panel shadow-sm ring-1 ring-line"
                 transition={{ type: 'spring', stiffness: 500, damping: 38 }}
               />
             )}

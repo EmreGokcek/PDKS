@@ -6,9 +6,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { Greeting, LiveClock } from '../../components/LiveClock'
-import { QuoteRotator } from '../../components/QuoteRotator'
-import { SplitFlap } from '../../components/SplitFlap'
-import i18n from '../../i18n'
+import { KioskFeed } from './KioskFeed'
 import { LanguageMenu } from '../../components/PreferencesControls'
 import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
@@ -26,11 +24,11 @@ interface KioskState {
   recent: { name: string; type: AttendanceAction; occurredAt: string }[]
 }
 
-const eventText: Record<AttendanceAction, string> = {
-  CheckIn: 'text-signal',
-  BreakEnd: 'text-signal',
-  BreakStart: 'text-pause',
-  CheckOut: 'text-on-brand/55',
+const eventTone: Record<AttendanceAction, string> = {
+  CheckIn: 'bg-signal',
+  BreakEnd: 'bg-signal',
+  BreakStart: 'bg-pause',
+  CheckOut: 'bg-on-brand/40',
 }
 
 /**
@@ -61,7 +59,7 @@ export function KioskPage() {
   useEffect(() => {
     if (!link) return
     let cancelled = false
-    QRCode.toString(link, { type: 'svg', errorCorrectionLevel: 'M', margin: 0, color: { dark: '#141517', light: '#ffffff' } })
+    QRCode.toString(link, { type: 'svg', errorCorrectionLevel: 'M', margin: 0, color: { dark: '#16324a', light: '#ffffff' } })
       .then((s) => !cancelled && setSvg(s))
       .catch(() => undefined)
     return () => {
@@ -76,16 +74,14 @@ export function KioskPage() {
   const fraction = data ? secondsLeft / data.windowSeconds : 0
   const offline = state.isError && !state.isFetching
 
-  const [latest, ...older] = data?.recent ?? []
-
   return (
-    <div className="dark relative flex min-h-dvh flex-col bg-brand text-on-brand">
-      <header className="flex items-center justify-between gap-4 border-b border-on-brand/10 px-6 py-4 sm:px-10">
+    <div className="relative flex min-h-dvh flex-col bg-brand text-on-brand">
+      <header className="flex items-center justify-between px-6 pt-6 sm:px-10">
         <div className="flex items-center gap-3">
-          <img src="/favicon.svg" alt="" className="size-9" />
+          <img src="/favicon.svg" alt="" className="size-9 rounded-xl ring-1 ring-on-brand/20" />
           <div className="leading-tight">
-            <p className="font-display text-xl font-semibold tracking-wide uppercase">{data?.kioskName ?? 'PDKS'}</p>
-            {data?.branchName && <p className="board-label text-xs text-on-brand/50">{data.branchName}</p>}
+            <p className="font-semibold">{data?.kioskName ?? 'PDKS'}</p>
+            {data?.branchName && <p className="text-sm text-on-brand/60">{data.branchName}</p>}
           </div>
         </div>
         <LanguageMenu tone="onBrand" />
@@ -93,34 +89,34 @@ export function KioskPage() {
 
       <main className="grid flex-1 items-center gap-10 px-6 py-8 sm:px-10 lg:grid-cols-[1fr_auto_1fr]">
         <div className="text-center lg:text-left">
-          <Greeting className="board-label mb-4 text-xl text-accent" />
-          <LiveClock size="md" className="[&_time]:max-lg:justify-center" align="start" />
-          <p className="mt-8 font-display text-3xl leading-tight font-semibold">{t('kiosk.instruction')}</p>
-          <p className="mt-2 max-w-sm text-on-brand/60 max-lg:mx-auto">{t('kiosk.steps')}</p>
+          <Greeting className="mb-3 text-xl font-medium text-signal" />
+          <LiveClock size="md" className="[&_time]:max-lg:justify-center" />
+          <p className="mt-8 text-2xl font-semibold">{t('kiosk.instruction')}</p>
+          <p className="mt-2 max-w-sm text-on-brand/65 max-lg:mx-auto">{t('kiosk.steps')}</p>
         </div>
 
-        {/* QR */}
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative rounded-md bg-white p-5 ring-4 ring-accent">
+        {/* QR kart */}
+        <div className="flex flex-col items-center gap-5">
+          <div className="relative rounded-[2rem] bg-white p-6 shadow-2xl">
             <div className="grid size-[min(72vw,340px)] place-items-center">
               <AnimatePresence mode="popLayout">
                 {svg ? (
                   <motion.div
                     key={data!.qrToken}
                     className="size-full [&_svg]:size-full"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ opacity: 0, scale: 0.94, filter: 'blur(6px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 1.03, filter: 'blur(6px)' }}
+                    transition={{ duration: 0.35 }}
                     dangerouslySetInnerHTML={{ __html: svg }}
                   />
                 ) : (
-                  <Spinner className="size-8 text-[#141517]" />
+                  <Spinner className="size-8 text-[#16324a]" />
                 )}
               </AnimatePresence>
             </div>
             {offline && (
-              <div className="absolute inset-0 grid place-items-center bg-white/92 p-6 text-center text-[#141517]">
+              <div className="absolute inset-0 grid place-items-center rounded-[2rem] bg-white/90 p-6 text-center text-[#16324a]">
                 <div>
                   <WifiOff className="mx-auto size-8" />
                   <p className="mt-3 text-sm">{t('kiosk.offline')}</p>
@@ -129,61 +125,56 @@ export function KioskPage() {
             )}
           </div>
 
-          {/* Yenilenme: her saniye bir kutucuk söner */}
-          <div className="w-full max-w-[380px]">
-            <div className="flex gap-[3px]" aria-hidden="true">
-              {Array.from({ length: data?.windowSeconds ?? 30 }, (_, i) => (
-                <span key={i} className={`h-2 flex-1 transition-colors duration-200 ${i < Math.ceil(fraction * (data?.windowSeconds ?? 30)) ? 'bg-accent' : 'bg-on-brand/12'}`} />
-              ))}
+          {/* Yenilenme çubuğu */}
+          <div className="w-full max-w-[340px]">
+            <div className="h-1.5 overflow-hidden rounded-full bg-on-brand/15">
+              <div
+                className="h-full rounded-full bg-signal transition-[width] duration-300 ease-linear"
+                style={{ width: `${Math.round(fraction * 100)}%` }}
+              />
             </div>
-            <p className="tabular board-label mt-2 text-center text-xs text-on-brand/50">
+            <p className="tabular mt-2 text-center text-sm text-on-brand/55">
               {t('kiosk.refreshesIn', { seconds: Math.ceil(secondsLeft) })}
             </p>
           </div>
         </div>
 
-        {/* Son okutmalar: kalkış tablosu */}
-        <aside className="w-full lg:w-[23rem] lg:justify-self-end">
-          <h2 className="board-label text-xs text-on-brand/50">{t('kiosk.lastScan')}</h2>
-          <div className="mt-2 rounded-md bg-flap-2 p-3 ring-1 ring-on-brand/10">
-            {latest ? (
-              <>
-                <SplitFlap text={latest.name.toLocaleUpperCase(i18n.language)} length={16} className="text-[clamp(1.1rem,1.6vw,1.45rem)]" />
-                <div className="mt-2 flex items-center justify-between">
-                  <span className={`board-label text-sm ${eventText[latest.type]}`}>{t(`attendance.eventNames.${latest.type}`)}</span>
-                  <span className="tabular font-display text-xl font-semibold">{formatTime(latest.occurredAt)}</span>
-                </div>
-              </>
-            ) : (
-              <p className="py-4 text-center text-sm text-on-brand/50">{t('kiosk.recentEmpty')}</p>
-            )}
-          </div>
-
-          {older.length > 0 && (
-            <table className="mt-5 w-full text-left">
-              <thead>
-                <tr className="board-label text-[11px] text-on-brand/40">
-                  <th className="pb-2 font-semibold">{t('kiosk.columns.time')}</th>
-                  <th className="pb-2 font-semibold">{t('kiosk.columns.person')}</th>
-                  <th className="pb-2 text-right font-semibold">{t('kiosk.columns.status')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-on-brand/10">
-                {older.map((r) => (
-                  <tr key={r.occurredAt + r.name + r.type} className="text-on-brand/80">
-                    <td className="tabular w-16 py-2 font-display text-lg font-semibold text-accent">{formatTime(r.occurredAt)}</td>
-                    <td className="max-w-0 truncate py-2 pr-2">{r.name}</td>
-                    <td className={`board-label py-2 text-right text-sm ${eventText[r.type]}`}>{t(`attendance.eventNames.${r.type}`)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        {/* Son okutmalar */}
+        <aside className="lg:justify-self-end">
+          <h2 className="text-sm text-on-brand/60">{t('kiosk.recent')}</h2>
+          <ul className="mt-3 w-full space-y-2 lg:w-80">
+            <AnimatePresence initial={false}>
+              {data?.recent.length ? (
+                data.recent.map((r, i) => (
+                  <motion.li
+                    key={r.occurredAt + r.name + r.type}
+                    layout
+                    initial={{ opacity: 0, x: 24, scale: 0.96 }}
+                    animate={{ opacity: i === 0 ? 1 : 0.75, x: 0, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 ${i === 0 ? 'bg-on-brand/12 ring-1 ring-on-brand/15' : 'bg-on-brand/5'}`}
+                  >
+                    <span className={`size-2.5 shrink-0 rounded-full ${eventTone[r.type]}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{r.name}</span>
+                      <span className="block text-sm text-on-brand/60">{t(`attendance.eventNames.${r.type}`)}</span>
+                    </span>
+                    <span className="tabular text-on-brand/70">{formatTime(r.occurredAt)}</span>
+                  </motion.li>
+                ))
+              ) : (
+                <li className="rounded-2xl border border-dashed border-on-brand/20 px-4 py-6 text-center text-sm text-on-brand/50">
+                  {t('kiosk.recentEmpty')}
+                </li>
+              )}
+            </AnimatePresence>
+          </ul>
         </aside>
       </main>
 
-      <div className="mx-auto w-full max-w-3xl px-6 pb-5">
-        <QuoteRotator intervalMs={12000} />
+      <div className="mx-auto w-full max-w-2xl px-6 pb-6">
+        <KioskFeed />
       </div>
 
       <footer className="px-6 pb-5 text-center">

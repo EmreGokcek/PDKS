@@ -48,6 +48,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(x => x.EmergencyContactName).HasMaxLength(150);
         b.Property(x => x.EmergencyContactPhone).HasMaxLength(30);
         b.Property(x => x.EmergencyContactRelation).HasMaxLength(50);
+        b.Property(x => x.ShareBirthday).HasDefaultValue(true);
 
         b.HasIndex(x => x.Email).IsUnique();
         b.HasIndex(x => new { x.CompanyId, x.Role });
@@ -175,5 +176,30 @@ internal class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         b.Property(x => x.NewValues).HasColumnType("jsonb");
         b.Property(x => x.Reason).HasMaxLength(500);
         b.HasIndex(x => new { x.CompanyId, x.CreatedAt });
+    }
+}
+
+internal class AnnouncementConfiguration : IEntityTypeConfiguration<Announcement>
+{
+    public void Configure(EntityTypeBuilder<Announcement> b)
+    {
+        b.Property(x => x.Title).HasMaxLength(120).IsRequired();
+        b.Property(x => x.Body).HasMaxLength(1000);
+        b.Property(x => x.ShowOnKiosk).HasDefaultValue(true);
+        b.HasIndex(x => new { x.CompanyId, x.CreatedAt });
+        b.HasOne(x => x.CreatedBy).WithMany().HasForeignKey(x => x.CreatedById).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne<Branch>().WithMany().HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class CongratulationConfiguration : IEntityTypeConfiguration<Congratulation>
+{
+    public void Configure(EntityTypeBuilder<Congratulation> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+        b.HasIndex(x => new { x.FromUserId, x.ToUserId, x.Kind, x.Date }).IsUnique();
+        b.HasIndex(x => new { x.ToUserId, x.Date });
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.FromUserId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.ToUserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -44,6 +44,7 @@ public class ProfileController(PdksDbContext db, ICurrentUser currentUser, Audit
         user.Phone = Clean(request.Phone);
         user.Address = Clean(request.Address);
         user.BirthDate = request.BirthDate;
+        if (request.ShareBirthday is { } share) user.ShareBirthday = share;
         user.EmergencyContactName = Clean(request.EmergencyContactName);
         user.EmergencyContactPhone = Clean(request.EmergencyContactPhone);
         user.EmergencyContactRelation = Clean(request.EmergencyContactRelation);

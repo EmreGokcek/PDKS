@@ -54,6 +54,14 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Anlık (push) bildirimler: telefona kurulum (PWA) adımında. Şu an uygulama içi; liste 60 sn'de bir yenileniyor.
 - [ ] Bildirim tercihleri (hangi bildirimleri almak istediğini seçme) ve eski bildirimlerin otomatik temizlenmesi.
 
+## Duyurular ve kutlamalar
+
+- [ ] Duyuruyu kimlerin okuduğu (okundu bilgisi) ve "okudum" onayı
+- [ ] Duyuruya görsel / dosya ekleme
+- [ ] Doğum günü sabahı kişiye ve ekibe otomatik bildirim (zamanlanmış iş gerekir; şu an pano ve kioskta görünüyor)
+- [ ] Yöneticinin duyuruyu belirli bir şubeye hedeflemesi (şu an yönetici: tüm firma, müdür: kendi şubesi)
+- [ ] Kutlamaya kısa mesaj yazabilme
+
 ## Yönetim
 
 - [ ] Denetim kaydı (AuditLog) görüntüleme ekranı.
@@ -68,6 +76,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Sunucu hata mesajlarının (title) da çok dilli olması; şu an arayüz "code" alanını çeviriyor, başlık Türkçe yedek.
 
 ## Tamamlananlar
+
+- [x] Duyurular (sabitleme, bitiş tarihi, kioskta gösterme, yeni duyuruda bildirim), doğum günü ve iş yıl dönümü kutlamaları, "Kutla" düğmesi
 
 - [x] Kiosk oturumu 8 saatte düşüyordu → 30 gün (PR #7)
 - [x] Web uygulamasının ilk açılış dosyası büyüktü → sayfalar ihtiyaç anında yükleniyor (PR #7)

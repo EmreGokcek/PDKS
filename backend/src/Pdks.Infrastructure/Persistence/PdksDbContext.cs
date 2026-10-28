@@ -20,6 +20,8 @@ public class PdksDbContext(DbContextOptions<PdksDbContext> options, ICurrentUser
     public DbSet<AttendanceEvent> AttendanceEvents => Set<AttendanceEvent>();
     public DbSet<Kiosk> Kiosks => Set<Kiosk>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<Congratulation> Congratulations => Set<Congratulation>();
 
     /// <summary>
     /// Global filtrede kullanılır. EF bu değeri her sorguda o anki kullanıcıdan okur.

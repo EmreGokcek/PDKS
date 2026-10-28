@@ -57,7 +57,7 @@ export function PageSkeleton({ variant = 'cards', label }: { variant?: Variant; 
           <Skeleton className="h-12 rounded-none" />
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-center gap-4 border-t border-line px-5 py-4">
-              <Skeleton className="size-9 shrink-0 rounded-sm" />
+              <Skeleton className="size-9 shrink-0 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-3.5 w-40" />
                 <Skeleton className="h-3 w-24" />

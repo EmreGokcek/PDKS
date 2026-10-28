@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Bell, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
+import { Bell, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -16,6 +16,8 @@ const icons: Record<NotificationType, ReactNode> = {
   RequestApproved: <CheckCircle2 className="size-4" />,
   RequestRejected: <XCircle className="size-4" />,
   RecordCorrected: <Wrench className="size-4" />,
+  AnnouncementPublished: <Megaphone className="size-4" />,
+  Congratulated: <PartyPopper className="size-4" />,
 }
 
 const tones: Record<NotificationType, string> = {
@@ -25,6 +27,8 @@ const tones: Record<NotificationType, string> = {
   RequestApproved: 'bg-signal-soft text-signal',
   RequestRejected: 'bg-overrun-soft text-overrun',
   RecordCorrected: 'bg-panel-2 text-ink-soft ring-1 ring-line',
+  AnnouncementPublished: 'bg-signal-soft text-signal',
+  Congratulated: 'bg-pause-soft text-pause',
 }
 
 /** Bildirime tıklayınca gidilecek sayfa (rolüne göre). */
@@ -41,6 +45,9 @@ function targetOf(type: NotificationType, role: Role): string {
       return `${base}/taleplerim`
     case 'RecordCorrected':
       return role === 'Manager' ? '/mudur/bugunum' : base
+    case 'AnnouncementPublished':
+    case 'Congratulated':
+      return `${base}/duyurular`
   }
 }
 
@@ -91,7 +98,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onB
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              className="tabular absolute -top-0.5 -right-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-sm bg-overrun px-1 text-[11px] font-semibold text-white ring-2 ring-panel"
+              className="tabular absolute -top-0.5 -right-0.5 grid h-[18px] min-w-[18px] place-items-center rounded-full bg-overrun px-1 text-[11px] font-semibold text-white ring-2 ring-panel"
             >
               {unread > 9 ? '9+' : unread}
             </motion.span>
@@ -114,7 +121,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onB
             <header className="flex items-center justify-between border-b border-line px-4 py-3">
               <h2 className="font-semibold">{t('notifications.title')}</h2>
               {unread > 0 && (
-                <button type="button" onClick={() => markRead.mutate(null)} className="text-sm font-medium text-accent-ink hover:underline">
+                <button type="button" onClick={() => markRead.mutate(null)} className="text-sm text-signal hover:underline">
                   {t('notifications.markAll')}
                 </button>
               )}
@@ -128,13 +135,13 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onB
                     <button
                       type="button"
                       onClick={() => openItem(n)}
-                      className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-panel-2 ${n.isRead ? '' : 'bg-accent-soft/50'}`}
+                      className={`flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-panel-2 ${n.isRead ? '' : 'bg-signal-soft/30'}`}
                     >
-                      <span className={`grid size-8 shrink-0 place-items-center rounded-sm ${tones[n.type]}`}>{icons[n.type]}</span>
+                      <span className={`grid size-8 shrink-0 place-items-center rounded-full ${tones[n.type]}`}>{icons[n.type]}</span>
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2">
                           <span className="truncate text-sm font-medium">{t(`notifications.${n.type}.title`)}</span>
-                          {!n.isRead && <span className="size-2 shrink-0 bg-accent" />}
+                          {!n.isRead && <span className="size-2 shrink-0 rounded-full bg-signal" />}
                         </span>
                         <span className="block text-sm text-ink-soft first-letter:uppercase">
                           <NotificationBody n={n} />
@@ -185,6 +192,15 @@ function NotificationBody({ n }: { n: AppNotification }) {
       })
       break
     }
+    case 'AnnouncementPublished':
+      text = t('notifications.AnnouncementPublished.body', { author: String(d.author ?? ''), title: String(d.title ?? '') })
+      break
+    case 'Congratulated':
+      text =
+        d.kind === 'WorkAnniversary'
+          ? t('notifications.Congratulated.bodyAnniversary', { from: String(d.from ?? '') })
+          : t('notifications.Congratulated.bodyBirthday', { from: String(d.from ?? '') })
+      break
   }
   const note = typeof d.note === 'string' && d.note ? ` ${t('notifications.note', { note: d.note })}` : ''
   return (

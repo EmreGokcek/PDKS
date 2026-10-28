@@ -19,6 +19,7 @@ public record ProfileDto(
     string? Phone,
     string? Address,
     DateOnly? BirthDate,
+    bool ShareBirthday,
     string? BloodType,
     DateTimeOffset? HealthDataConsentAt,
     string? EmergencyContactName,
@@ -27,7 +28,7 @@ public record ProfileDto(
 {
     public static ProfileDto From(User u) => new(
         u.Id, u.FirstName, u.LastName, u.FullName, u.Email, u.Role, u.Company?.Name ?? string.Empty, u.Branch?.Name,
-        u.EmployeeNumber, u.Position, u.HireDate, u.Phone, u.Address, u.BirthDate, u.BloodType, u.HealthDataConsentAt,
+        u.EmployeeNumber, u.Position, u.HireDate, u.Phone, u.Address, u.BirthDate, u.ShareBirthday, u.BloodType, u.HealthDataConsentAt,
         u.EmergencyContactName, u.EmergencyContactPhone, u.EmergencyContactRelation);
 }
 
@@ -41,7 +42,9 @@ public record UpdateProfileRequest(
     bool HealthDataConsent,
     [MaxLength(150)] string? EmergencyContactName,
     [MaxLength(30)] string? EmergencyContactPhone,
-    [MaxLength(50)] string? EmergencyContactRelation);
+    [MaxLength(50)] string? EmergencyContactRelation,
+    /// <summary>Boş gelirse mevcut tercih korunur.</summary>
+    bool? ShareBirthday = null);
 
 public record NotificationDto(Guid Id, NotificationType Type, System.Text.Json.JsonElement? Data, DateTimeOffset CreatedAt, bool IsRead);
 

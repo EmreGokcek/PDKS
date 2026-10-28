@@ -21,7 +21,11 @@ export function ProfileSections({ profile: p, showLocks = false, single = false 
       </Section>
 
       <Section icon={<UserRound className="size-4" />} title={t('profile.sections.personal')}>
-        <Row label={t('profile.fields.birthDate')} value={date(p.birthDate)} />
+        <Row
+          label={t('profile.fields.birthDate')}
+          value={date(p.birthDate)}
+          hint={p.birthDate && !p.shareBirthday ? t('profile.birthdayHidden') : undefined}
+        />
         <Row
           label={t('profile.fields.bloodType')}
           value={
@@ -55,7 +59,7 @@ export function ProfileSections({ profile: p, showLocks = false, single = false 
 export function ProfileHeader({ profile: p, actions }: { profile: Profile; actions?: ReactNode }) {
   const { t } = useTranslation()
   return (
-    <section className="relative overflow-hidden dark rounded-lg bg-brand p-6 text-on-brand ring-1 ring-line sm:p-8">
+    <section className="relative overflow-hidden rounded-3xl bg-brand p-6 text-on-brand sm:p-8 dark:ring-1 dark:ring-line">
       <div className="flex flex-wrap items-center gap-5">
         <div className="scale-150 p-2">
           <Avatar name={p.fullName} />
@@ -65,7 +69,7 @@ export function ProfileHeader({ profile: p, actions }: { profile: Profile; actio
           <p className="mt-1 text-on-brand/70">
             {[p.position, p.branchName, p.companyName].filter(Boolean).join(' · ')}
           </p>
-          <span className="mt-3 inline-flex rounded-sm bg-on-brand/10 px-3 py-1 text-sm ring-1 ring-on-brand/20">{t(`roles.${p.role}`)}</span>
+          <span className="mt-3 inline-flex rounded-full bg-on-brand/10 px-3 py-1 text-sm ring-1 ring-on-brand/20">{t(`roles.${p.role}`)}</span>
         </div>
         {actions}
       </div>
@@ -90,7 +94,7 @@ function Section({ icon, title, note, children }: { icon: ReactNode; title: stri
   return (
     <section className="rounded-2xl bg-panel p-5 ring-1 ring-line">
       <h3 className="flex items-center gap-2 font-semibold">
-        <span className="grid size-8 place-items-center rounded-lg bg-accent-soft text-accent-ink">{icon}</span>
+        <span className="grid size-8 place-items-center rounded-lg bg-signal-soft text-signal">{icon}</span>
         {title}
       </h3>
       <dl className="mt-4 space-y-3">{children}</dl>

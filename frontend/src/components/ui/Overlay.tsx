@@ -35,7 +35,7 @@ function useOverlayBehavior(open: boolean, onClose: () => void) {
 
 const Backdrop = ({ onClick }: { onClick: () => void }) => (
   <motion.div
-    className="fixed inset-0 z-40 bg-black/45"
+    className="fixed inset-0 z-40 bg-brand/40 backdrop-blur-[2px]"
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
@@ -75,7 +75,7 @@ export function Dialog({
               exit={{ opacity: 0, scale: 0.97, y: 6 }}
               transition={{ type: 'spring', stiffness: 420, damping: 32 }}
             >
-              <h2 className="font-display text-2xl leading-tight font-semibold">{title}</h2>
+              <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
               <div className="mt-3">{children}</div>
             </motion.div>
           </div>
@@ -124,7 +124,7 @@ export function Sheet({
           >
             <div className="flex items-start justify-between gap-4 border-b border-line px-6 pt-6 pb-4">
               <div>
-                <h2 className="font-display text-2xl leading-tight font-semibold">{title}</h2>
+                <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
                 {description && <p className="mt-1 text-sm text-ink-soft">{description}</p>}
               </div>
               <IconButton label={closeLabel} onClick={onClose} className="-mt-1 -mr-2">

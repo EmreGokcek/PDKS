@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<ShiftPublication>();
         services.AddScoped<AttendanceReports>();
         services.AddScoped<MonthlyTimesheetService>();
+        services.AddScoped<Social.AnnouncementFeed>();
 
         return services;
     }

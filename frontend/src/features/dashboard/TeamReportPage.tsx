@@ -67,15 +67,15 @@ export function TeamReportPage() {
         <section className={`overflow-x-auto rounded-2xl bg-panel ring-1 ring-line transition-opacity ${report.isPlaceholderData ? 'opacity-60' : ''}`}>
           <table className="w-full min-w-[880px] text-sm">
             <thead>
-              <tr className="board-label border-b border-line bg-panel-2 text-left text-xs text-ink-soft">
-                <th className="px-5 py-3 font-semibold">{t('reports.person')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.worked')} / {t('reports.planned')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.overtime')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.late')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.early')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.breakOverrun')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.absent')}</th>
-                <th className="px-3 py-3 font-semibold">{t('reports.leave')}</th>
+              <tr className="border-b border-line text-left text-ink-soft">
+                <th className="px-5 py-3 font-normal">{t('reports.person')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.worked')} / {t('reports.planned')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.overtime')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.late')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.early')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.breakOverrun')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.absent')}</th>
+                <th className="px-3 py-3 font-normal">{t('reports.leave')}</th>
               </tr>
             </thead>
             <tbody>
@@ -99,8 +99,8 @@ export function TeamReportPage() {
                       <span className="tabular">
                         {formatSeconds(p.workedSeconds)} <span className="text-ink-soft">/ {formatSeconds(p.plannedSeconds)}</span>
                       </span>
-                      <div className="mt-1.5 h-1 w-32 overflow-hidden rounded-sm bg-panel-2">
-                        <motion.div className="h-full rounded-sm bg-signal" initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} />
+                      <div className="mt-1.5 h-1 w-32 overflow-hidden rounded-full bg-panel-2">
+                        <motion.div className="h-full rounded-full bg-signal" initial={{ width: 0 }} animate={{ width: `${ratio * 100}%` }} />
                       </div>
                     </td>
                     <Num value={p.overtimeSeconds} tone="pause">{formatSeconds(p.overtimeSeconds)}</Num>
@@ -187,7 +187,7 @@ function DayRow({ day: d, onEdit }: { day: DayRecord; onEdit?: () => void }) {
           <p className="text-xs text-ink-soft">
             {leave ? (
               <span className="inline-flex items-center gap-1.5">
-                <span className="size-2 rounded-sm" style={{ backgroundColor: leaveColors[plan!.kind as keyof typeof leaveColors] }} />
+                <span className="size-2 rounded-full" style={{ backgroundColor: leaveColors[plan!.kind as keyof typeof leaveColors] }} />
                 {t(`shifts.kinds.${plan!.kind}`)}
               </span>
             ) : plan ? (

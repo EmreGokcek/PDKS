@@ -147,13 +147,13 @@ function SheetTable({ sheet }: { sheet: Timesheet }) {
         ))}
       </colgroup>
       <thead>
-        <tr className="board-label border-b border-line text-xs text-ink-soft">
+        <tr className="border-b border-line text-ink-soft">
           <th className="sticky left-0 z-[1] bg-panel px-3 py-2 text-left font-normal print:static print:px-1">{t('timesheet.person')}</th>
           {days.map((d) => {
             const dow = parseDate(d).getDay()
             const weekend = dow === 0 || dow === 6
             return (
-              <th key={d} className={`border-l border-line py-1.5 text-center font-normal ${weekend ? 'bg-panel-2' : ''} ${d === today ? 'bg-accent-soft text-accent-ink' : ''}`}>
+              <th key={d} className={`border-l border-line py-1.5 text-center font-normal ${weekend ? 'bg-panel-2' : ''} ${d === today ? 'text-signal' : ''}`}>
                 <span className="block text-[10px] leading-none print:text-[6px]">{formatDay(d, { weekday: 'narrow' })}</span>
                 <span className="tabular block font-semibold leading-tight">{parseDate(d).getDate()}</span>
               </th>
@@ -232,7 +232,7 @@ function DayCell({ cell: c, lateMinutes }: { cell: TimesheetCell; lateMinutes: n
     content = hoursFmt().format(c.hours)
     cls = `${flagged ? 'bg-pause-soft' : cls} ${c.late ? 'font-semibold text-overrun' : 'text-ink'}`
   } else if (c.code === 'Planned') {
-    content = <span className="mx-auto block size-1 rounded-sm bg-ink-soft/40" />
+    content = <span className="mx-auto block size-1 rounded-full bg-ink-soft/40" />
   } else if (c.code in codeStyle || c.code === 'Off') {
     content = t(`timesheet.short.${c.code as 'Off'}`)
     cls = codeStyle[c.code] ? `${codeStyle[c.code]} font-semibold` : `${cls} text-ink-soft/60`
@@ -256,7 +256,7 @@ function Legend() {
               code === 'Work' ? 'bg-panel text-ink ring-1 ring-line' : code === 'Planned' || code === 'Off' ? 'bg-panel ring-1 ring-line' : codeStyle[code]
             }`}
           >
-            {code === 'Work' ? '8' : code === 'Planned' ? <span className="size-1 rounded-sm bg-ink-soft/40" /> : t(`timesheet.short.${code as 'Off'}`)}
+            {code === 'Work' ? '8' : code === 'Planned' ? <span className="size-1 rounded-full bg-ink-soft/40" /> : t(`timesheet.short.${code as 'Off'}`)}
           </span>
           {t(`timesheet.codes.${code}`)}
         </li>

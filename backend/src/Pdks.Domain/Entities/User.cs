@@ -24,6 +24,8 @@ public class User : TenantEntity
 
     // ---- Kişisel bilgiler (kişi kendisi güncelleyebilir) ----
     public DateOnly? BirthDate { get; set; }
+    /// <summary>Doğum günü (yalnızca gün ve ay) ekip duyurularında görünsün mü. Kişi profilinden kapatabilir.</summary>
+    public bool ShareBirthday { get; set; } = true;
     public string? Address { get; set; }
 
     /// <summary>

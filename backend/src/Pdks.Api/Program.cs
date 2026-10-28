@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -24,7 +25,28 @@ builder.Services.Configure<JwtOptions>(jwtSection);
 var jwt = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
 
 if (jwt.SigningKey.Length < 32)
-    throw new InvalidOperationException("Jwt:SigningKey en az 32 karakter olmalı.");
+    throw new InvalidOperationException("Jwt:SigningKey en az 32 karakter olmalı (ortam değişkeni: Jwt__SigningKey).");
+// Geliştirme anahtarı depoda açıkça duruyor; üretimde kullanılırsa herkes geçerli token üretebilir.
+if (!builder.Environment.IsDevelopment() && jwt.SigningKey.StartsWith("GELISTIRME", StringComparison.OrdinalIgnoreCase))
+    throw new InvalidOperationException("Üretimde geliştirme JWT anahtarı kullanılamaz. Jwt__SigningKey ortam değişkenini ayarlayın.");
+
+builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection(AppOptions.SectionName));
+builder.Services.AddPdksRateLimits(builder.Configuration);
+
+// Ters vekil sunucu (reverse proxy) arkasında gerçek istemci IP'si ve https bilgisi başlıklardan okunur.
+var trustProxy = builder.Configuration.GetValue<bool>("ReverseProxy:TrustForwardedHeaders");
+if (trustProxy)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(o =>
+    {
+        o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // Barındırma ortamının vekil adresleri önceden bilinmediğinden tüm vekillere güvenilir;
+        // bu ayar yalnızca uygulama doğrudan internete açık değilken açılmalı.
+        o.KnownIPNetworks.Clear();
+        o.KnownProxies.Clear();
+    });
+}
 
 builder.Services.AddSingleton<TokenService>();
 builder.Services
@@ -62,8 +84,8 @@ builder.Services.AddCors(options => options.AddPolicy(WebCors, policy => policy
 
 var app = builder.Build();
 
-// ---- Geliştirme ortamında: migration + demo verisi + API dokümanı ----
-if (app.Environment.IsDevelopment())
+// ---- Açılışta migration (geliştirmede her zaman, üretimde Database:MigrateOnStartup ile) + demo verisi ----
+if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<PdksDbContext>();
@@ -71,17 +93,26 @@ if (app.Environment.IsDevelopment())
 
     var seedOptions = scope.ServiceProvider.GetRequiredService<IOptions<SeedOptions>>().Value;
     await scope.ServiceProvider.GetRequiredService<DbSeeder>().SeedAsync(seedOptions);
+}
 
+if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
     app.MapScalarApiReference(); // http://localhost:5080/scalar
 }
 
+if (trustProxy) app.UseForwardedHeaders();
+
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseCors(WebCors);
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseMiddleware<PasswordChangeGate>();
 app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+/// <summary>Entegrasyon testlerinin (WebApplicationFactory) uygulamayı başlatabilmesi için.</summary>
+public partial class Program;

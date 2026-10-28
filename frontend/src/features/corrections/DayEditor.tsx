@@ -9,8 +9,7 @@ import { Field, Input, Select } from '../../components/ui/Field'
 import { Dialog } from '../../components/ui/Overlay'
 import { Spinner } from '../../components/ui/Spinner'
 import { errorMessage } from '../../lib/api'
-import { addDays, formatDay, hhmm, isOvernight, isoDate } from '../../lib/dates'
-import { formatTime } from '../../lib/format'
+import { addDays, formatDay, hhmm, isOvernight } from '../../lib/dates'
 import type { AttendanceAction } from '../attendance/api'
 import { actionIcons } from '../attendance/TodayPage'
 import { useCorrections, useDayEvents, type EventDetail } from './api'
@@ -39,7 +38,6 @@ export function DayEditor({ target, onClose }: { target: DayEditorTarget | null;
   )
 }
 
-const localDate = (iso: string) => isoDate(new Date(iso))
 
 function Editor({ target }: { target: DayEditorTarget }) {
   const { t } = useTranslation()
@@ -155,15 +153,15 @@ function Editor({ target }: { target: DayEditorTarget }) {
                   ) : (
                     <>
                       <span className="tabular text-sm font-semibold">
-                        {formatTime(e.occurredAt)}
-                        {localDate(e.occurredAt) !== target.date && (
-                          <span className="ml-1 text-xs font-normal text-ink-soft">({formatDay(localDate(e.occurredAt), { day: 'numeric', month: 'short' })})</span>
+                        {e.localTime}
+                        {e.localDate !== target.date && (
+                          <span className="ml-1 text-xs font-normal text-ink-soft">({formatDay(e.localDate, { day: 'numeric', month: 'short' })})</span>
                         )}
                       </span>
                       {e.source === 'Manual' && <Badge tone="pause">{t('corrections.manual')}</Badge>}
                       <IconButton
                         label={t('corrections.editTime')}
-                        onClick={() => setEditing({ id: e.id, date: localDate(e.occurredAt), time: formatTime(e.occurredAt) })}
+                        onClick={() => setEditing({ id: e.id, date: e.localDate, time: e.localTime })}
                       >
                         <Pencil className="size-4" />
                       </IconButton>

@@ -64,4 +64,6 @@ public record KioskStateDto(
     DateTimeOffset ExpiresAt,
     int WindowSeconds,
     DateTimeOffset ServerNow,
-    List<KioskScanDto> Recent);
+    List<KioskScanDto> Recent,
+    /// <summary>QR bağlantısında kullanılacak genel adres; boşsa kiosk ekranının adresi kullanılır.</summary>
+    string? PublicUrl = null);

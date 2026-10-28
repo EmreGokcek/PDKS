@@ -3,13 +3,27 @@ using Pdks.Domain.Enums;
 
 namespace Pdks.Api.Contracts;
 
+/// <summary>
+/// Gün düzeltme ekranındaki kayıt. LocalDate / LocalTime şubenin saat dilimindedir;
+/// ekran bunları gösterir ve düzenlemede aynen geri gönderir (tarayıcının saat diliminden bağımsız).
+/// </summary>
 public record EventDetailDto(
     Guid Id,
     AttendanceEventType Type,
     DateTimeOffset OccurredAt,
     AttendanceSource Source,
     string? Note,
-    string? RecordedBy);
+    string? RecordedBy,
+    DateOnly LocalDate,
+    string LocalTime)
+{
+    public static EventDetailDto Create(Domain.Entities.AttendanceEvent e, string? recordedBy, TimeZoneInfo tz)
+    {
+        var local = TimeZoneInfo.ConvertTime(e.OccurredAt, tz);
+        return new EventDetailDto(e.Id, e.Type, e.OccurredAt, e.Source, e.Note, recordedBy,
+            DateOnly.FromDateTime(local.DateTime), local.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture));
+    }
+}
 
 /// <summary>Elle eklenen ya da değiştirilen kayıt. Tarih ve saat şubenin yerel saatidir.</summary>
 public record ManualEventRequest(

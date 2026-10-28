@@ -1,7 +1,7 @@
 import { motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { roleHome } from '../auth/types'
 import { DayProgress, Greeting, LiveClock } from '../components/LiveClock'
@@ -29,6 +29,7 @@ export function LoginPage() {
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [shake, setShake] = useState(0)
@@ -40,7 +41,7 @@ export function LoginPage() {
     setError(null)
     setSubmitting(true)
     try {
-      const loggedIn = await login(email, password)
+      const loggedIn = await login(email, password, rememberMe)
       const from = (location.state as { from?: string } | null)?.from
       navigate(loggedIn.mustChangePassword ? '/sifre-degistir' : (from ?? roleHome[loggedIn.role]), { replace: true })
     } catch (err) {
@@ -139,6 +140,19 @@ export function LoginPage() {
               )}
             </Field>
 
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[var(--color-signal)]"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>
+                {t('login.rememberMe')}
+                <span className="block text-ink-soft">{t('login.rememberMeHint')}</span>
+              </span>
+            </label>
+
             {error && (
               <motion.p
                 role="alert"
@@ -154,6 +168,12 @@ export function LoginPage() {
               {submitting ? t('login.submitting') : t('login.submit')}
             </Button>
           </motion.form>
+
+          <p className="mt-6 text-xs text-ink-soft">
+            <Link to="/kvkk" className="underline underline-offset-4 hover:text-ink">
+              {t('privacy.link')}
+            </Link>
+          </p>
 
           {import.meta.env.DEV && (
             <div className="mt-10 border-t border-line pt-6">

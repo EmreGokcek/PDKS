@@ -12,6 +12,8 @@ export interface User {
   branchId: string | null
   branchName: string | null
   mustChangePassword: boolean
+  /** Güncel KVKK aydınlatma metni onaylandı mı. */
+  privacyNoticeAccepted: boolean
 }
 
 export interface LoginResponse {

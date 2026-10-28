@@ -22,6 +22,7 @@ public class PdksDbContext(DbContextOptions<PdksDbContext> options, ICurrentUser
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<Congratulation> Congratulations => Set<Congratulation>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     /// <summary>
     /// Global filtrede kullanılır. EF bu değeri her sorguda o anki kullanıcıdan okur.

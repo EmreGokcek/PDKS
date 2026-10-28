@@ -19,6 +19,10 @@ export function RequireRole({ roles, children }: { roles?: Role[]; children: Rea
   if (user.mustChangePassword && location.pathname !== '/sifre-degistir')
     return <Navigate to="/sifre-degistir" replace />
 
+  // Şifre belirlendikten sonra, güncel aydınlatma metni okunmadıysa önce o gösterilir.
+  if (!user.mustChangePassword && !user.privacyNoticeAccepted && location.pathname !== '/aydinlatma')
+    return <Navigate to="/aydinlatma" replace />
+
   if (roles && !roles.includes(user.role)) return <Navigate to={roleHome[user.role]} replace />
 
   return children

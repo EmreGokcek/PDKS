@@ -21,6 +21,7 @@ public class KioskController(
     ICurrentUser currentUser,
     KioskQrTokens qrTokens,
     AnnouncementFeed feed,
+    Microsoft.Extensions.Options.IOptions<AppOptions> appOptions,
     TimeProvider time) : ControllerBase
 {
     [HttpGet("state")]
@@ -58,7 +59,8 @@ public class KioskController(
             expiresAt,
             KioskQrTokens.WindowSeconds,
             now,
-            recent.Select(r => new KioskScanDto($"{r.FirstName} {r.LastName[..1]}.", r.Type, r.OccurredAt)).ToList());
+            recent.Select(r => new KioskScanDto($"{r.FirstName} {r.LastName[..1]}.", r.Type, r.OccurredAt)).ToList(),
+            string.IsNullOrWhiteSpace(appOptions.Value.PublicUrl) ? null : appOptions.Value.PublicUrl.TrimEnd('/'));
     }
 
     /// <summary>

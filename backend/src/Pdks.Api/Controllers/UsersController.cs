@@ -27,7 +27,8 @@ public class UsersController(
     IPasswordHasher<User> hasher,
     ICurrentUser currentUser,
     AuditLogger audit,
-    RefreshTokenService refreshTokens) : ControllerBase
+    RefreshTokenService refreshTokens,
+    AccessScope scope) : ControllerBase
 {
     /// <summary>Bu kullanıcının atayabileceği roller (İK yönetici hesabı açamaz).</summary>
     private IReadOnlyCollection<UserRole> Assignable => currentUser.Role is { } r ? RolePermissions.AssignableRoles(r) : [];
@@ -42,10 +43,8 @@ public class UsersController(
         [FromQuery] bool? isActive,
         CancellationToken ct)
     {
-        var query = db.Users.AsNoTracking().Where(u => u.Role != UserRole.Kiosk);
-
-        if (currentUser.Role == UserRole.Manager)
-            query = query.Where(u => u.BranchId == currentUser.BranchId);
+        // Yönetici herkesi, müdür kendi şubesindeki personel ve müdürleri görür.
+        var query = scope.VisibleStaff().AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -72,8 +71,7 @@ public class UsersController(
     public async Task<ActionResult<UserListItem>> Get(Guid id, CancellationToken ct)
     {
         var user = await FindAsync(id, ct);
-        if (user is null) return this.NotFoundError("Personel bulunamadı.");
-        if (currentUser.Role == UserRole.Manager && user.BranchId != currentUser.BranchId)
+        if (user is null || !await scope.VisibleStaff().AnyAsync(u => u.Id == id, ct))
             return this.NotFoundError("Personel bulunamadı.");
         return ToItem(user);
     }

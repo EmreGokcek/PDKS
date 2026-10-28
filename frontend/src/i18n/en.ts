@@ -912,6 +912,7 @@ const en: Translations = {
     note: 'This confirms that you were informed; it is not explicit consent. Explicit consent is asked separately for special category data such as blood type.',
   },
   errors: {
+    not_your_staff: 'You cannot correct this person’s records; an admin or HR can.',
     swap_not_work: 'Only working shifts can be swapped.',
     swap_past: 'Started or past shifts cannot be swapped.',
     swap_unpublished: 'Swaps are only possible in published weeks.',

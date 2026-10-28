@@ -29,14 +29,33 @@ public record AuditPageDto(List<AuditEntryDto> Items, DateTimeOffset? NextBefore
 [Authorize(Policy = Perm.AuditView)]
 public class AuditController(PdksDbContext db) : ControllerBase
 {
+    /// <summary>Tür süzgeci: her tür, işlem adının başladığı öneklerle tanımlanır.</summary>
+    private static readonly Dictionary<string, string[]> Categories = new()
+    {
+        ["users"] = ["user.created", "user.updated", "user.activated", "user.deactivated", "profile."],
+        ["security"] = ["user.locked_out", "user.password_", "user.privacy_"],
+        ["attendance"] = ["attendance."],
+        ["requests"] = ["request.", "swap."],
+        ["shifts"] = ["shifts.", "shift_template."],
+        ["leave"] = ["leave.", "holiday."],
+        ["announcements"] = ["announcement."],
+        ["settings"] = ["work_rule.", "company.", "branch.", "kiosk."],
+    };
+
     /// <param name="before">Bu zamandan önceki kayıtlar (sayfalama).</param>
     /// <param name="area">İşlem grubu (işlem adının başı): user, profile, attendance, shift, request, announcement, work_rule.</param>
+    /// <param name="category">Tür: users, security, attendance, requests, shifts, leave, announcements, settings.</param>
     /// <param name="actorId">Yalnızca bu kişinin yaptıkları.</param>
+    /// <param name="from">Bu günden itibaren (dahil).</param>
+    /// <param name="to">Bu güne kadar (dahil).</param>
     [HttpGet]
     public async Task<AuditPageDto> List(
         [FromQuery] DateTimeOffset? before,
         [FromQuery] string? area,
+        [FromQuery] string? category,
         [FromQuery] Guid? actorId,
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
         [FromQuery] int take = 50,
         CancellationToken ct = default)
     {
@@ -44,7 +63,11 @@ public class AuditController(PdksDbContext db) : ControllerBase
         var query = db.AuditLogs.AsNoTracking();
         if (before is { } b) query = query.Where(a => a.CreatedAt < b);
         if (!string.IsNullOrWhiteSpace(area)) query = query.Where(a => a.Action.StartsWith(area));
+        if (category is not null && Categories.TryGetValue(category, out var prefixes)) query = query.Where(StartsWithAny(prefixes));
         if (actorId is { } actor) query = query.Where(a => a.ActorUserId == actor);
+        // Gün sınırları saat dilimi farkı için birkaç saat geniş tutulur.
+        if (from is { } f) query = query.Where(a => a.CreatedAt >= new DateTimeOffset(f.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddHours(-14));
+        if (to is { } t) query = query.Where(a => a.CreatedAt < new DateTimeOffset(t.AddDays(1).ToDateTime(TimeOnly.MinValue), TimeSpan.Zero).AddHours(14));
 
         var logs = await query.OrderByDescending(a => a.CreatedAt).Take(take + 1).ToListAsync(ct);
         var hasMore = logs.Count > take;
@@ -71,5 +94,18 @@ public class AuditController(PdksDbContext db) : ControllerBase
             Parse(l.OldValues), Parse(l.NewValues), l.Reason)).ToList();
 
         return new AuditPageDto(items, hasMore ? logs[^1].CreatedAt : null);
+    }
+
+    /// <summary>"İşlem şu öneklerden biriyle başlar" koşulunu SQL'e çevrilebilir biçimde kurar.</summary>
+    private static System.Linq.Expressions.Expression<Func<AuditLog, bool>> StartsWithAny(string[] prefixes)
+    {
+        var a = System.Linq.Expressions.Expression.Parameter(typeof(AuditLog), "a");
+        var action = System.Linq.Expressions.Expression.Property(a, nameof(AuditLog.Action));
+        var startsWith = typeof(string).GetMethod(nameof(string.StartsWith), [typeof(string)])!;
+        System.Linq.Expressions.Expression body = System.Linq.Expressions.Expression.Constant(false);
+        foreach (var p in prefixes)
+            body = System.Linq.Expressions.Expression.OrElse(body,
+                System.Linq.Expressions.Expression.Call(action, startsWith, System.Linq.Expressions.Expression.Constant(p)));
+        return System.Linq.Expressions.Expression.Lambda<Func<AuditLog, bool>>(body, a);
     }
 }

@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<Leave.HolidayService>();
         services.AddScoped<Leave.LeaveService>();
         services.AddScoped<Alerts.AttendanceAlertScanner>();
+        services.AddScoped<Auth.AccessScope>();
 
         return services;
     }

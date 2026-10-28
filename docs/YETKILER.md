@@ -43,7 +43,10 @@ Herkes (kiosk hariç): kendi profili, bildirimler, duyuruları okuma ve kutlama.
 
 - Kimse kendi talebini onaylayamaz, kendi giriş-çıkış kaydını düzeltemez (talep gönderir).
 - Kimse kendi rolünü değiştiremez, kendi hesabını pasife alamaz.
-- Müdür başka şubenin verisini hiçbir uç noktada göremez (veri sorgu düzeyinde süzülür).
+- Müdür başka şubenin verisini hiçbir uç noktada göremez (veri sorgu düzeyinde süzülür); yöneticileri listelerde görmez.
+- Kişi bazlı kurallar tek yerde: `AccessScope` (sunucu) ve `auth/permissions.ts` (arayüz).
+- Kayıt düzeltme ve talep onayı: müdür yalnızca kendi şubesindeki **personelin**; İK personel ve müdürlerin;
+  yönetici herkesin (kendisi hariç). Müdürün talebi diğer müdürlere bildirilmez, İK'ya ve yöneticilere gider.
 - Firmalar birbirinin verisini göremez (veritabanı düzeyinde firma filtresi).
 - Canlı pano bağlantısı yetkiyle aynı kapsamı izler: müdür yalnızca kendi şubesindeki değişiklikleri, yönetici ve İK tüm firmayı duyar.
   Bağlantı veri taşımaz, yalnızca "değişti" der; veri yine yetki kontrolü yapan uç noktadan çekilir.

@@ -121,6 +121,8 @@ Yönetici, İnsan kaynakları, Müdür, Personel ve Kiosk rolleri; kim neyi gör
 
 ## Mimari notlar
 
+- Roller ve yetkiler: [docs/YETKILER.md](docs/YETKILER.md)
+
 - **Çok firmalı yapı:** Her tablo `CompanyId` taşır. `PdksDbContext` içindeki global filtre sayesinde bir kullanıcı yalnızca kendi firmasının verisini görebilir.
 - **Şube hazırlığı:** Kayıtlar `BranchId` taşır; şimdilik tek şube kullanılıyor.
 - **Dinamik QR:** Kiosk QR'ı 30 saniyede bir değişir ve kioskun gizli anahtarıyla HMAC imzalıdır (`KioskQrTokens`). Bir önceki pencere de kabul edildiğinden bir kod en fazla ~60 sn geçerlidir.

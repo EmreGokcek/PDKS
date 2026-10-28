@@ -910,6 +910,7 @@ const tr = {
     note: 'Bu onay, bilgilendirildiğinin kaydıdır; açık rıza yerine geçmez. Kan grubu gibi özel nitelikli veriler için ayrıca açık rızan istenir.',
   },
   errors: {
+    not_your_staff: 'Bu kişinin kayıtlarını düzeltme yetkin yok; yönetici ya da İK düzeltir.',
     swap_not_work: 'Yalnızca çalışma vardiyası takas edilebilir.',
     swap_past: 'Başlamış ya da geçmiş vardiya takas edilemez.',
     swap_unpublished: 'Henüz yayınlanmamış haftada takas istenemez.',

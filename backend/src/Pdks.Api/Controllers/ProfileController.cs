@@ -17,7 +17,7 @@ namespace Pdks.Api.Controllers;
 /// <summary>Kişinin kendi profili. Ad, e-posta, pozisyon gibi alanları yalnızca admin değiştirir.</summary>
 [ApiController]
 [Authorize(Roles = Roles.Staff)]
-public class ProfileController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit, TimeProvider time) : ControllerBase
+public class ProfileController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit, TimeProvider time, AccessScope scope) : ControllerBase
 {
     public static readonly string[] BloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "0+", "0-"];
 
@@ -65,8 +65,7 @@ public class ProfileController(PdksDbContext db, ICurrentUser currentUser, Audit
     public async Task<ActionResult<ProfileDto>> Staff(Guid id, CancellationToken ct)
     {
         var user = await Load(id, ct);
-        if (user is null || user.Role == UserRole.Kiosk) return this.NotFoundError("Personel bulunamadı.");
-        if (currentUser.Role == UserRole.Manager && user.BranchId != currentUser.BranchId)
+        if (user is null || !await scope.VisibleStaff().AnyAsync(u => u.Id == id, ct))
             return this.NotFoundError("Personel bulunamadı.");
         return ProfileDto.From(user);
     }

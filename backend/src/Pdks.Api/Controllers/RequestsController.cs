@@ -99,7 +99,7 @@ public class MyRequestsController(
 
         db.StaffRequests.Add(entity);
         audit.Log("request.created", nameof(StaffRequest), entity.Id, newValues: new { Type = entity.Type.ToString() });
-        notifier.Notify(await notifier.ReviewersAsync(entity.BranchId, user.Id, ct), NotificationType.RequestCreated,
+        notifier.Notify(await notifier.ReviewersAsync(entity.BranchId, user.Id, user.Role, ct), NotificationType.RequestCreated,
             new { requestId = entity.Id, name = user.FullName, type = entity.Type.ToString() });
         await db.SaveChangesAsync(ct);
         return (await RequestQueries.ToDtos(db, db.StaffRequests.Where(r => r.Id == entity.Id), ct)).Single();
@@ -242,10 +242,16 @@ public class RequestsController(
         return (entity, null);
     }
 
-    private IQueryable<StaffRequest> Scope() =>
-        currentUser.Role == UserRole.Manager
-            ? db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId)
-            : db.StaffRequests;
+    /// <summary>
+    /// Görüp karara bağlayabildiği talepler (AccessScope.CanReview): yönetici hepsini, İK personel ve müdürlerinkini,
+    /// müdür şubesindeki personelinkileri.
+    /// </summary>
+    private IQueryable<StaffRequest> Scope() => currentUser.Role switch
+    {
+        UserRole.Manager => db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId && r.User!.Role == UserRole.Employee),
+        UserRole.HumanResources => db.StaffRequests.Where(r => r.User!.Role == UserRole.Employee || r.User!.Role == UserRole.Manager),
+        _ => db.StaffRequests
+    };
 }
 
 internal static class RequestQueries

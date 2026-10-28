@@ -11,5 +11,9 @@ public enum NotificationType
     RequestApproved = 4,
     RequestRejected = 5,
     /// <summary>Yönetici kişinin kaydını düzeltti.</summary>
-    RecordCorrected = 6
+    RecordCorrected = 6,
+    /// <summary>Yeni duyuru yayınlandı.</summary>
+    AnnouncementPublished = 7,
+    /// <summary>Bir ekip arkadaşı doğum gününü / iş yıl dönümünü kutladı.</summary>
+    Congratulated = 8
 }

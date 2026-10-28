@@ -23,6 +23,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         if (await db.Companies.AnyAsync(ct))
         {
             await EnsureDemoShiftTemplatesAsync(ct);
+            await EnsureDemoSocialAsync(ct);
             return;
         }
 
@@ -68,6 +69,40 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         logger.LogInformation("Demo verisi oluşturuldu: {Company} / {Branch}", company.Name, branch.Name);
 
         await EnsureDemoShiftTemplatesAsync(ct);
+        await EnsureDemoSocialAsync(ct);
+    }
+
+    /// <summary>
+    /// Duyuru panosu boş görünmesin diye demo firmasına bir hoş geldin duyurusu ekler;
+    /// tarihleri boş demo hesaplara bugün doğum günü ve yaklaşan bir iş yıl dönümü verir.
+    /// Firmada daha önce hiç duyuru varsa hiçbir şey yapmaz.
+    /// </summary>
+    private async Task EnsureDemoSocialAsync(CancellationToken ct)
+    {
+        var company = await db.Companies.IgnoreQueryFilters().OrderBy(c => c.CreatedAt).FirstOrDefaultAsync(ct);
+        if (company is null) return;
+        if (await db.Announcements.IgnoreQueryFilters().AnyAsync(a => a.CompanyId == company.Id, ct)) return;
+
+        var users = await db.Users.IgnoreQueryFilters().Where(u => u.CompanyId == company.Id).ToListAsync(ct);
+        var admin = users.FirstOrDefault(u => u.Role == UserRole.Admin);
+        if (admin is null) return;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        if (users.FirstOrDefault(u => u.Role == UserRole.Employee) is { BirthDate: null } employee)
+            employee.BirthDate = new DateOnly(1996, today.Month, today.Month == 2 && today.Day == 29 ? 28 : today.Day);
+        if (users.FirstOrDefault(u => u.Role == UserRole.Manager) is { HireDate: null } manager)
+            manager.HireDate = today.AddDays(2).AddYears(-3);
+
+        db.Announcements.Add(new Announcement
+        {
+            CompanyId = company.Id,
+            Title = "PDKS'ye hoş geldiniz",
+            Body = "Giriş, çıkış ve molalarınızı girişteki kiosktan QR okutarak kaydedebilirsiniz. Vardiyalarınızı ve taleplerinizi uygulamadan takip edin.",
+            IsPinned = true,
+            CreatedById = admin.Id
+        });
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Demo duyurusu ve kutlama tarihleri eklendi.");
     }
 
     /// <summary>Demo firmasında hiç vardiya şablonu yoksa örnek şablonlar ekler.</summary>

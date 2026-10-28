@@ -7,6 +7,8 @@ using Pdks.Api.Contracts;
 using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
+using Pdks.Infrastructure.Social;
+using Pdks.Domain.Enums;
 
 namespace Pdks.Api.Controllers;
 
@@ -18,6 +20,7 @@ public class KioskController(
     PdksDbContext db,
     ICurrentUser currentUser,
     KioskQrTokens qrTokens,
+    AnnouncementFeed feed,
     TimeProvider time) : ControllerBase
 {
     [HttpGet("state")]
@@ -56,5 +59,30 @@ public class KioskController(
             KioskQrTokens.WindowSeconds,
             now,
             recent.Select(r => new KioskScanDto($"{r.FirstName} {r.LastName[..1]}.", r.Type, r.OccurredAt)).ToList());
+    }
+
+    /// <summary>
+    /// Kiosk ekranında dönen satırlar: girişte gösterilmesi seçilen duyurular ve bugünkü kutlamalar.
+    /// Ekran herkese açık olduğundan soyadının yalnızca baş harfi gösterilir.
+    /// </summary>
+    [HttpGet("feed")]
+    public async Task<ActionResult<List<KioskFeedItemDto>>> Feed(CancellationToken ct)
+    {
+        var branchId = await db.Kiosks.Where(k => k.DeviceUserId == currentUser.UserId && k.IsActive)
+            .Select(k => (Guid?)k.BranchId).FirstOrDefaultAsync(ct);
+        if (branchId is null)
+            return this.ApiError(404, "kiosk_not_found", "Bu hesaba bağlı bir kiosk yok.");
+
+        var result = await feed.BuildAsync(new FeedScope(branchId, false), null, kioskOnly: true, ct: ct);
+        var items = new List<KioskFeedItemDto>();
+        foreach (var c in result.Celebrations.Where(c => c.Celebration.DaysUntil == 0))
+        {
+            var parts = c.Celebration.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            var shortName = parts.Length > 1 ? $"{string.Join(' ', parts[..^1])} {parts[^1][..1]}." : c.Celebration.Name;
+            items.Add(new KioskFeedItemDto(
+                c.Celebration.Kind == CelebrationKind.Birthday ? "birthday" : "anniversary", shortName, null, c.Celebration.Years));
+        }
+        items.AddRange(result.Announcements.Select(a => new KioskFeedItemDto("announcement", a.Title, a.Body, null)));
+        return items;
     }
 }

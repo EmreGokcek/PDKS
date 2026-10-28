@@ -82,3 +82,38 @@ public record ReportPersonDto(
 public record TeamReportDto(DateOnly From, DateOnly To, int WeeklyWorkMinutes, DayOfWeek WeekStartsOn, List<ReportPersonDto> People);
 
 public record PersonReportDto(ReportPersonDto Summary, List<DayRecordDto> Days);
+
+public record TimesheetCellDto(
+    DateOnly Date,
+    Pdks.Domain.Reports.TimesheetCode Code,
+    double Hours,
+    bool Late,
+    bool EarlyLeave,
+    bool BreakOverrun,
+    bool Unclosed,
+    bool Unplanned);
+
+public record TimesheetRowDto(
+    Guid UserId,
+    string Name,
+    string? EmployeeNumber,
+    string? Position,
+    List<TimesheetCellDto> Cells,
+    Pdks.Domain.Reports.TimesheetTotals Totals);
+
+public record TimesheetDto(
+    string CompanyName,
+    string? BranchName,
+    int Year,
+    int Month,
+    DateOnly From,
+    DateOnly To,
+    int WeeklyWorkMinutes,
+    List<TimesheetRowDto> Rows)
+{
+    public static TimesheetDto Create(Pdks.Domain.Reports.Timesheet t) => new(
+        t.CompanyName, t.BranchName, t.Year, t.Month, t.From, t.To, t.WeeklyWorkMinutes,
+        t.Rows.Select(r => new TimesheetRowDto(r.UserId, r.Name, r.EmployeeNumber, r.Position,
+            r.Cells.Select(c => new TimesheetCellDto(c.Date, c.Code, Math.Round(c.Hours, 2), c.Late, c.EarlyLeave, c.BreakOverrun, c.Unclosed, c.Unplanned)).ToList(),
+            r.Totals)).ToList());
+}

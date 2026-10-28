@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.*" />
+    <!-- Excel (.xlsx) üretimi; MIT lisanslı -->
+    <PackageReference Include="ClosedXML" Version="0.*" />
     <!-- Dolaylı gelen eski sürümdeki güvenlik açığını kapatmak için güncel sürüm sabitlendi. -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="10.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.*">

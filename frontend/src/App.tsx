@@ -23,6 +23,7 @@ const TeamReportPage = named(() => import('./features/dashboard/TeamReportPage')
 const MyRequestsPage = named(() => import('./features/requests/MyRequestsPage'), 'MyRequestsPage')
 const RequestsPage = named(() => import('./features/requests/RequestsPage'), 'RequestsPage')
 const ProfilePage = named(() => import('./features/profile/ProfilePage'), 'ProfilePage')
+const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 'TimesheetPage')
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
@@ -42,6 +43,7 @@ export default function App() {
           <Route index element={<Navigate to="pano" replace />} />
           <Route path="pano" element={<LiveDashboardPage />} />
           <Route path="sureler" element={<TeamReportPage />} />
+          <Route path="puantaj" element={<TimesheetPage />} />
           <Route path="talepler" element={<RequestsPage />} />
           <Route path="personel" element={<UsersPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
@@ -52,6 +54,7 @@ export default function App() {
         <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
           <Route index element={<LiveDashboardPage />} />
           <Route path="sureler" element={<TeamReportPage />} />
+          <Route path="puantaj" element={<TimesheetPage />} />
           <Route path="talepler" element={<RequestsPage />} />
           <Route path="taleplerim" element={<MyRequestsPage />} />
           <Route path="bugunum" element={<TodayPage />} />

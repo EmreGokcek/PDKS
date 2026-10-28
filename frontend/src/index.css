@@ -81,3 +81,36 @@
     transition: none;
   }
 }
+
+/* ---- Baskı (PDF) düzeni: A4 yatay, uygulama çerçevesi gizli, her zaman açık tema ---- */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm;
+  }
+  html,
+  html.dark {
+    color-scheme: light;
+    --color-brand: #16324a;
+    --color-ink: #16324a;
+    --color-ink-soft: #52687c;
+    --color-paper: #ffffff;
+    --color-panel: #ffffff;
+    --color-panel-2: #f2f5f7;
+    --color-line: #c9d3db;
+    --color-signal: #1f9a76;
+    --color-signal-soft: #e3f4ee;
+    --color-pause: #b97f0c;
+    --color-pause-soft: #fbf1dc;
+    --color-overrun: #c2410c;
+    --color-overrun-soft: #fdebe2;
+  }
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+}

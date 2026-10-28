@@ -23,6 +23,8 @@ public class StaffRequest : TenantEntity
     public ShiftKind? LeaveKind { get; set; }
     public DateOnly? StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
+    /// <summary>Yıllık izinde düşülecek gün (tatil ve hafta tatilleri hariç); talep anında hesaplanır.</summary>
+    public int? LeaveDays { get; set; }
 
     public required string Reason { get; set; }
 

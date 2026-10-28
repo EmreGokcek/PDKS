@@ -35,6 +35,8 @@ public static class DependencyInjection
         services.AddScoped<Social.AnnouncementFeed>();
         services.Configure<Auth.LoginSessionOptions>(configuration.GetSection(Auth.LoginSessionOptions.SectionName));
         services.AddScoped<Auth.RefreshTokenService>();
+        services.AddScoped<Leave.HolidayService>();
+        services.AddScoped<Leave.LeaveService>();
 
         return services;
     }

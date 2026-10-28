@@ -218,3 +218,27 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
         b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+internal class PublicHolidayConfiguration : IEntityTypeConfiguration<PublicHoliday>
+{
+    public void Configure(EntityTypeBuilder<PublicHoliday> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        b.HasIndex(x => new { x.CompanyId, x.Date }).IsUnique();
+    }
+}
+
+internal class HolidayYearConfiguration : IEntityTypeConfiguration<HolidayYear>
+{
+    public void Configure(EntityTypeBuilder<HolidayYear> b) => b.HasIndex(x => new { x.CompanyId, x.Year }).IsUnique();
+}
+
+internal class LeaveAdjustmentConfiguration : IEntityTypeConfiguration<LeaveAdjustment>
+{
+    public void Configure(EntityTypeBuilder<LeaveAdjustment> b)
+    {
+        b.Property(x => x.Reason).HasMaxLength(300).IsRequired();
+        b.HasIndex(x => x.UserId);
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

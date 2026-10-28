@@ -15,6 +15,13 @@ public static class ApiErrors
         return new ObjectResult(problem) { StatusCode = status };
     }
 
+    /// <summary>Hata yanıtına arayüzün metinde kullanacağı ek alan ekler (ör. kalan gün).</summary>
+    public static ObjectResult WithExtension(this ObjectResult result, string key, object? value)
+    {
+        if (result.Value is ProblemDetails problem) problem.Extensions[key] = value;
+        return result;
+    }
+
     public static ObjectResult NotFoundError(this ControllerBase c, string title = "Kayıt bulunamadı.") =>
         c.ApiError(StatusCodes.Status404NotFound, "not_found", title);
 }

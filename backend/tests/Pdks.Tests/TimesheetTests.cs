@@ -88,4 +88,19 @@ public class TimesheetTests
         Assert.Equal("Ad soyad", detail.Cell(1, 2).GetString());
         Assert.Equal(32, detail.LastRowUsed()!.RowNumber());    // başlık + 31 gün
     }
+
+    [Fact]
+    public void Public_holidays_are_marked_and_holiday_work_is_totalled()
+    {
+        // 14 Ekim (devamsız) ve 1 Ekim (çalıştı, 10 sa) tatil sayılırsa:
+        var holidays = new HashSet<DateOnly> { new(2026, 10, 14), new(2026, 10, 1), new(2026, 10, 29) };
+        var row = TimesheetBuilder.BuildRow(Guid.NewGuid(), "Mehmet Demir", "P-102", "Kasiyer", October(), 2026, 10, Today, 45 * 60, DayOfWeek.Monday, 60, holidays);
+        Assert.Equal(TimesheetCode.PublicHoliday, row.Cells[13].Code);   // gelmediği gün devamsız değil, resmi tatil
+        Assert.Equal(TimesheetCode.Work, row.Cells[0].Code);             // tatilde çalıştı
+        Assert.Equal(TimesheetCode.PublicHoliday, row.Cells[28].Code);   // 29 Ekim (gelecek) planlı değil, tatil
+        Assert.Equal(0, row.Totals.AbsentDays);
+        Assert.Equal(2, row.Totals.PublicHolidayDays);
+        Assert.Equal(10, row.Totals.HolidayWorkHours, 3);
+        Assert.Equal("RT", TimesheetBuilder.ShortCode(TimesheetCode.PublicHoliday));
+    }
 }

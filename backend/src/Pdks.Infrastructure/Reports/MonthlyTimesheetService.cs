@@ -6,7 +6,7 @@ using Pdks.Infrastructure.Persistence;
 namespace Pdks.Infrastructure.Reports;
 
 /// <summary>Seçilen kişiler için aylık puantajı hazırlar.</summary>
-public class MonthlyTimesheetService(PdksDbContext db, AttendanceReports reports)
+public class MonthlyTimesheetService(PdksDbContext db, AttendanceReports reports, Leave.HolidayService holidays)
 {
     public async Task<Timesheet> BuildAsync(IReadOnlyList<User> users, int year, int month, CancellationToken ct = default)
     {
@@ -20,9 +20,10 @@ public class MonthlyTimesheetService(PdksDbContext db, AttendanceReports reports
         var branchId = users.Select(u => u.BranchId).FirstOrDefault(b => b != null);
         var branch = branchId is null ? null : await db.Branches.Where(b => b.Id == branchId).Select(b => b.Name).FirstOrDefaultAsync(ct);
 
+        var fullHolidays = await holidays.FullDaysAsync(first, last, ct);
         var rows = ctx.People.Select(p => TimesheetBuilder.BuildRow(
             p.User.Id, p.User.FullName, p.User.EmployeeNumber, p.User.Position, p.Days, year, month, today,
-            rules.WeeklyWorkMinutes, rules.WeekStartsOn, rules.DailyBreakMinutes)).ToList();
+            rules.WeeklyWorkMinutes, rules.WeekStartsOn, rules.DailyBreakMinutes, fullHolidays)).ToList();
 
         return new Timesheet(company, branch, year, month, first, last, rules.WeeklyWorkMinutes, rules.WeekStartsOn, ctx.Tz, rows);
     }

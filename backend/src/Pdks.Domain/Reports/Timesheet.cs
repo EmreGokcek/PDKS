@@ -20,7 +20,9 @@ public enum TimesheetCode
     /// <summary>Planı vardı, gelmedi.</summary>
     Absent,
     /// <summary>Planı yok, çalışmadı.</summary>
-    Off
+    Off,
+    /// <summary>Resmi tatil (tam gün), çalışmadı.</summary>
+    PublicHoliday
 }
 
 public record TimesheetCell(
@@ -47,7 +49,10 @@ public record TimesheetTotals(
     int SickLeaveDays,
     int ExcusedLeaveDays,
     double BreakOverrunHours,
-    int UnclosedCount);
+    int UnclosedCount,
+    int PublicHolidayDays = 0,
+    /// <summary>Tam gün resmi tatilde çalışılan saat (ücret hesabında ayrıca ödenir).</summary>
+    double HolidayWorkHours = 0);
 
 public record TimesheetRow(
     Guid UserId,
@@ -92,11 +97,13 @@ public static class TimesheetBuilder
     public static TimesheetRow BuildRow(
         Guid userId, string name, string? employeeNumber, string? position,
         IReadOnlyList<DayRecord> days, int year, int month, DateOnly today,
-        int weeklyWorkMinutes, DayOfWeek weekStartsOn, int defaultBreakMinutes)
+        int weeklyWorkMinutes, DayOfWeek weekStartsOn, int defaultBreakMinutes,
+        IReadOnlySet<DateOnly>? fullDayHolidays = null)
     {
         var (first, last, _, _) = Range(year, month, weekStartsOn);
         var monthDays = days.Where(d => d.Date >= first && d.Date <= last).OrderBy(d => d.Date).ToList();
-        var cells = monthDays.Select(d => Cell(d, today)).ToList();
+        var isHoliday = (DateOnly d) => fullDayHolidays?.Contains(d) == true;
+        var cells = monthDays.Select(d => Cell(d, today, isHoliday(d.Date))).ToList();
 
         var weekly = TimeSpan.FromMinutes(weeklyWorkMinutes);
         var overtime = days
@@ -124,12 +131,15 @@ public static class TimesheetBuilder
             SickLeaveDays: cells.Count(c => c.Code == TimesheetCode.SickLeave),
             ExcusedLeaveDays: cells.Count(c => c.Code == TimesheetCode.ExcusedLeave),
             BreakOverrunHours: monthDays.Sum(d => d.BreakOverrun.TotalHours),
-            UnclosedCount: monthDays.Count(d => d.HasUnclosedSession));
+            UnclosedCount: monthDays.Count(d => d.HasUnclosedSession),
+            PublicHolidayDays: cells.Count(c => c.Code == TimesheetCode.PublicHoliday),
+            HolidayWorkHours: cells.Where(c => c.Code == TimesheetCode.Work && isHoliday(c.Date)).Sum(c => c.Hours));
 
         return new TimesheetRow(userId, name, employeeNumber, position, cells, monthDays, totals);
     }
 
-    public static TimesheetCell Cell(DayRecord d, DateOnly today)
+    /// <param name="holiday">Gün tam gün resmi tatil mi: çalışılmadıysa "RT", devamsızlık sayılmaz.</param>
+    public static TimesheetCell Cell(DayRecord d, DateOnly today, bool holiday = false)
     {
         var leave = d.Plan?.Kind switch
         {
@@ -152,6 +162,11 @@ public static class TimesheetBuilder
                 _ => TimesheetCode.Off
             };
 
+        // Resmi tatilde çalışılmadıysa (hafta tatili / rapor gibi kendi kodu olanlar hariç) "resmi tatil" yazılır.
+        if (holiday && code is TimesheetCode.Off or TimesheetCode.Absent or TimesheetCode.Planned or TimesheetCode.None
+            or TimesheetCode.AnnualLeave)
+            code = TimesheetCode.PublicHoliday;
+
         return new TimesheetCell(
             d.Date, code, code == TimesheetCode.Work ? d.Worked.TotalHours : 0,
             d.LateMinutes > 0, d.EarlyLeaveMinutes > 0, d.BreakOverrun > TimeSpan.Zero, d.HasUnclosedSession,
@@ -166,6 +181,7 @@ public static class TimesheetBuilder
         TimesheetCode.SickLeave => "R",
         TimesheetCode.ExcusedLeave => "Mİ",
         TimesheetCode.Absent => "D",
+        TimesheetCode.PublicHoliday => "RT",
         TimesheetCode.Off => "–",
         _ => ""
     };

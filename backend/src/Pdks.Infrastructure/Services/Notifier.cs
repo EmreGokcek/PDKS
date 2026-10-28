@@ -23,13 +23,14 @@ public class Notifier(PdksDbContext db)
     public void Notify(Guid userId, NotificationType type, object? data = null) => Notify([userId], type, data);
 
     /// <summary>
-    /// Talebi karara bağlayabilecek kişiler (talep sahibi hariç): personelin talebinde şube müdürleri ve yöneticiler,
-    /// müdürün talebinde yalnızca yöneticiler.
+    /// Talebi karara bağlayabilecek kişiler (talep sahibi hariç), AccessScope.CanReview ile aynı kural:
+    /// personelin talebinde şube müdürleri, İK ve yöneticiler; müdürün talebinde İK ve yöneticiler; İK'nın talebinde yöneticiler.
     /// </summary>
     public async Task<List<Guid>> ReviewersAsync(Guid branchId, Guid exceptUserId, UserRole requesterRole, CancellationToken ct = default) =>
         await db.Users
             .Where(u => u.IsActive && u.Id != exceptUserId &&
                         (u.Role == UserRole.Admin ||
+                         (u.Role == UserRole.HumanResources && (requesterRole == UserRole.Employee || requesterRole == UserRole.Manager)) ||
                          (requesterRole == UserRole.Employee && u.Role == UserRole.Manager && u.BranchId == branchId)))
             .Select(u => u.Id)
             .ToListAsync(ct);

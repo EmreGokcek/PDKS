@@ -93,4 +93,18 @@ public class FlowTests(PdksApiFactory api)
         var res = await _c.GetAsync("/api/announcements/feed");
         Assert.Equal(HttpStatusCode.Unauthorized, res.StatusCode);
     }
+
+    [Fact]
+    public async Task Employee_sees_own_month_without_future_plan()
+    {
+        var employee = await _c.Login("personel@pdks.local");
+        var now = api.Time.GetUtcNow();
+        var month = await (await _c.Send(HttpMethod.Get, $"/api/me/month?year={now.Year}&month={now.Month}", employee.AccessToken)).Json<JsonElement>();
+        var cells = month.GetProperty("row").GetProperty("cells").EnumerateArray().ToList();
+        Assert.Equal(DateTime.DaysInMonth(now.Year, now.Month), cells.Count);
+        Assert.DoesNotContain(cells, c => c.GetProperty("code").GetString() == "Planned");
+        Assert.True(month.TryGetProperty("leave", out _));
+
+        Assert.Equal(HttpStatusCode.BadRequest, (await _c.Send(HttpMethod.Get, "/api/me/month?year=2026&month=13", employee.AccessToken)).StatusCode);
+    }
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Attendance;
@@ -9,6 +10,7 @@ using Pdks.Domain.Entities;
 using Pdks.Domain.Enums;
 using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Auth;
+using Pdks.Infrastructure.Leave;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Services;
 
@@ -17,11 +19,12 @@ namespace Pdks.Api.Controllers;
 /// <summary>Personelin kendi talepleri: düzeltme ve izin.</summary>
 [ApiController]
 [Route("api/me/requests")]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Policy = Perm.AttendanceSelf)]
 public class MyRequestsController(
     PdksDbContext db,
     ICurrentUser currentUser,
     AttendanceService attendance,
+    LeaveService leave,
     AuditLogger audit,
     Notifier notifier,
     TimeProvider time) : ControllerBase
@@ -68,6 +71,27 @@ public class MyRequestsController(
             if (request.EndDate < request.StartDate || request.EndDate.Value.DayNumber - request.StartDate.Value.DayNumber > 60)
                 return this.ApiError(400, "invalid_range", "Tarih aralığı geçersiz.");
 
+            if (kind == ShiftKind.AnnualLeave)
+            {
+                // Yıllık izin: tatiller ve hafta tatilleri düşülür; yasal hak ve bakiye kontrol edilir.
+                var days = await leave.CountDaysAsync(user.Id, request.StartDate.Value, request.EndDate.Value, ct: ct);
+                if (days == 0)
+                    return this.ApiError(400, "no_working_days", "Seçilen günlerin hepsi tatil ya da hafta tatili.");
+                if (user.HireDate is null)
+                    return this.ApiError(400, "hire_date_missing", "İşe giriş tarihin tanımlı değil; İK'ya başvur.");
+
+                var today = await TodayAsync(user, ct);
+                var balance = (await leave.BalancesAsync(db.Users.Where(u => u.Id == user.Id), today, ct)).Single();
+                if (balance.ServiceYears == 0 && balance.Adjustments <= 0)
+                    return this.ApiError(400, "no_annual_leave_yet",
+                        $"İlk çalışma yılın {balance.NextEarnedOn:dd.MM.yyyy} tarihinde doluyor; yıllık izin hakkın o zaman başlar.")
+                        .WithExtension("date", balance.NextEarnedOn);
+                if (days > balance.Available)
+                    return this.ApiError(400, "insufficient_leave_balance", $"Yeterli izin bakiyen yok. Kullanılabilir: {balance.Available} gün.")
+                        .WithExtension("available", balance.Available).WithExtension("requested", days);
+                entity.LeaveDays = days;
+            }
+
             entity.LeaveKind = kind;
             entity.StartDate = request.StartDate;
             entity.EndDate = request.EndDate;
@@ -80,6 +104,9 @@ public class MyRequestsController(
         await db.SaveChangesAsync(ct);
         return (await RequestQueries.ToDtos(db, db.StaffRequests.Where(r => r.Id == entity.Id), ct)).Single();
     }
+
+    private async Task<DateOnly> TodayAsync(User user, CancellationToken ct) =>
+        Pdks.Domain.Attendance.AttendanceCalculator.LocalDate(time.GetUtcNow(), await attendance.TimeZoneForAsync(user.BranchId, ct));
 
     /// <summary>Bekleyen talebi geri çeker.</summary>
     [HttpPost("{id:guid}/cancel")]
@@ -99,11 +126,12 @@ public class MyRequestsController(
 /// <summary>Yöneticinin talepleri görmesi ve karara bağlaması. Müdür kendi şubesini görür, kendi talebini onaylayamaz.</summary>
 [ApiController]
 [Route("api/requests")]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.RequestsReview)]
 public class RequestsController(
     PdksDbContext db,
     ICurrentUser currentUser,
     AttendanceService attendance,
+    HolidayService holidays,
     AuditLogger audit,
     Notifier notifier,
     TimeProvider time) : ControllerBase
@@ -149,13 +177,17 @@ public class RequestsController(
         else
         {
             // İzin günleri plana yazılır; o günlerdeki vardiyaların yerini alır.
+            // Resmi tatiller ve plandaki hafta tatilleri olduğu gibi kalır (izinden sayılmaz).
             var start = entity.StartDate!.Value;
             var end = entity.EndDate!.Value;
+            var fullHolidays = await holidays.FullDaysAsync(start, end, ct);
             var existing = await db.Shifts
                 .Where(s => s.UserId == user.Id && s.Date >= start && s.Date <= end)
                 .ToDictionaryAsync(s => s.Date, ct);
             for (var d = start; d <= end; d = d.AddDays(1))
             {
+                if (fullHolidays.Contains(d)) continue;
+                if (existing.TryGetValue(d, out var planned) && planned.Kind == ShiftKind.WeeklyOff) continue;
                 if (!existing.TryGetValue(d, out var shift))
                 {
                     shift = new Shift { UserId = user.Id, BranchId = entity.BranchId, Date = d, CreatedByUserId = currentUser.UserId!.Value };
@@ -210,11 +242,16 @@ public class RequestsController(
         return (entity, null);
     }
 
-    /// <summary>Görüp karara bağlayabildiği talepler: yönetici hepsini, müdür şubesindeki personelinkileri.</summary>
-    private IQueryable<StaffRequest> Scope() =>
-        currentUser.Role == UserRole.Manager
-            ? db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId && r.User!.Role == UserRole.Employee)
-            : db.StaffRequests;
+    /// <summary>
+    /// Görüp karara bağlayabildiği talepler (AccessScope.CanReview): yönetici hepsini, İK personel ve müdürlerinkini,
+    /// müdür şubesindeki personelinkileri.
+    /// </summary>
+    private IQueryable<StaffRequest> Scope() => currentUser.Role switch
+    {
+        UserRole.Manager => db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId && r.User!.Role == UserRole.Employee),
+        UserRole.HumanResources => db.StaffRequests.Where(r => r.User!.Role == UserRole.Employee || r.User!.Role == UserRole.Manager),
+        _ => db.StaffRequests
+    };
 }
 
 internal static class RequestQueries
@@ -235,7 +272,7 @@ internal static class RequestQueries
         return rows.Select(x =>
         {
             var r = x.Request;
-            int? days = r.StartDate is { } s && r.EndDate is { } e ? e.DayNumber - s.DayNumber + 1 : null;
+            int? days = r.LeaveDays ?? (r.StartDate is { } s && r.EndDate is { } e ? e.DayNumber - s.DayNumber + 1 : null);
             return new RequestDto(r.Id, r.UserId, x.UserName, r.Type, r.Status, r.EventType, r.EventAt, r.LeaveKind,
                 r.StartDate, r.EndDate, days, r.Reason, r.CreatedAt, x.Reviewer, r.ReviewedAt, r.ReviewNote);
         }).ToList();

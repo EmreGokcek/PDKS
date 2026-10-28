@@ -13,7 +13,7 @@ import { addDays, formatDay, formatRange, hhmm, todayIso, weekStartOf, type Week
 import { formatMinutes, formatSeconds, formatTime } from '../../lib/format'
 import { isLeave, leaveColors } from '../shifts/leave'
 import { useAuth } from '../../auth/AuthContext'
-import { can } from '../../auth/permissions'
+import { canEditRecordsOf } from '../../auth/permissions'
 import { DayEditor, type DayEditorTarget } from '../corrections/DayEditor'
 import { usePersonReport, useTeamReport, type DayRecord, type ReportPerson } from './api'
 import { statusTone } from './status'
@@ -149,7 +149,7 @@ function PersonSheet({ person, from, to, onClose }: { person: ReportPerson | nul
   const { user } = useAuth()
   const detail = usePersonReport(person?.userId ?? null, from, to)
   const [editing, setEditing] = useState<DayEditorTarget | null>(null)
-  const canEdit = !!person && !!user && can.editRecordsOf(user, person)
+  const canEdit = !!person && !!user && canEditRecordsOf(user, person)
   return (
     <Sheet open={!!person} onClose={onClose} closeLabel={t('common.close')} title={person?.name ?? ''} description={t('reports.detail')}>
       {detail.isPending || !detail.data ? (

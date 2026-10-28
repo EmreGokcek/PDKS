@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -20,7 +21,7 @@ namespace Pdks.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/shifts")]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.ShiftsPlan)]
 public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit, Notifier notifier, ShiftPublication publication) : ControllerBase
 {
     private const int MaxRangeDays = 42;
@@ -348,7 +349,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
     /// <summary>Planlanabilir kişiler: Personel ve Müdür. Müdür yalnızca kendi şubesini görür.</summary>
     private IQueryable<User> StaffScope()
     {
-        var query = db.Users.Where(u => u.Role == UserRole.Employee || u.Role == UserRole.Manager);
+        var query = db.Users.Where(u => RolePermissions.Workforce.Contains(u.Role));
         return currentUser.Role == UserRole.Manager ? query.Where(u => u.BranchId == currentUser.BranchId) : query;
     }
 }
@@ -356,7 +357,7 @@ public class ShiftsController(PdksDbContext db, ICurrentUser currentUser, AuditL
 /// <summary>Kişinin kendi vardiyaları (yalnızca yayınlanmış haftalar).</summary>
 [ApiController]
 [Route("api/me/shifts")]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class MyShiftsController(PdksDbContext db, ICurrentUser currentUser, ShiftPublication publication) : ControllerBase
 {
     [HttpGet]

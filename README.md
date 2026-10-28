@@ -71,6 +71,7 @@ Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçil
 |---|---|---|
 | Yönetici | admin@pdks.local | /admin |
 | Müdür | mudur@pdks.local | /mudur |
+| İnsan kaynakları | ik@pdks.local | /ik |
 | Personel | personel@pdks.local | /personel |
 | Kiosk | kiosk@pdks.local | /kiosk |
 
@@ -105,10 +106,18 @@ Gizli bilgiler depoda tutulmaz; sunucuda **ortam değişkeni** olarak verilir (i
 | `Database__MigrateOnStartup` | `true` ise açılışta veritabanı güncellenir |
 | `ReverseProxy__TrustForwardedHeaders` | Uygulama bir ters vekil (Nginx, barındırma platformu) arkasındaysa `true` |
 | `Seed__Enabled` | Üretimde `false` (demo hesaplar oluşturulmasın). Canlı demo için `true` + `Seed__DefaultPassword` |
+| `Registration__Enabled` | Giriş ekranında "Firmanı kaydet" (yeni firmalar kendi kendine kaydolur). Varsayılan `true`; kapatmak için `false` |
+| `Alerts__Enabled` | Anlık uyarılar (gelmeyen personel, mola aşımı). Varsayılan `true` |
 
-Oturum ve giriş güvenliği ayarları (`Session`, `RateLimits`) ve KVKK aydınlatma metni sürümü (`Privacy__NoticeVersion`) `appsettings.json` içinde varsayılanlarıyla durur.
+Canlı pano WebSocket kullanır (`/api/hubs/live`); ters vekil arkasındaysa WebSocket yönlendirmesinin açık olduğundan emin olun (açık değilse pano 30 saniyede bir yenilenerek çalışmaya devam eder).
+
+Oturum ve giriş güvenliği ayarları (`Session`, `RateLimits`; kayıt için IP başına saatte 5 deneme) ve KVKK aydınlatma metni sürümü (`Privacy__NoticeVersion`) `appsettings.json` içinde varsayılanlarıyla durur.
 
 > **KVKK aydınlatma metni** (`frontend/src/features/privacy/notice.ts`) bir şablondur; canlı kullanımdan önce hukuk danışmanına gözden geçirtilmelidir. Metin değişince sürüm numarası hem orada hem `Privacy__NoticeVersion` ayarında artırılır; herkes bir sonraki girişte yeniden onaylar.
+
+## Roller ve yetkiler
+
+Yönetici, İnsan kaynakları, Müdür, Personel ve Kiosk rolleri; kim neyi görür ve değiştirir: [docs/YETKILER.md](docs/YETKILER.md).
 
 ## Mimari notlar
 

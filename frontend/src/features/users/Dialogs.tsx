@@ -45,7 +45,7 @@ export function TempPasswordDialog({
   )
 }
 
-function CopyRow({ label, value, emphasize }: { label: string; value: string; emphasize?: boolean }) {
+export function CopyRow({ label, value, emphasize }: { label: string; value: string; emphasize?: boolean }) {
   const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
   return (

@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'motion/react'
-import { CalendarClock } from 'lucide-react'
+import { ArrowLeftRight, CalendarClock } from 'lucide-react'
+import { useState } from 'react'
+import { useAuth } from '../../auth/AuthContext'
+import { MySwaps, SwapSheet } from '../swaps/SwapViews'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
 import { useNow } from '../../hooks/useNow'
@@ -24,6 +27,8 @@ export function MyShiftsPage() {
   const end = addDays(start, 13)
   const shifts = useMyShifts(start, end)
   const now = useNow(30_000)
+  const { user } = useAuth()
+  const [swapping, setSwapping] = useState<Shift | null>(null)
 
   const byDate = new Map((shifts.data ?? []).map((s) => [s.date, s]))
   const next = (shifts.data ?? []).find((s) => !isLeave(s.kind) && startOf(s) > now)
@@ -35,6 +40,7 @@ export function MyShiftsPage() {
   return (
     <>
       <PageHeader title={t('shifts.myTitle')} subtitle={t('shifts.mySubtitle')} />
+      {user && <MySwaps me={user.id} />}
 
       {shifts.isPending || rules.isPending ? (
         <PageSkeleton variant="grid" />
@@ -97,6 +103,16 @@ export function MyShiftsPage() {
                               <p className="tabular text-xs text-ink-soft sm:text-sm">
                                 {t('shifts.workAndBreak', { work: formatDuration(workOf(s)), break: formatMinutes(breakOf(s)) })}
                               </p>
+                              {startOf(s) > now && (
+                                <button
+                                  type="button"
+                                  onClick={() => setSwapping(s)}
+                                  className="inline-flex items-center gap-1.5 self-start rounded-lg px-2 py-1 text-xs font-medium text-ink-soft ring-1 ring-line transition-colors hover:bg-panel-2 hover:text-ink sm:ml-auto sm:self-center"
+                                >
+                                  <ArrowLeftRight className="size-3.5" />
+                                  {t('swaps.action')}
+                                </button>
+                              )}
                             </>
                           ) : (
                             <span className="flex h-full items-center rounded-lg border border-dashed border-line px-3 text-sm text-ink-soft">
@@ -115,6 +131,7 @@ export function MyShiftsPage() {
           </div>
         </>
       )}
+      <SwapSheet shift={swapping} onClose={() => setSwapping(null)} />
     </>
   )
 }

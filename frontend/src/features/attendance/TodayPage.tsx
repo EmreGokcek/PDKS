@@ -1,5 +1,6 @@
+import { pathFor } from '../../auth/types'
 import { AnimatePresence, motion } from 'motion/react'
-import { AlertTriangle, Coffee, LogIn, LogOut, Play, TrendingUp, Watch } from 'lucide-react'
+import { AlertTriangle, ChevronRight, Coffee, LogIn, LogOut, Play, TrendingUp, Watch } from 'lucide-react'
 import { useCallback, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -98,7 +99,7 @@ export function TodayPage() {
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <span>
             {t('attendance.unclosed')}{' '}
-            <Link to={user?.role === 'Manager' ? '/mudur/taleplerim' : '/personel/taleplerim'} className="font-medium underline underline-offset-4">
+            <Link to={user ? pathFor(user.role, 'taleplerim') : '/'} className="font-medium underline underline-offset-4">
               {t('requests.unclosedLink')}
             </Link>
           </span>
@@ -177,7 +178,7 @@ export function TodayPage() {
       </section>
 
       <div className="mt-4">
-        <FeedPanel allHref={user?.role === 'Manager' ? '/mudur/duyurular' : '/personel/duyurular'} />
+        <FeedPanel allHref={user ? pathFor(user.role, 'duyurular') : '/'} />
       </div>
 
       {/* Özet kartları */}
@@ -206,6 +207,19 @@ export function TodayPage() {
           value={live.overtime > 0 ? formatSeconds(live.overtime) : t('attendance.noOvertime')}
         />
       </div>
+
+      {user && (
+        <Link
+          to={pathFor(user.role, 'ayim')}
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-panel px-5 py-3.5 text-sm ring-1 ring-line transition-colors hover:bg-panel-2"
+        >
+          <span>
+            <span className="font-medium">{t('month.title')}</span>
+            <span className="ml-2 text-ink-soft">{t('month.teaser')}</span>
+          </span>
+          <ChevronRight className="size-4 text-ink-soft" />
+        </Link>
+      )}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         <WeekChart status={status} liveExtra={live.todayLiveExtra} />

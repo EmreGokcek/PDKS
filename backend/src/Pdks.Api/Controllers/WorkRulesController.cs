@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
 using Pdks.Infrastructure.Persistence;
@@ -12,7 +13,7 @@ namespace Pdks.Api.Controllers;
 /// <summary>Firmanın çalışma kuralları. Herkes okuyabilir (personel kalan molasını hesaplamak için), yalnızca Admin değiştirir.</summary>
 [ApiController]
 [Route("api/settings/work-rules")]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class WorkRulesController(PdksDbContext db, AuditLogger audit) : ControllerBase
 {
     [HttpGet]
@@ -22,7 +23,7 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
         return ToDto(rule);
     }
 
-    [HttpPut, Authorize(Roles = Roles.Admin)]
+    [HttpPut, Authorize(Policy = Perm.RulesManage)]
     public async Task<ActionResult<WorkRuleDto>> Update(UpdateWorkRuleRequest request, CancellationToken ct)
     {
         var rule = await GetOrCreateAsync(ct);
@@ -32,6 +33,8 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
         rule.DailyBreakMinutes = request.DailyBreakMinutes;
         rule.LateToleranceMinutes = request.LateToleranceMinutes;
         rule.WeekStartsOn = request.WeekStartsOn;
+        rule.NotArrivedAlertMinutes = request.NotArrivedAlertMinutes;
+        rule.BreakOverrunAlert = request.BreakOverrunAlert;
 
         audit.Log("work_rule.updated", nameof(WorkRule), rule.Id, before, ToDto(rule));
         await db.SaveChangesAsync(ct);
@@ -51,5 +54,5 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
     }
 
     private static WorkRuleDto ToDto(WorkRule r) =>
-        new(r.WeeklyWorkMinutes, r.DailyBreakMinutes, r.LateToleranceMinutes, r.WeekStartsOn);
+        new(r.WeeklyWorkMinutes, r.DailyBreakMinutes, r.LateToleranceMinutes, r.WeekStartsOn, r.NotArrivedAlertMinutes, r.BreakOverrunAlert);
 }

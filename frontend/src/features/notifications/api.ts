@@ -10,6 +10,11 @@ export type NotificationType =
   | 'RecordCorrected'
   | 'AnnouncementPublished'
   | 'Congratulated'
+  | 'SwapRequested'
+  | 'SwapUpdated'
+  | 'SwapNeedsApproval'
+  | 'EmployeeNotArrived'
+  | 'BreakOverrun'
 
 export interface AppNotification {
   id: string

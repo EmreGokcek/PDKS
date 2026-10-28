@@ -13,7 +13,8 @@ export default defineConfig(({ mode }) => {
       host: phone ? true : undefined,
       // /api ile başlayan istekler .NET API'ye yönlendirilir (CORS derdi olmaz).
       proxy: {
-        '/api': 'http://localhost:5080',
+        // ws: canlı pano bağlantısı (/api/hubs/live) WebSocket kullanır.
+        '/api': { target: 'http://localhost:5080', ws: true },
       },
     },
   }

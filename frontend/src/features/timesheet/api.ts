@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 
-export type TimesheetCode = 'None' | 'Work' | 'Planned' | 'WeeklyOff' | 'AnnualLeave' | 'SickLeave' | 'ExcusedLeave' | 'Absent' | 'Off'
+export type TimesheetCode = 'None' | 'Work' | 'Planned' | 'WeeklyOff' | 'AnnualLeave' | 'SickLeave' | 'ExcusedLeave' | 'Absent' | 'Off' | 'PublicHoliday'
 
 export interface TimesheetCell {
   date: string
@@ -29,6 +29,9 @@ export interface TimesheetTotals {
   excusedLeaveDays: number
   breakOverrunHours: number
   unclosedCount: number
+  publicHolidayDays: number
+  /** Tam gün resmi tatilde çalışılan saat. */
+  holidayWorkHours: number
 }
 
 export interface Timesheet {

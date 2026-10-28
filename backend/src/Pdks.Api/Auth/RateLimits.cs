@@ -11,12 +11,15 @@ public class RateLimitOptions
 
     public int LoginPerMinute { get; set; } = 10;
     public int RefreshPerMinute { get; set; } = 30;
+    /// <summary>Yeni firma kaydı (IP başına saatte).</summary>
+    public int RegisterPerHour { get; set; } = 5;
 }
 
 public static class RateLimits
 {
     public const string Login = "login";
     public const string Refresh = "refresh";
+    public const string Register = "register";
 
     public static IServiceCollection AddPdksRateLimits(this IServiceCollection services, IConfiguration configuration)
     {
@@ -40,16 +43,17 @@ public static class RateLimits
 
             options.AddPolicy(Login, http => Window(http, o.LoginPerMinute));
             options.AddPolicy(Refresh, http => Window(http, o.RefreshPerMinute));
+            options.AddPolicy(Register, http => Window(http, o.RegisterPerHour, TimeSpan.FromHours(1)));
         });
     }
 
-    private static RateLimitPartition<string> Window(HttpContext http, int perMinute) =>
+    private static RateLimitPartition<string> Window(HttpContext http, int permits, TimeSpan? window = null) =>
         RateLimitPartition.GetFixedWindowLimiter(
             http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = Math.Max(1, perMinute),
-                Window = TimeSpan.FromMinutes(1),
+                PermitLimit = Math.Max(1, permits),
+                Window = window ?? TimeSpan.FromMinutes(1),
                 QueueLimit = 0
             });
 }

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pdks.Domain.Entities;
 using Pdks.Infrastructure.Attendance;
 using Pdks.Infrastructure.Reports;
@@ -19,7 +20,12 @@ public static class DependencyInjection
         var connectionString = configuration.GetConnectionString("Default")
             ?? throw new InvalidOperationException("ConnectionStrings:Default bulunamadı.");
 
-        services.AddDbContext<PdksDbContext>(options => options.UseNpgsql(connectionString));
+        services.TryAddSingleton<Live.ILiveUpdates, Live.NullLiveUpdates>();
+        services.AddSingleton<Live.LiveUpdatesInterceptor>();
+        services.AddDbContext<PdksDbContext>((sp, options) => options
+            .UseNpgsql(connectionString)
+            .AddInterceptors(sp.GetRequiredService<Live.LiveUpdatesInterceptor>()));
+        services.AddScoped<Auth.TenantOverride>();
 
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
@@ -35,6 +41,9 @@ public static class DependencyInjection
         services.AddScoped<Social.AnnouncementFeed>();
         services.Configure<Auth.LoginSessionOptions>(configuration.GetSection(Auth.LoginSessionOptions.SectionName));
         services.AddScoped<Auth.RefreshTokenService>();
+        services.AddScoped<Leave.HolidayService>();
+        services.AddScoped<Leave.LeaveService>();
+        services.AddScoped<Alerts.AttendanceAlertScanner>();
         services.AddScoped<Auth.AccessScope>();
 
         return services;

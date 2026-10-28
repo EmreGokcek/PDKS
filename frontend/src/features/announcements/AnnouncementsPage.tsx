@@ -139,7 +139,7 @@ export function AnnouncementsPage() {
       <AnnouncementSheet
         open={!!sheet}
         editing={sheet?.editing ?? null}
-        companyWide={user?.role === 'Admin'}
+        companyWide={!!user?.companyWide}
         onClose={() => setSheet(null)}
       />
       <ConfirmDialog

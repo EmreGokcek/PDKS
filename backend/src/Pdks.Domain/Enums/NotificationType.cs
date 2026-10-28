@@ -15,5 +15,15 @@ public enum NotificationType
     /// <summary>Yeni duyuru yayınlandı.</summary>
     AnnouncementPublished = 7,
     /// <summary>Bir ekip arkadaşı doğum gününü / iş yıl dönümünü kutladı.</summary>
-    Congratulated = 8
+    Congratulated = 8,
+    /// <summary>Ekip arkadaşı vardiya takası istedi.</summary>
+    SwapRequested = 9,
+    /// <summary>Takas ilerledi: kabul edildi / reddedildi / onaylandı (Data.status).</summary>
+    SwapUpdated = 10,
+    /// <summary>Müdüre: onay bekleyen takas.</summary>
+    SwapNeedsApproval = 11,
+    /// <summary>Müdüre: vardiyası başlayan personel hâlâ gelmedi.</summary>
+    EmployeeNotArrived = 12,
+    /// <summary>Müdüre: personel mola süresini aştı.</summary>
+    BreakOverrun = 13
 }

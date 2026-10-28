@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import type { Role } from '../../auth/types'
 import { api } from '../../lib/api'
+import { useLiveStatus } from '../../lib/live'
 import type { WeekDayName } from '../../lib/dates'
 import type { AttendanceState } from '../attendance/api'
 import type { ShiftKind } from '../shifts/leave'
@@ -67,10 +68,12 @@ export interface TeamReport {
 }
 
 export function useLiveDashboard() {
+  // Canlı bağlantı varken değişiklikler anında gelir; yine de durumlar (ör. "gelmedi") saatle değiştiği için arada bir yenilenir.
+  const live = useLiveStatus() === 'live'
   return useQuery({
     queryKey: ['dashboard', 'live'],
     queryFn: () => api<LiveDashboard>('/dashboard/live'),
-    refetchInterval: 30_000,
+    refetchInterval: live ? 60_000 : 30_000,
     refetchOnWindowFocus: true,
   })
 }

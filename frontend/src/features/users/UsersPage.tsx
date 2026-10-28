@@ -1,3 +1,5 @@
+import { useAuth } from '../../auth/AuthContext'
+import { assignableRoles, can } from '../../auth/types'
 import { AnimatePresence, motion } from 'motion/react'
 import { IdCard, KeyRound, MoreHorizontal, Pencil, Plus, Power, Search, UserRoundX } from 'lucide-react'
 import { useState } from 'react'
@@ -30,8 +32,11 @@ import { PageSkeleton } from '../../components/ui/Skeleton'
 type Pending = { kind: 'deactivate' | 'reset'; member: StaffMember } | null
 
 /** Personel listesi. Admin için tam yönetim, müdür için salt okunur. */
-export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
+export function UsersPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const readOnly = !can(user, 'staff.manage')
+  const assignable = assignableRoles(user?.role)
   const [search, setSearch] = useState('')
   const [role, setRole] = useState<StaffFilters['role']>('all')
   const [status, setStatus] = useState<StaffFilters['status']>('active')
@@ -75,7 +80,10 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
     }
   }
 
-  const rowActions = (member: StaffMember): MenuItem[] => [
+  // İK yönetici hesaplarında yalnızca profili görebilir.
+  const rowActions = (member: StaffMember): MenuItem[] => !assignable.includes(member.role) ? [
+    { label: t('profile.viewProfile'), icon: <IdCard className="size-4" />, onSelect: () => setViewing(member.id) },
+  ] : [
     { label: t('common.edit'), icon: <Pencil className="size-4" />, onSelect: () => openEdit(member) },
     { label: t('profile.viewProfile'), icon: <IdCard className="size-4" />, onSelect: () => setViewing(member.id) },
     { label: t('users.resetPassword'), icon: <KeyRound className="size-4" />, onSelect: () => setPending({ kind: 'reset', member }) },
@@ -121,7 +129,7 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
             onChange={setRole}
             options={[
               { value: 'all', label: t('common.all') },
-              ...(['Employee', 'Manager', 'Admin'] as ManagedRole[]).map((r) => ({ value: r, label: t(`roles.${r}`) })),
+              ...(['Employee', 'Manager', 'HumanResources', 'Admin'] as ManagedRole[]).map((r) => ({ value: r, label: t(`roles.${r}`) })),
             ]}
           />
         </div>
@@ -170,7 +178,7 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
                   animate={{ opacity: 1, y: 0, transition: { delay: Math.min(i, 10) * 0.025 } }}
                   exit={{ opacity: 0, transition: { duration: 0.12 } }}
                 >
-                  <StaffRow member={m} readOnly={readOnly} onOpen={() => (readOnly ? setViewing(m.id) : openEdit(m))} actions={rowActions(m)} />
+                  <StaffRow member={m} readOnly={readOnly} onOpen={() => (readOnly || !assignable.includes(m.role) ? setViewing(m.id) : openEdit(m))} actions={rowActions(m)} />
                 </motion.li>
               ))}
             </AnimatePresence>
@@ -224,7 +232,7 @@ function StaffRow({
   actions: MenuItem[]
 }) {
   const { t } = useTranslation()
-  const roleTone = m.role === 'Admin' ? 'brand' : m.role === 'Manager' ? 'pause' : 'neutral'
+  const roleTone = m.role === 'Admin' ? 'brand' : m.role === 'Manager' ? 'pause' : m.role === 'HumanResources' ? 'signal' : 'neutral'
 
   const status = !m.isActive ? (
     <Badge tone="overrun" dot>

@@ -1,12 +1,13 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Megaphone, ScrollText, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Building2, CalendarCheck, CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
+import { useLiveConnection } from '../lib/live'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
-import type { Role } from '../auth/types'
+import { basePath, can, pathFor, type Permission, type User } from '../auth/types'
 import { LanguageMenu, ThemeSwitch } from './PreferencesControls'
 import { Avatar } from './ui/Avatar'
 import { IconButton } from './ui/Button'
@@ -26,46 +27,45 @@ interface NavItem {
   badge?: number
 }
 
-function useNavItems(role: Role): NavItem[] {
+/** Menü yetkilere göre kurulur: kullanıcı yalnızca yetkisi olan sayfaları görür. */
+function useNavItems(user: User): NavItem[] {
   const { t } = useTranslation()
   const icon = 'size-[18px]'
-  const pending = usePendingCount(role === 'Admin' || role === 'Manager').data ?? 0
-  switch (role) {
-    case 'Admin':
-      return [
-        { to: '/admin/pano', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
-        { to: '/admin/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
-        { to: '/admin/duyurular', section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
-        { to: '/admin/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
-        { to: '/admin/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
-        { to: '/admin/puantaj', section: 'reports', tab: true, label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
-        { to: '/admin/personel', section: 'management', label: t('nav.staff'), icon: <Users className={icon} /> },
-        { to: '/admin/kurallar', section: 'management', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
-        { to: '/admin/denetim', section: 'management', label: t('nav.audit'), icon: <ScrollText className={icon} /> },
-      ]
-    case 'Manager':
-      return [
-        { to: '/mudur', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
-        { to: '/mudur/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
-        { to: '/mudur/duyurular', section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
-        { to: '/mudur/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
-        { to: '/mudur/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
-        { to: '/mudur/puantaj', section: 'reports', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
-        { to: '/mudur/ekip', section: 'team', label: t('nav.team'), icon: <Users className={icon} /> },
-        { to: '/mudur/kurallar', section: 'team', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
-        { to: '/mudur/bugunum', section: 'me', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
-        { to: '/mudur/vardiyalarim', section: 'me', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
-        { to: '/mudur/taleplerim', section: 'me', label: t('nav.myRequests'), icon: <Send className={icon} /> },
-      ]
-    default:
-      return [
-        { to: '/personel', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
-        { to: '/personel/vardiyalarim', tab: true, label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
-        { to: '/personel/taleplerim', tab: true, label: t('nav.myRequests'), icon: <Send className={icon} /> },
-        { to: '/personel/duyurular', tab: true, label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
-        { to: '/personel/profil', tab: true, label: t('nav.profile'), icon: <UserRound className={icon} /> },
-      ]
+  const has = (p: Permission) => can(user, p)
+  const pending = usePendingCount(has('requests.review')).data ?? 0
+  const at = (segment: string) => pathFor(user.role, segment)
+  const hasBoard = has('dashboard.view')
+
+  // Panosu olmayan (personel): bölümsüz, sade menü; hepsi alt sekme.
+  if (!hasBoard) {
+    return [
+      { to: basePath[user.role], tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
+      { to: at('vardiyalarim'), tab: true, label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+      { to: at('taleplerim'), tab: true, label: t('nav.myRequests'), icon: <Send className={icon} /> },
+      { to: at('ayim'), label: t('nav.myMonth'), icon: <CalendarCheck className={icon} /> },
+      { to: at('duyurular'), tab: true, label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
+      { to: at('profil'), tab: true, label: t('nav.profile'), icon: <UserRound className={icon} /> },
+    ]
   }
+
+  const items: (NavItem & { show: boolean })[] = [
+    { show: true, to: basePath[user.role], end: true, section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
+    { show: has('requests.review'), to: at('talepler'), section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+    { show: true, to: at('duyurular'), section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
+    { show: has('shifts.plan'), to: at('vardiyalar'), section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+    { show: has('requests.review'), to: at('izinler'), section: 'planning', label: t('nav.leave'), icon: <CalendarHeart className={icon} /> },
+    { show: has('reports.view'), to: at('sureler'), section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+    { show: has('timesheet.view'), to: at('puantaj'), section: 'reports', tab: !has('shifts.plan'), label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
+    { show: has('staff.view'), to: at('personel'), section: 'management', label: has('staff.manage') ? t('nav.staff') : t('nav.team'), icon: <Users className={icon} /> },
+    { show: has('rules.view'), to: at('kurallar'), section: 'management', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+    { show: has('company.manage'), to: at('firma'), section: 'management', label: t('nav.company'), icon: <Building2 className={icon} /> },
+    { show: has('audit.view'), to: at('denetim'), section: 'management', label: t('nav.audit'), icon: <History className={icon} /> },
+    { show: has('attendance.self'), to: at('bugunum'), section: 'me', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
+    { show: has('attendance.self'), to: at('vardiyalarim'), section: 'me', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+    { show: has('attendance.self'), to: at('taleplerim'), section: 'me', label: t('nav.myRequests'), icon: <Send className={icon} /> },
+    { show: has('attendance.self'), to: at('ayim'), section: 'me', label: t('nav.myMonth'), icon: <CalendarCheck className={icon} /> },
+  ]
+  return items.filter((i) => i.show).map(({ show: _show, ...item }) => item)
 }
 
 /** Menü maddelerini bölümlerine göre gruplar (bölümü olmayanlar tek grup). */
@@ -82,7 +82,7 @@ function groupBySection(items: NavItem[]) {
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
-  const items = useNavItems(user!.role)
+  const items = useNavItems(user!)
 
   return (
     <div className="flex h-full flex-col">
@@ -159,7 +159,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
         <div className="flex items-center gap-3">
           <NavLink
-            to={`${user!.role === 'Admin' ? '/admin' : user!.role === 'Manager' ? '/mudur' : '/personel'}/profil`}
+            to={pathFor(user!.role, 'profil')}
             onClick={onNavigate}
             title={t('nav.profile')}
             className={({ isActive }) => `-m-1.5 flex min-w-0 flex-1 items-center gap-3 rounded-xl p-1.5 transition-colors hover:bg-panel-2 ${isActive ? 'bg-panel-2 ring-1 ring-line' : ''}`}
@@ -183,8 +183,10 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 function TabBar({ onMore }: { onMore: () => void }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const tabs = useNavItems(user!.role).filter((i) => i.tab)
-  const showMore = user!.role !== 'Employee'
+  const showMore = can(user, 'dashboard.view')
+  const allTabs = useNavItems(user!).filter((i) => i.tab)
+  // Panosu olanlarda 4 sekme + "Diğer"; personelde menünün tamamı sekmede.
+  const tabs = showMore ? allTabs.slice(0, 4) : allTabs
 
   return (
     <nav
@@ -240,6 +242,7 @@ export function AppShell() {
   const { user } = useAuth()
   const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  useLiveConnection(user?.id)
 
   if (!user) return null
 

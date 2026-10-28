@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Attendance;
@@ -19,7 +20,7 @@ namespace Pdks.Api.Controllers;
 /// Elle eklenen kayıtlar Source = Manual olarak işaretlenir.
 /// </summary>
 [ApiController]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.AttendanceCorrect)]
 public class CorrectionsController(
     PdksDbContext db,
     ICurrentUser currentUser,
@@ -153,9 +154,9 @@ public class CorrectionsController(
     /// <summary>Kayıtlarını görebildiği kişiler.</summary>
     private IQueryable<User> StaffScope() => scope.VisibleStaff();
 
-    /// <summary>Düzeltebildiği kişiler (müdür: şubesindeki personel; yönetici: kendisi dışında herkes).</summary>
+    /// <summary>Düzeltebildiği kişiler (AccessScope.SupervisedStaff).</summary>
     private Task<bool> CanEditAsync(Guid userId, CancellationToken ct) => scope.SupervisedStaff().AnyAsync(u => u.Id == userId, ct);
 
     private ObjectResult NotYourStaff() =>
-        this.ApiError(403, "not_your_staff", "Bu kişinin kayıtlarını yalnızca yönetici düzeltebilir.");
+        this.ApiError(403, "not_your_staff", "Bu kişinin kayıtlarını düzeltme yetkin yok; yönetici ya da İK düzeltir.");
 }

@@ -82,6 +82,18 @@ public class PermissionTests(PdksApiFactory api)
     }
 
     [Fact]
+    public async Task Hr_corrects_managers_but_not_admins()
+    {
+        var w = await World();
+        var hr = await _c.Login("ik@pdks.local");
+        var body = new { type = "CheckIn", date = "2026-10-02", time = "09:00", reason = "İK düzeltmesi" };
+
+        var manager = await _c.Send(HttpMethod.Post, $"/api/staff/{w.SecondManager.Id}/attendance", hr.AccessToken, body);
+        Assert.True(manager.IsSuccessStatusCode, await manager.Content.ReadAsStringAsync());
+        Assert.Equal("not_your_staff", await (await _c.Send(HttpMethod.Post, $"/api/staff/{w.DemoAdmin.Id}/attendance", hr.AccessToken, body)).ErrorCode());
+    }
+
+    [Fact]
     public async Task Manager_request_is_reviewed_by_admin_not_by_other_managers()
     {
         var w = await World();
@@ -116,7 +128,7 @@ public class PermissionTests(PdksApiFactory api)
         Assert.Empty(feed.GetProperty("announcements").EnumerateArray());
 
         var audit = await (await _c.Send(HttpMethod.Get, "/api/audit", rival.AccessToken)).Json<JsonElement>();
-        Assert.DoesNotContain(audit.GetProperty("items").EnumerateArray(), a => a.GetProperty("targetName").GetString() == "Demo Personel");
+        Assert.DoesNotContain(audit.GetProperty("items").EnumerateArray(), a => a.GetProperty("subjectName").GetString() == "Demo Personel");
     }
 
     [Fact]

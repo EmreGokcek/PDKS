@@ -15,6 +15,8 @@ import type { LeaveKind } from '../shifts/leave'
 import { useCancelRequest, useCreateRequest, useMyRequests, type RequestType } from './api'
 import { RequestCard } from './RequestCard'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { useLeavePreview } from '../leave/api'
+import { LeaveBalanceCard } from '../leave/LeaveBalanceCard'
 
 /** Personelin talepleri: düzeltme ve izin. */
 export function MyRequestsPage() {
@@ -34,6 +36,8 @@ export function MyRequestsPage() {
           </Button>
         }
       />
+
+      <LeaveBalanceCard />
 
       {list.isPending ? (
         <PageSkeleton variant="list" />
@@ -92,6 +96,9 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
   const [reason, setReason] = useState('')
 
   const days = start && end && end >= start ? Math.round((parseDate(end).getTime() - parseDate(start).getTime()) / 86_400_000) + 1 : 0
+  const preview = useLeavePreview(leaveKind, start, end, type === 'Leave' && days > 0)
+  const annual = leaveKind === 'AnnualLeave'
+  const overBalance = annual && preview.data?.available != null && preview.data.days > preview.data.available
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -156,10 +163,23 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label={t('requests.start')}>{(p) => <Input {...p} type="date" value={start} onChange={(e) => { setStart(e.target.value); if (end < e.target.value) setEnd(e.target.value) }} />}</Field>
-                <Field label={t('requests.end')} hint={days > 0 ? t('requests.dayCount', { count: days }) : undefined}>
+                <Field label={t('requests.end')} hint={days > 0 && !annual ? t('requests.dayCount', { count: days }) : undefined}>
                   {(p) => <Input {...p} type="date" min={start} value={end} onChange={(e) => setEnd(e.target.value)} />}
                 </Field>
               </div>
+              {preview.data && days > 0 && (
+                <div className="space-y-2 text-sm">
+                  {annual && (
+                    <p className={`rounded-xl px-3.5 py-2.5 ${overBalance ? 'bg-overrun-soft text-overrun' : 'bg-panel-2 text-ink-soft ring-1 ring-line'}`}>
+                      {t('leave.preview.days', { count: preview.data.days })}{' '}
+                      {preview.data.available != null && t('leave.preview.available', { count: preview.data.available })}
+                    </p>
+                  )}
+                  {preview.data.overlap > 0 && (
+                    <p className="rounded-xl bg-pause-soft px-3.5 py-2.5 text-pause">{t('leave.preview.overlap', { count: preview.data.overlap })}</p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </motion.div>
@@ -179,7 +199,7 @@ function NewRequestForm({ onDone }: { onDone: () => void }) {
         )}
       </Field>
 
-      <Button type="submit" className="w-full" loading={create.isPending} disabled={reason.trim().length < 3 || (type === 'Leave' && days <= 0)}>
+      <Button type="submit" className="w-full" loading={create.isPending} disabled={reason.trim().length < 3 || (type === 'Leave' && (days <= 0 || overBalance))}>
         {t('requests.send')}
       </Button>
     </form>

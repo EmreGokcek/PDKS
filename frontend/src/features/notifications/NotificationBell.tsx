@@ -1,10 +1,10 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Bell, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
+import { ArrowLeftRight, Bell, Coffee, UserX, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
-import type { Role } from '../../auth/types'
+import { can, myDayPath, pathFor, type User } from '../../auth/types'
 import { formatDay, isoDate } from '../../lib/dates'
 import { relativeTime, formatTime } from '../../lib/format'
 import { useMarkRead, useNotifications, type AppNotification, type NotificationType } from './api'
@@ -18,6 +18,11 @@ const icons: Record<NotificationType, ReactNode> = {
   RecordCorrected: <Wrench className="size-4" />,
   AnnouncementPublished: <Megaphone className="size-4" />,
   Congratulated: <PartyPopper className="size-4" />,
+  SwapRequested: <ArrowLeftRight className="size-4" />,
+  SwapUpdated: <ArrowLeftRight className="size-4" />,
+  SwapNeedsApproval: <ArrowLeftRight className="size-4" />,
+  EmployeeNotArrived: <UserX className="size-4" />,
+  BreakOverrun: <Coffee className="size-4" />,
 }
 
 const tones: Record<NotificationType, string> = {
@@ -29,25 +34,38 @@ const tones: Record<NotificationType, string> = {
   RecordCorrected: 'bg-panel-2 text-ink-soft ring-1 ring-line',
   AnnouncementPublished: 'bg-signal-soft text-signal',
   Congratulated: 'bg-pause-soft text-pause',
+  SwapRequested: 'bg-pause-soft text-pause',
+  SwapUpdated: 'bg-panel-2 text-ink-soft ring-1 ring-line',
+  SwapNeedsApproval: 'bg-pause-soft text-pause',
+  EmployeeNotArrived: 'bg-overrun-soft text-overrun',
+  BreakOverrun: 'bg-overrun-soft text-overrun',
 }
 
-/** Bildirime tıklayınca gidilecek sayfa (rolüne göre). */
-function targetOf(type: NotificationType, role: Role): string {
-  const base = role === 'Admin' ? '/admin' : role === 'Manager' ? '/mudur' : '/personel'
+/** Bildirime tıklayınca gidilecek sayfa (kullanıcının yetkilerine göre). */
+function targetOf(type: NotificationType, user: User): string {
+  const at = (segment: string) => pathFor(user.role, segment)
   switch (type) {
     case 'ShiftWeekPublished':
     case 'ShiftChanged':
-      return role === 'Admin' ? '/admin/vardiyalar' : `${base}/vardiyalarim`
+      return can(user, 'attendance.self') ? at('vardiyalarim') : at('vardiyalar')
     case 'RequestCreated':
-      return `${base}/talepler`
+      return at('talepler')
     case 'RequestApproved':
     case 'RequestRejected':
-      return `${base}/taleplerim`
+      return at('taleplerim')
     case 'RecordCorrected':
-      return role === 'Manager' ? '/mudur/bugunum' : base
+      return myDayPath(user)
     case 'AnnouncementPublished':
     case 'Congratulated':
-      return `${base}/duyurular`
+      return at('duyurular')
+    case 'SwapRequested':
+    case 'SwapUpdated':
+      return at('vardiyalarim')
+    case 'SwapNeedsApproval':
+      return at('talepler')
+    case 'EmployeeNotArrived':
+    case 'BreakOverrun':
+      return can(user, 'dashboard.view') ? at('pano') : at('')
   }
 }
 
@@ -77,7 +95,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onB
   function openItem(n: AppNotification) {
     if (!n.isRead) markRead.mutate([n.id])
     setOpen(false)
-    if (user) navigate(targetOf(n.type, user.role))
+    if (user) navigate(targetOf(n.type, user))
   }
 
   return (
@@ -200,6 +218,23 @@ function NotificationBody({ n }: { n: AppNotification }) {
         d.kind === 'WorkAnniversary'
           ? t('notifications.Congratulated.bodyAnniversary', { from: String(d.from ?? '') })
           : t('notifications.Congratulated.bodyBirthday', { from: String(d.from ?? '') })
+      break
+    case 'SwapRequested':
+      text = t('notifications.SwapRequested.body', { name: String(d.name ?? ''), date: day(String(d.date)) })
+      break
+    case 'SwapUpdated': {
+      const status = String(d.status ?? 'Approved') as 'Approved'
+      text = t(`notifications.SwapUpdated.${status}`, { name: String(d.name ?? ''), date: day(String(d.date)) })
+      break
+    }
+    case 'SwapNeedsApproval':
+      text = t('notifications.SwapNeedsApproval.body', { date: day(String(d.date)) })
+      break
+    case 'EmployeeNotArrived':
+      text = t('notifications.EmployeeNotArrived.body', { name: String(d.name ?? ''), start: String(d.start ?? ''), minutes: Number(d.minutes ?? 0) })
+      break
+    case 'BreakOverrun':
+      text = t('notifications.BreakOverrun.body', { name: String(d.name ?? ''), minutes: Number(d.minutes ?? 0) })
       break
   }
   const note = typeof d.note === 'string' && d.note ? ` ${t('notifications.note', { note: d.note })}` : ''

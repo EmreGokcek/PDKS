@@ -68,6 +68,10 @@ internal class WorkRuleConfiguration : IEntityTypeConfiguration<WorkRule>
     {
         b.HasIndex(x => x.CompanyId).IsUnique();
         b.Property(x => x.WeekStartsOn).HasConversion<string>().HasMaxLength(20);
+        // Mevcut firmalar uyarılar açık başlasın. Sentinel: varsayılan değer, "değer verilmedi" sayılmasın diye
+        // CLR varsayılanı yerine sütun varsayılanıyla aynı tutulur (0 / false da kaydedilebilsin).
+        b.Property(x => x.NotArrivedAlertMinutes).HasDefaultValue(15).HasSentinel(15);
+        b.Property(x => x.BreakOverrunAlert).HasDefaultValue(true).HasSentinel(true);
     }
 }
 
@@ -216,5 +220,54 @@ internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken
         b.HasIndex(x => new { x.UserId, x.RevokedAt });
         b.HasIndex(x => x.FamilyId);
         b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class PublicHolidayConfiguration : IEntityTypeConfiguration<PublicHoliday>
+{
+    public void Configure(EntityTypeBuilder<PublicHoliday> b)
+    {
+        b.Property(x => x.Name).HasMaxLength(100).IsRequired();
+        b.HasIndex(x => new { x.CompanyId, x.Date }).IsUnique();
+    }
+}
+
+internal class HolidayYearConfiguration : IEntityTypeConfiguration<HolidayYear>
+{
+    public void Configure(EntityTypeBuilder<HolidayYear> b) => b.HasIndex(x => new { x.CompanyId, x.Year }).IsUnique();
+}
+
+internal class LeaveAdjustmentConfiguration : IEntityTypeConfiguration<LeaveAdjustment>
+{
+    public void Configure(EntityTypeBuilder<LeaveAdjustment> b)
+    {
+        b.Property(x => x.Reason).HasMaxLength(300).IsRequired();
+        b.HasIndex(x => x.UserId);
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class ShiftSwapConfiguration : IEntityTypeConfiguration<ShiftSwap>
+{
+    public void Configure(EntityTypeBuilder<ShiftSwap> b)
+    {
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Property(x => x.ReviewNote).HasMaxLength(300);
+        b.HasIndex(x => new { x.BranchId, x.Status });
+        b.HasIndex(x => x.RequesterId);
+        b.HasIndex(x => x.TargetUserId);
+        b.HasOne(x => x.Requester).WithMany().HasForeignKey(x => x.RequesterId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.TargetUser).WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class AttendanceAlertConfiguration : IEntityTypeConfiguration<AttendanceAlert>
+{
+    public void Configure(EntityTypeBuilder<AttendanceAlert> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+        b.HasIndex(x => new { x.UserId, x.Date, x.Kind }).IsUnique();
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

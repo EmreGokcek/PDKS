@@ -20,6 +20,7 @@ import { isLeave, leaveColors, leaveKinds, matchTemplate, netWorkMinutes, type L
 import { LeaveChip, ShiftChip } from './ShiftChip'
 import { TemplatesSheet } from './TemplatesSheet'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { useHolidays } from '../leave/api'
 
 type Brush =
   | { kind: 'template'; id: string }
@@ -59,6 +60,10 @@ export function ShiftPlannerPage() {
 
   const data = planner.data
   const days = weekStart ? weekDays(weekStart) : []
+  // Resmi tatiller sütun başlığında gösterilir (hafta iki yıla yayılabilir).
+  const holidaysA = useHolidays(Number((days[0] ?? todayIso()).slice(0, 4)))
+  const holidaysB = useHolidays(Number((days[6] ?? todayIso()).slice(0, 4)))
+  const holidayOf = new Map([...(holidaysA.data ?? []), ...(holidaysB.data ?? [])].map((h) => [h.date, h]))
   const today = todayIso()
 
   const shiftsByCell = useMemo(() => {
@@ -287,9 +292,12 @@ export function ShiftPlannerPage() {
             {/* Başlık satırı */}
             <div className="sticky left-0 z-[1] border-b border-line bg-panel px-4 py-3 text-sm text-ink-soft">{t('shifts.person')}</div>
             {days.map((d) => (
-              <div key={d} className={`border-b border-l border-line px-3 py-3 text-center ${d === today ? 'bg-signal-soft/50' : ''}`}>
+              <div key={d} title={holidayOf.get(d)?.name} className={`border-b border-l border-line px-3 py-3 text-center ${d === today ? 'bg-signal-soft/50' : holidayOf.get(d) ? 'bg-[#7c5cc4]/8' : ''}`}>
                 <p className="text-xs text-ink-soft first-letter:uppercase">{formatDay(d, { weekday: 'short' })}</p>
                 <p className={`tabular text-lg font-semibold ${d === today ? 'text-signal' : ''}`}>{formatDay(d, { day: 'numeric' })}</p>
+                {holidayOf.get(d) && (
+                  <p className="mt-0.5 truncate text-[11px] font-medium text-[#5b3c99] dark:text-[#c3b0f0]">{holidayOf.get(d)!.name}</p>
+                )}
               </div>
             ))}
 

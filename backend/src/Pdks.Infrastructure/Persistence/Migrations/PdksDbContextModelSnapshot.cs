@@ -74,6 +74,40 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.AttendanceAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("AttendanceAlerts");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.AttendanceEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -287,6 +321,32 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Congratulations");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.HolidayYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("HolidayYears");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Kiosk", b =>
                 {
                     b.Property<Guid>("Id")
@@ -334,6 +394,42 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Kiosks");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.LeaveAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Days")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LeaveAdjustments");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -370,6 +466,40 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "ReadAt");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.PublicHoliday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsHalfDay")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("PublicHolidays");
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.RefreshToken", b =>
@@ -484,6 +614,72 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Shifts");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.ShiftSwap", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("PeerRespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("RequesterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequesterShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid?>("TargetShiftId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TargetUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RequesterId");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.HasIndex("BranchId", "Status");
+
+                    b.ToTable("ShiftSwaps");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.ShiftTemplate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -589,6 +785,9 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Property<string>("EventType")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("LeaveDays")
+                        .HasColumnType("integer");
 
                     b.Property<string>("LeaveKind")
                         .HasMaxLength(20)
@@ -768,6 +967,11 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("BreakOverrunAlert")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
@@ -779,6 +983,11 @@ namespace Pdks.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("LateToleranceMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<int>("NotArrivedAlertMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(15);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -813,6 +1022,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.AttendanceAlert", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.AttendanceEvent", b =>
@@ -882,6 +1100,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Navigation("Branch");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.LeaveAdjustment", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>
                 {
                     b.HasOne("Pdks.Domain.Entities.User", null)
@@ -924,6 +1151,25 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Navigation("ShiftTemplate");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.ShiftSwap", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Pdks.Domain.Entities.User", "TargetUser")
+                        .WithMany()
+                        .HasForeignKey("TargetUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Requester");
+
+                    b.Navigation("TargetUser");
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.ShiftTemplate", b =>

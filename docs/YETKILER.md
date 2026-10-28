@@ -1,31 +1,55 @@
 # Roller ve yetkiler
 
-Dört rol vardır. Her firma (SaaS kiracısı) yalnızca kendi verisini görür; bu ayrım veritabanı katmanında, her sorguya otomatik eklenen firma filtresiyle yapılır. Firma içindeki rol ve şube kuralları tek bir yerde tanımlıdır: `backend/src/Pdks.Infrastructure/Auth/AccessScope.cs` (arayüzdeki karşılığı `frontend/src/auth/permissions.ts`). Asıl kontrol her zaman sunucudadır; arayüz yalnızca izin verilmeyen düğmeleri gizler.
+Yetkiler tek yerde tanımlıdır: `backend/src/Pdks.Domain/Security/Permissions.cs`.
+API her uç noktayı bu yetkilerle korur; giriş yanıtı kullanıcının yetkilerini listeler ve arayüz menüyü, sayfaları ve düğmeleri buna göre gösterir.
+Bir yetkiyi değiştirmek için yalnızca o dosyadaki tabloyu güncellemek yeterlidir (birim testleri `PermissionsTests`, uç nokta testleri `RoleTests`).
 
-| | Yönetici (Admin) | Müdür (Manager) | Personel (Employee) | Kiosk |
-| --- | --- | --- | --- | --- |
-| **Kapsam** | Tüm firma, tüm şubeler | Kendi şubesi | Yalnızca kendisi | Bağlı olduğu giriş noktası |
-| Kendi giriş-çıkışı (QR), Bugünüm, vardiyalarım, taleplerim, profilim | ✓ | ✓ | ✓ | – |
-| Canlı pano, ekip süreleri, puantaj ve Excel | Tüm şubeler | Şubesindeki personel ve müdürler | – | – |
-| Vardiya planı ve şablonlar, yayınlama | Tüm şubeler | Kendi şubesi | – | – |
-| Personel listesi ve profil (acil durum kişisi dahil) | Herkes | Şubesindeki personel ve müdürler (salt okunur) | Yalnızca kendisi | – |
-| Personel ekleme, düzenleme, pasife alma, şifre sıfırlama | ✓ | – | – | – |
-| Giriş-çıkış kaydı düzeltme | Kendisi dışında herkes | Yalnızca şubesindeki personel | – (talep gönderir) | – |
-| Talep (düzeltme / izin) onaylama | Kendisi dışında herkesinki | Şubesindeki personelinki | – | – |
-| Müdürün kendi talebi kime gider | – | Yöneticilere | – | – |
-| Çalışma kuralları | Değiştirir | Görür | Görür | – |
-| Duyuru yazma | Tüm firmaya | Kendi şubesine | – | – |
-| Duyuru düzenleme / silme | Hepsi | Şubesine yazılanlar | – | – |
-| Denetim kaydı | ✓ | – | – | – |
-| QR kodu gösterme, son okutmalar, kiosk duyuruları | – | – | – | ✓ |
+## Roller
 
-## Kurallar
+| Rol | Kim | Kapsam |
+| --- | --- | --- |
+| **Yönetici** | Firma sahibi / genel müdür | Tüm firma, tüm şubeler |
+| **İnsan kaynakları** | İK, muhasebe, bordro | Tüm firma, tüm şubeler |
+| **Müdür** | Şube / mağaza müdürü | Yalnızca kendi şubesi |
+| **Personel** | Çalışan | Yalnızca kendisi |
+| **Kiosk** | Girişteki tablet | Yalnızca QR ekranı |
 
-- **Kimse kendi kaydını düzeltemez, kendi talebini onaylayamaz.** Personel ve müdür düzeltme/izin için talep gönderir.
-- **Müdür, başka bir müdürün kayıtlarını düzeltemez ve talebini onaylayamaz**; bunları yönetici yapar. Müdür şubesindeki müdürleri panoda ve raporlarda görür.
-- **Müdür yöneticileri listelerde görmez.**
-- Kiosk hesabı yalnızca kiosk ekranının uç noktalarını kullanabilir; personel listesi, raporlar gibi hiçbir veriye erişemez.
-- Geçici şifreyle giriş yapan kişi, şifresini değiştirmeden başka hiçbir işlem yapamaz.
-- Yetkisiz bir kayıt istendiğinde, varlığını belli etmemek için genellikle "bulunamadı" (404) döner.
+## Yetki tablosu
 
-Bu tablo `backend/tests/Pdks.IntegrationTests/PermissionTests.cs` içindeki testlerle korunur.
+| Yetki | Ne demek | Yönetici | İK | Müdür | Personel |
+| --- | --- | :-: | :-: | :-: | :-: |
+| `attendance.self` | Kendi giriş-çıkışı (QR), Bugünüm, vardiyalarım, taleplerim | – | ✓ | ✓ | ✓ |
+| `dashboard.view` | Canlı pano (bugün kim nerede) | ✓ | ✓ | ✓ (şube) | – |
+| `shifts.plan` | Vardiya planı, şablonlar, yayınlama | ✓ | – | ✓ (şube) | – |
+| `reports.view` | Ekip süreleri raporu | ✓ | ✓ | ✓ (şube) | – |
+| `timesheet.view` | Aylık puantaj, Excel / PDF | ✓ | ✓ | ✓ (şube) | – |
+| `requests.review` | İzin ve düzeltme taleplerini onaylama | ✓ | ✓ | ✓ (şube) | – |
+| `attendance.correct` | Giriş-çıkış kaydını elle ekleme / değiştirme / silme | ✓ | ✓ | ✓ (şube) | – |
+| `staff.view` | Personel listesi ve profilleri (acil durum kişisi vb.) | ✓ | ✓ | ✓ (şube) | – |
+| `staff.manage` | Personel ekleme, düzenleme, pasife alma, şifre sıfırlama | ✓ | ✓ ¹ | – | – |
+| `rules.view` | Çalışma kurallarını görme | ✓ | ✓ | ✓ | – ² |
+| `rules.manage` | Çalışma kurallarını değiştirme | ✓ | – | – | – |
+| `announcements.post` | Duyuru yazma | ✓ (firma) | ✓ (firma) | ✓ (şube) | – |
+| `audit.view` | Denetim kaydı | ✓ | ✓ | – | – |
+| `leave.manage` | İzin bakiyesi düzeltme, resmi tatil takvimi | ✓ | ✓ | – | – |
+| `company.manage` | Firma ayarları, şubeler, kiosklar | ✓ | – | – | – |
+
+¹ İK yönetici hesabı açamaz; yönetici hesaplarını düzenleyemez, pasife alamaz, şifresini sıfırlayamaz.
+² Personel kuralları ayrı bir sayfada görmez; vardiya ve süre hesaplarında kullanılan değerler kendi ekranlarında görünür.
+
+Herkes (kiosk hariç): kendi profili, bildirimler, duyuruları okuma ve kutlama.
+
+## Diğer kurallar
+
+- Kimse kendi talebini onaylayamaz, kendi giriş-çıkış kaydını düzeltemez (talep gönderir).
+- Kimse kendi rolünü değiştiremez, kendi hesabını pasife alamaz.
+- Müdür başka şubenin verisini hiçbir uç noktada göremez (veri sorgu düzeyinde süzülür); yöneticileri listelerde görmez.
+- Kişi bazlı kurallar tek yerde: `AccessScope` (sunucu) ve `auth/permissions.ts` (arayüz).
+- Kayıt düzeltme ve talep onayı: müdür yalnızca kendi şubesindeki **personelin**; İK personel ve müdürlerin;
+  yönetici herkesin (kendisi hariç). Müdürün talebi diğer müdürlere bildirilmez, İK'ya ve yöneticilere gider.
+- Firmalar birbirinin verisini göremez (veritabanı düzeyinde firma filtresi).
+- Canlı pano bağlantısı yetkiyle aynı kapsamı izler: müdür yalnızca kendi şubesindeki değişiklikleri, yönetici ve İK tüm firmayı duyar.
+  Bağlantı veri taşımaz, yalnızca "değişti" der; veri yine yetki kontrolü yapan uç noktadan çekilir.
+- Anlık uyarılar (gelmedi, mola aşımı) şube müdürüne gider; şubede müdür yoksa yöneticilere ve İK'ya. Kişinin kendisine gitmez.
+- Yeni firma kaydı herkese açıktır (ayarla kapatılabilir); kaydı yapan kişi o firmanın yöneticisi olur ve yalnızca kendi firmasını görür.
+- Kiosk hesapları personel listesinde görünmez; Firma ayarlarından yönetilir. Kiosk şifresi yalnızca oluşturma / yenileme anında bir kez gösterilir.

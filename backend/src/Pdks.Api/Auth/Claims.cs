@@ -20,6 +20,8 @@ public static class Roles
     public const string Manager = "Manager";
     public const string Employee = "Employee";
     public const string Kiosk = "Kiosk";
+    public const string HumanResources = "HumanResources";
 
-    public const string AdminOrManager = Admin + "," + Manager;
+    /// <summary>Kiosk dışındaki tüm insan hesapları.</summary>
+    public const string Staff = Admin + "," + Manager + "," + HumanResources + "," + Employee;
 }

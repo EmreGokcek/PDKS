@@ -12,5 +12,6 @@ public class SeedOptions
     public string AdminEmail { get; set; } = "admin@pdks.local";
     public string ManagerEmail { get; set; } = "mudur@pdks.local";
     public string EmployeeEmail { get; set; } = "personel@pdks.local";
+    public string HrEmail { get; set; } = "ik@pdks.local";
     public string KioskEmail { get; set; } = "kiosk@pdks.local";
 }

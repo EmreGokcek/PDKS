@@ -26,6 +26,7 @@ public static class TimesheetExcel
         [TimesheetCode.SickLeave] = ("#FBE3E7", "#B0304A"),
         [TimesheetCode.ExcusedLeave] = ("#FBF1DC", "#8A5E10"),
         [TimesheetCode.Absent] = ("#FDEBE2", "#C2410C"),
+        [TimesheetCode.PublicHoliday] = ("#EDE7F6", "#5B3C99"),
     };
 
     public static string FileName(Timesheet t) => $"puantaj-{t.Year}-{t.Month:00}.xlsx";
@@ -54,6 +55,8 @@ public static class TimesheetExcel
         ("Rapor", x => x.SickLeaveDays, "0"),
         ("Mazeret izni", x => x.ExcusedLeaveDays, "0"),
         ("Mola aşımı (saat)", x => Math.Round(x.BreakOverrunHours, 2), "0.00"),
+        ("Resmi tatil (gün)", x => x.PublicHolidayDays, "0"),
+        ("Tatilde çalışma (saat)", x => Math.Round(x.HolidayWorkHours, 2), "0.00"),
     ];
 
     private static void WriteSummary(IXLWorksheet ws, Timesheet t)
@@ -231,6 +234,7 @@ public static class TimesheetExcel
             ("R", "Rapor (hastalık izni)", TimesheetCode.SickLeave),
             ("Mİ", "Mazeret izni", TimesheetCode.ExcusedLeave),
             ("D", "Devamsız: vardiyası vardı, gelmedi", TimesheetCode.Absent),
+            ("RT", "Resmi tatil (tam gün). Tatilde çalışılan saatler ayrıca toplanır.", TimesheetCode.PublicHoliday),
             ("–", "Planı yok, çalışmadı", null),
             ("(boş)", "Henüz gerçekleşmemiş gün", null),
         ];
@@ -286,6 +290,7 @@ public static class TimesheetExcel
         TimesheetCode.ExcusedLeave => "Mazeret izni",
         TimesheetCode.Absent => "Devamsız",
         TimesheetCode.Off => "Plan yok",
+        TimesheetCode.PublicHoliday => "Resmi tatil",
         _ => ""
     };
 }

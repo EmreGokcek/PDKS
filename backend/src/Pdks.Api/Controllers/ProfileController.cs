@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -15,7 +16,7 @@ namespace Pdks.Api.Controllers;
 
 /// <summary>Kişinin kendi profili. Ad, e-posta, pozisyon gibi alanları yalnızca admin değiştirir.</summary>
 [ApiController]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class ProfileController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit, TimeProvider time, AccessScope scope) : ControllerBase
 {
     public static readonly string[] BloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "0+", "0-"];
@@ -60,7 +61,7 @@ public class ProfileController(PdksDbContext db, ICurrentUser currentUser, Audit
     }
 
     /// <summary>Yöneticinin bir personelin profilini görmesi (acil durum kişisi, kan grubu vb.).</summary>
-    [HttpGet("api/users/{id:guid}/profile"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpGet("api/users/{id:guid}/profile"), Authorize(Policy = Perm.StaffView)]
     public async Task<ActionResult<ProfileDto>> Staff(Guid id, CancellationToken ct)
     {
         var user = await Load(id, ct);
@@ -78,7 +79,7 @@ public class ProfileController(PdksDbContext db, ICurrentUser currentUser, Audit
 /// <summary>Kişinin uygulama içi bildirimleri.</summary>
 [ApiController]
 [Route("api/me/notifications")]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class NotificationsController(PdksDbContext db, ICurrentUser currentUser, TimeProvider time) : ControllerBase
 {
     [HttpGet]

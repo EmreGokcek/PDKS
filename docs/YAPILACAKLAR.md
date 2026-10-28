@@ -24,6 +24,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Puantaj
 
+- [ ] Dini bayram tarihleri 2027 sonrası için takvime elle girilmeli (Diyanet takvimi yayınlanınca tabloya eklenebilir).
+- [ ] Yıllık izin hakkının yıllara göre kullanım dökümü (hangi yılın izninden düşüldüğü) ve zamanaşımı.
 - [ ] Excel çıktısı şimdilik yalnızca Türkçe; arayüz dili İngilizceyse başlıklar da İngilizce olmalı.
 - [ ] Bordro programlarına (Logo, Mikro, Netsis) aktarım biçimleri.
 - [ ] Ay kapatma: onaylanan ayın kayıtlarının kilitlenmesi (sonradan düzeltme yapılamasın ya da yeniden onay gereksin).
@@ -32,11 +34,12 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 ## Talepler ve düzeltmeler
 
 - [ ] Talep onaylanınca / reddedilince personele bildirim (Adım 8: bildirimler).
-- [ ] İzin bakiyesi (kalan yıllık izin günü) ve izin talebinde bakiye kontrolü.
 - [ ] Onaylanan izin yayınlanmış bir haftaya düşerse plana yazılıyor; müdüre "plan değişti" bilgisi gösterilebilir.
 
 ## Vardiya planı
 
+- [ ] Farklı günler arasında vardiya takası (şu an yalnızca aynı gün).
+- [ ] Boş vardiya ilanı (müdür ilan eder, personel talip olur).
 - [ ] Hafta başlangıç günü yayınlanmış haftalar varken değiştirilirse eski yayın kayıtları yeni haftalarla eşleşmez. Değişiklik sırasında uyarı ya da dönüştürme gerekli.
 - [ ] Şablona varsayılan mola süresi eklenmesi (ör. "Gece" vardiyası 30 dk).
 - [ ] Planlama tablosunda çoklu seçim (Shift + tıklama) ve klavye ile planlama.
@@ -73,6 +76,20 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Sunucu hata mesajlarının (title) da çok dilli olması; şu an arayüz "code" alanını çeviriyor, başlık Türkçe yedek.
 
 ## Tamamlananlar
+
+- [x] Firma kendi kendine kayıt (firma + ilk şube + yönetici; hazır kurallar ve vardiya şablonları)
+- [x] Firma ayarları: firma adı, şubeler (saat dilimi, açma/kapama), giriş kioskları (oluşturma, şifre yenileme, kapatma)
+
+- [x] Canlı pano (SignalR): okutmalar panoya anında düşer, bildirim zili anında güncellenir
+- [x] Anlık uyarılar: vardiyasına gelmeyen ve molasını aşan personel için müdüre bildirim (Çalışma kuralları'ndan ayarlanır)
+
+- [x] Benim ayım: personelin kendi aylık puantajı ve özetleri
+
+- [x] Vardiya takası (aynı gün; arkadaş kabulü + müdür onayı, çakışma ve plan değişikliği kontrolü)
+
+- [x] Resmi tatil takvimi (otomatik), yıllık izin bakiyesi (yasal hak, kıdem ve yaş), bakiye düzeltme, ekip izin takvimi, puantajda resmi tatil ve tatil mesaisi
+
+- [x] İK rolü ve tek yerden yönetilen yetki tablosu (docs/YETKILER.md); denetim kaydı ekranı
 
 - [x] Giriş deneme sınırı ve hesap kilidi; yenileme token'ı ve "beni hatırla"; üretim gizli ayarları; `App__PublicUrl`; düzeltme ekranında şube saat dilimi; KVKK aydınlatma metni ve onayı; API entegrasyon testleri; Playwright uçtan uca testleri
 

@@ -14,7 +14,7 @@ namespace Pdks.Api.Controllers;
 
 /// <summary>Personelin kendi giriş-çıkış işlemleri. Kiosk hesapları kullanamaz.</summary>
 [ApiController]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class AttendanceController(
     PdksDbContext db,
     ICurrentUser currentUser,

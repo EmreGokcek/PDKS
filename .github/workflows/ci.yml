@@ -17,7 +17,14 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - run: dotnet restore
-      - run: dotnet build --no-restore -c Release
+      # Derleme hatası olursa ilk hatalar özet olarak (annotation) gösterilir.
+      - name: Build
+        run: |
+          set -o pipefail
+          dotnet build --no-restore -c Release 2>&1 | tee build.log || {
+            grep -E ": error [A-Z]+[0-9]+" build.log | sed -E 's/^ *//; s/ \[[^]]*\]$//' | sort -u | head -20 | sed 's/^/::error::/'
+            exit 1
+          }
       # Birim testleri + gerçek PostgreSQL (Docker) ile API entegrasyon testleri
       - run: dotnet test --no-build -c Release --logger "console;verbosity=normal" --logger trx --results-directory TestResults
       - name: Test summary

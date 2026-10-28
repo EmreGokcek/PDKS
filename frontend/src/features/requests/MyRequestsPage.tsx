@@ -8,13 +8,13 @@ import { Button } from '../../components/ui/Button'
 import { Field, Input, Select } from '../../components/ui/Field'
 import { Sheet } from '../../components/ui/Overlay'
 import { Segmented } from '../../components/ui/Segmented'
-import { Spinner } from '../../components/ui/Spinner'
 import { errorMessage } from '../../lib/api'
 import { addDays, parseDate, todayIso } from '../../lib/dates'
 import type { AttendanceAction } from '../attendance/api'
 import type { LeaveKind } from '../shifts/leave'
 import { useCancelRequest, useCreateRequest, useMyRequests, type RequestType } from './api'
 import { RequestCard } from './RequestCard'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 /** Personelin talepleri: düzeltme ve izin. */
 export function MyRequestsPage() {
@@ -36,9 +36,7 @@ export function MyRequestsPage() {
       />
 
       {list.isPending ? (
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="list" />
       ) : (list.data?.length ?? 0) === 0 ? (
         <p className="rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('requests.empty')}</p>
       ) : (

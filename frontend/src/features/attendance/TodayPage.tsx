@@ -6,7 +6,6 @@ import { Link } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
 import { PageHeader } from '../../components/AppShell'
 import { Button } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
 import { addDays, formatDay, hhmm } from '../../lib/dates'
 import { locale } from '../../i18n'
@@ -16,6 +15,7 @@ import { availableActions, useAttendance, useScan, type AttendanceAction, type A
 import { QrScannerSheet } from './QrScannerSheet'
 import { SuccessOverlay } from './SuccessOverlay'
 import { useLiveStatus } from './useLiveStatus'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 export const actionIcons: Record<AttendanceAction, ReactNode> = {
   CheckIn: <LogIn className="size-5" />,
@@ -65,9 +65,7 @@ export function TodayPage() {
     return (
       <>
         <PageHeader title={t('placeholder.hello', { name: user?.firstName ?? '' })} subtitle={dateLabel} />
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="hero" />
       </>
     )
   }

@@ -3,7 +3,6 @@ import { motion } from 'motion/react'
 import { CalendarClock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
-import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
 import { api } from '../../lib/api'
 import { addDays, formatDay, hhmm, parseDate, shiftMinutes, todayIso, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
@@ -11,6 +10,7 @@ import { formatDuration, formatMinutes } from '../../lib/format'
 import { useMyShifts, type Shift } from './api'
 import { isLeave, leaveColors, netWorkMinutes } from './leave'
 import { LeaveChip, ShiftChip } from './ShiftChip'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 /** Personelin bu hafta ve gelecek haftaki vardiyaları. */
 export function MyShiftsPage() {
@@ -37,9 +37,7 @@ export function MyShiftsPage() {
       <PageHeader title={t('shifts.myTitle')} subtitle={t('shifts.mySubtitle')} />
 
       {shifts.isPending || rules.isPending ? (
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="grid" />
       ) : (
         <>
           <NextShiftCard shift={next} now={now} work={next ? workOf(next) : 0} brk={next ? breakOf(next) : 0} />

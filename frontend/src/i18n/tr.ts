@@ -29,6 +29,8 @@ const tr = {
     language: 'Dil',
   },
   nav: {
+    more: 'Diğer',
+    sections: { today: 'Bugün', planning: 'Planlama', reports: 'Raporlar', management: 'Yönetim', team: 'Ekip', me: 'Benim' },
     timesheet: 'Puantaj',
     profile: 'Profilim',
     myRequests: 'Taleplerim',
@@ -45,6 +47,8 @@ const tr = {
     menu: 'Menü',
   },
   login: {
+    greetings: { morning: 'Günaydın', day: 'İyi günler', evening: 'İyi akşamlar', night: 'İyi geceler' },
+    dayProgress: 'Gün %{{percent}} tamamlandı',
     tagline: 'Giriş, çıkış ve molalar tek okutmayla kayıt altında.',
     title: 'Hesabına giriş yap',
     subtitle: 'Yöneticinin sana verdiği e-posta ve şifreyi kullan.',
@@ -317,6 +321,10 @@ const tr = {
     nextShiftHint: 'Sıradaki vardiyan {{day}} {{start}}.',
   },
   dashboard: {
+    attendance: 'Bugünkü katılım',
+    arrivedOf: '{{expected}} kişiden {{arrived}} kişi geldi',
+    noneExpected: 'Bugün vardiyası olan kimse yok.',
+    filterHint: 'Listeyi süzmek için bir kutuya dokun.',
     title: 'Genel bakış',
     updated: 'Son güncelleme {{time}}',
     refresh: 'Yenile',
@@ -538,6 +546,22 @@ const tr = {
     },
     leaveBreakdown: 'HT {{ht}} · Yİ {{yi}} · R {{r}} · Mİ {{mi}}',
     total: 'Toplam',
+  },
+  quotes: {
+    proverb: 'Atasözü',
+    items: [
+      { text: 'İşleyen demir ışıldar.', proverb: true },
+      { text: 'Damlaya damlaya göl olur.', proverb: true },
+      { text: 'Vakit nakittir.', proverb: true },
+      { text: 'Bugünün işini yarına bırakma.', proverb: true },
+      { text: 'Birlikten kuvvet doğar.', proverb: true },
+      { text: 'Erken kalkan yol alır.', proverb: true },
+      { text: 'Emek olmadan yemek olmaz.', proverb: true },
+      { text: 'Küçük adımlar, büyük haftalar kurar.' },
+      { text: 'İyi bir gün, zamanında atılan ilk adımla başlar.' },
+      { text: 'Her vardiya, bir öncekinden biraz daha iyi olabilir.' },
+      { text: 'Zamanını bilen, işini de bilir.' },
+    ],
   },
   errors: {
     invalid_blood_type: 'Geçersiz kan grubu.',

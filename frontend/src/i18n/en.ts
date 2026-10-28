@@ -31,6 +31,8 @@ const en: Translations = {
     language: 'Language',
   },
   nav: {
+    more: 'More',
+    sections: { today: 'Today', planning: 'Planning', reports: 'Reports', management: 'Admin', team: 'Team', me: 'Me' },
     timesheet: 'Timesheet',
     profile: 'My profile',
     myRequests: 'My requests',
@@ -47,6 +49,8 @@ const en: Translations = {
     menu: 'Menu',
   },
   login: {
+    greetings: { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' },
+    dayProgress: 'Day {{percent}}% complete',
     tagline: 'Check-ins, check-outs and breaks, recorded with a single scan.',
     title: 'Sign in to your account',
     subtitle: 'Use the email and password your administrator gave you.',
@@ -319,6 +323,10 @@ const en: Translations = {
     nextShiftHint: 'Your next shift is {{day}} at {{start}}.',
   },
   dashboard: {
+    attendance: 'Today’s attendance',
+    arrivedOf: '{{arrived}} of {{expected}} people arrived',
+    noneExpected: 'No one has a shift today.',
+    filterHint: 'Tap a box to filter the list.',
     title: 'Overview',
     updated: 'Updated {{time}}',
     refresh: 'Refresh',
@@ -540,6 +548,22 @@ const en: Translations = {
     },
     leaveBreakdown: 'HT {{ht}} · Yİ {{yi}} · R {{r}} · Mİ {{mi}}',
     total: 'Total',
+  },
+  quotes: {
+    proverb: 'Turkish proverb',
+    items: [
+      { text: 'Iron that is worked keeps shining.', proverb: true },
+      { text: 'Drop by drop, a lake is formed.', proverb: true },
+      { text: 'Time is money.', proverb: true },
+      { text: 'Don’t leave today’s work for tomorrow.', proverb: true },
+      { text: 'Strength is born of unity.', proverb: true },
+      { text: 'Those who rise early go far.', proverb: true },
+      { text: 'No effort, no bread.', proverb: true },
+      { text: 'Small steps build great weeks.' },
+      { text: 'A good day starts with a first step taken on time.' },
+      { text: 'Every shift can be a little better than the last.' },
+      { text: 'Know your time, and you know your work.' },
+    ],
   },
   errors: {
     invalid_blood_type: 'Invalid blood type.',

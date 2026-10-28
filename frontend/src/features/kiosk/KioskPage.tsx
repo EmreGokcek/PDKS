@@ -5,7 +5,8 @@ import QRCode from 'qrcode'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
-import { LiveClock } from '../../components/LiveClock'
+import { Greeting, LiveClock } from '../../components/LiveClock'
+import { QuoteRotator } from '../../components/QuoteRotator'
 import { LanguageMenu } from '../../components/PreferencesControls'
 import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
@@ -88,7 +89,8 @@ export function KioskPage() {
 
       <main className="grid flex-1 items-center gap-10 px-6 py-8 sm:px-10 lg:grid-cols-[1fr_auto_1fr]">
         <div className="text-center lg:text-left">
-          <LiveClock />
+          <Greeting className="mb-3 text-xl font-medium text-signal" />
+          <LiveClock size="md" className="[&_time]:max-lg:justify-center" />
           <p className="mt-8 text-2xl font-semibold">{t('kiosk.instruction')}</p>
           <p className="mt-2 max-w-sm text-on-brand/65 max-lg:mx-auto">{t('kiosk.steps')}</p>
         </div>
@@ -170,6 +172,10 @@ export function KioskPage() {
           </ul>
         </aside>
       </main>
+
+      <div className="mx-auto w-full max-w-2xl px-6 pb-6">
+        <QuoteRotator align="center" intervalMs={12000} />
+      </div>
 
       <footer className="px-6 pb-5 text-center">
         <button type="button" onClick={logout} className="text-xs text-on-brand/35 underline underline-offset-4 hover:text-on-brand/70">

@@ -44,7 +44,8 @@ jobs:
                       continue
                   msg = r.findtext('.//t:Message', default='', namespaces=ns)
                   stack = r.findtext('.//t:StackTrace', default='', namespaces=ns)
-                  where = next((l.strip() for l in stack.splitlines() if '.cs:line' in l), '')
+                  lines = [l.strip() for l in stack.splitlines() if '.cs:line' in l]
+                  where = ' | '.join(lines[:3])
                   text = f"{r.get('testName')}: {msg} {where}".replace('%', '%25').replace('\r', '').replace('\n', '%0A')
                   print(f"::error title=Başarısız test::{text[:1500]}")
           PY

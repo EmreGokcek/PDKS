@@ -148,7 +148,7 @@ public class CompanyController(
         audit.Log("kiosk.created", nameof(Kiosk), kiosk.Id, newValues: new { kiosk.Name, Branch = branch.Name, Email = email });
         await db.SaveChangesAsync(ct);
 
-        return new KioskWithPasswordDto(await KioskQuery().FirstAsync(k => k.Id == kiosk.Id, ct), password);
+        return new KioskWithPasswordDto(await KioskQuery(kiosk.Id).FirstAsync(ct), password);
     }
 
     [HttpPut("kiosks/{id:guid}")]
@@ -170,7 +170,7 @@ public class CompanyController(
         }
         audit.Log("kiosk.updated", nameof(Kiosk), kiosk.Id, before, new { kiosk.Name, kiosk.BranchId });
         await db.SaveChangesAsync(ct);
-        return await KioskQuery().FirstAsync(k => k.Id == id, ct);
+        return await KioskQuery(id).FirstAsync(ct);
     }
 
     /// <summary>Kiosk hesabına yeni şifre verir; tablet yeniden giriş yapmalıdır.</summary>
@@ -188,7 +188,7 @@ public class CompanyController(
         await refreshTokens.RevokeAllForUserAsync(device.Id, "password_reset", ct);
         audit.Log("kiosk.password_reset", nameof(Kiosk), kiosk.Id);
         await db.SaveChangesAsync(ct);
-        return new KioskWithPasswordDto(await KioskQuery().FirstAsync(k => k.Id == id, ct), password);
+        return new KioskWithPasswordDto(await KioskQuery(id).FirstAsync(ct), password);
     }
 
     [HttpPost("kiosks/{id:guid}/deactivate")]
@@ -212,7 +212,7 @@ public class CompanyController(
             audit.Log(active ? "kiosk.activated" : "kiosk.deactivated", nameof(Kiosk), kiosk.Id);
             await db.SaveChangesAsync(ct);
         }
-        return await KioskQuery().FirstAsync(k => k.Id == id, ct);
+        return await KioskQuery(id).FirstAsync(ct);
     }
 
     /// <summary>Kiosku ve hesabını birlikte açar / kapatır; kapanınca tabletteki oturum da kapanır.</summary>
@@ -225,9 +225,11 @@ public class CompanyController(
         if (!active) await refreshTokens.RevokeAllForUserAsync(device.Id, "kiosk_deactivated", ct);
     }
 
-    private IQueryable<KioskDto> KioskQuery() =>
+    /// <summary>Kiosklar (ya da tek kiosk). Süzme, DTO'ya çevirmeden önce yapılır (EF kurucu parametresini sorguya çeviremez).</summary>
+    private IQueryable<KioskDto> KioskQuery(Guid? id = null) =>
         from k in db.Kiosks.AsNoTracking()
         join u in db.Users on k.DeviceUserId equals u.Id
+        where id == null || k.Id == id
         orderby k.IsActive descending, k.CreatedAt
         select new KioskDto(k.Id, k.Name, k.BranchId, k.Branch != null ? k.Branch.Name : null, u.Email, k.IsActive, u.LastLoginAt, k.LastSeenAt);
 

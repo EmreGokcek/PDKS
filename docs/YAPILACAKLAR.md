@@ -38,6 +38,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Vardiya planı
 
+- [ ] Farklı günler arasında vardiya takası (şu an yalnızca aynı gün).
+- [ ] Boş vardiya ilanı (müdür ilan eder, personel talip olur).
 - [ ] Hafta başlangıç günü yayınlanmış haftalar varken değiştirilirse eski yayın kayıtları yeni haftalarla eşleşmez. Değişiklik sırasında uyarı ya da dönüştürme gerekli.
 - [ ] Şablona varsayılan mola süresi eklenmesi (ör. "Gece" vardiyası 30 dk).
 - [ ] Planlama tablosunda çoklu seçim (Shift + tıklama) ve klavye ile planlama.
@@ -74,6 +76,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Sunucu hata mesajlarının (title) da çok dilli olması; şu an arayüz "code" alanını çeviriyor, başlık Türkçe yedek.
 
 ## Tamamlananlar
+
+- [x] Vardiya takası (aynı gün; arkadaş kabulü + müdür onayı, çakışma ve plan değişikliği kontrolü)
 
 - [x] Resmi tatil takvimi (otomatik), yıllık izin bakiyesi (yasal hak, kıdem ve yaş), bakiye düzeltme, ekip izin takvimi, puantajda resmi tatil ve tatil mesaisi
 

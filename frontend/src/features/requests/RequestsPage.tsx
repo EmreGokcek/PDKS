@@ -12,6 +12,7 @@ import { errorMessage } from '../../lib/api'
 import { useReview, useTeamRequests, type StaffRequest } from './api'
 import { RequestCard } from './RequestCard'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { TeamSwaps } from '../swaps/SwapViews'
 
 /** Yöneticinin talep ekranı: bekleyenler ve geçmiş. */
 export function RequestsPage() {
@@ -34,6 +35,8 @@ export function RequestsPage() {
           ]}
         />
       </div>
+
+      <TeamSwaps pendingOnly={tab === 'pending'} />
 
       {query.isPending ? (
         <PageSkeleton variant="list" />

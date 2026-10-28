@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Bell, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
+import { ArrowLeftRight, Bell, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -18,6 +18,9 @@ const icons: Record<NotificationType, ReactNode> = {
   RecordCorrected: <Wrench className="size-4" />,
   AnnouncementPublished: <Megaphone className="size-4" />,
   Congratulated: <PartyPopper className="size-4" />,
+  SwapRequested: <ArrowLeftRight className="size-4" />,
+  SwapUpdated: <ArrowLeftRight className="size-4" />,
+  SwapNeedsApproval: <ArrowLeftRight className="size-4" />,
 }
 
 const tones: Record<NotificationType, string> = {
@@ -29,6 +32,9 @@ const tones: Record<NotificationType, string> = {
   RecordCorrected: 'bg-panel-2 text-ink-soft ring-1 ring-line',
   AnnouncementPublished: 'bg-signal-soft text-signal',
   Congratulated: 'bg-pause-soft text-pause',
+  SwapRequested: 'bg-pause-soft text-pause',
+  SwapUpdated: 'bg-panel-2 text-ink-soft ring-1 ring-line',
+  SwapNeedsApproval: 'bg-pause-soft text-pause',
 }
 
 /** Bildirime tıklayınca gidilecek sayfa (kullanıcının yetkilerine göre). */
@@ -48,6 +54,11 @@ function targetOf(type: NotificationType, user: User): string {
     case 'AnnouncementPublished':
     case 'Congratulated':
       return at('duyurular')
+    case 'SwapRequested':
+    case 'SwapUpdated':
+      return at('vardiyalarim')
+    case 'SwapNeedsApproval':
+      return at('talepler')
   }
 }
 
@@ -200,6 +211,17 @@ function NotificationBody({ n }: { n: AppNotification }) {
         d.kind === 'WorkAnniversary'
           ? t('notifications.Congratulated.bodyAnniversary', { from: String(d.from ?? '') })
           : t('notifications.Congratulated.bodyBirthday', { from: String(d.from ?? '') })
+      break
+    case 'SwapRequested':
+      text = t('notifications.SwapRequested.body', { name: String(d.name ?? ''), date: day(String(d.date)) })
+      break
+    case 'SwapUpdated': {
+      const status = String(d.status ?? 'Approved') as 'Approved'
+      text = t(`notifications.SwapUpdated.${status}`, { name: String(d.name ?? ''), date: day(String(d.date)) })
+      break
+    }
+    case 'SwapNeedsApproval':
+      text = t('notifications.SwapNeedsApproval.body', { date: day(String(d.date)) })
       break
   }
   const note = typeof d.note === 'string' && d.note ? ` ${t('notifications.note', { note: d.note })}` : ''

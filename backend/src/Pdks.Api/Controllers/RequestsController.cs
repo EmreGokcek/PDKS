@@ -75,7 +75,7 @@ public class MyRequestsController(
 
         db.StaffRequests.Add(entity);
         audit.Log("request.created", nameof(StaffRequest), entity.Id, newValues: new { Type = entity.Type.ToString() });
-        notifier.Notify(await notifier.ReviewersAsync(entity.BranchId, user.Id, ct), NotificationType.RequestCreated,
+        notifier.Notify(await notifier.ReviewersAsync(entity.BranchId, user.Id, user.Role, ct), NotificationType.RequestCreated,
             new { requestId = entity.Id, name = user.FullName, type = entity.Type.ToString() });
         await db.SaveChangesAsync(ct);
         return (await RequestQueries.ToDtos(db, db.StaffRequests.Where(r => r.Id == entity.Id), ct)).Single();
@@ -210,9 +210,10 @@ public class RequestsController(
         return (entity, null);
     }
 
+    /// <summary>Görüp karara bağlayabildiği talepler: yönetici hepsini, müdür şubesindeki personelinkileri.</summary>
     private IQueryable<StaffRequest> Scope() =>
         currentUser.Role == UserRole.Manager
-            ? db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId)
+            ? db.StaffRequests.Where(r => r.BranchId == currentUser.BranchId && r.User!.Role == UserRole.Employee)
             : db.StaffRequests;
 }
 

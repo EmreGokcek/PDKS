@@ -22,11 +22,15 @@ public class Notifier(PdksDbContext db)
 
     public void Notify(Guid userId, NotificationType type, object? data = null) => Notify([userId], type, data);
 
-    /// <summary>Talepleri karara bağlayabilecek kişiler: şubenin müdürleri ve tüm adminler (talep sahibi hariç).</summary>
-    public async Task<List<Guid>> ReviewersAsync(Guid branchId, Guid exceptUserId, CancellationToken ct = default) =>
+    /// <summary>
+    /// Talebi karara bağlayabilecek kişiler (talep sahibi hariç): personelin talebinde şube müdürleri ve yöneticiler,
+    /// müdürün talebinde yalnızca yöneticiler.
+    /// </summary>
+    public async Task<List<Guid>> ReviewersAsync(Guid branchId, Guid exceptUserId, UserRole requesterRole, CancellationToken ct = default) =>
         await db.Users
             .Where(u => u.IsActive && u.Id != exceptUserId &&
-                        (u.Role == UserRole.Admin || (u.Role == UserRole.Manager && u.BranchId == branchId)))
+                        (u.Role == UserRole.Admin ||
+                         (requesterRole == UserRole.Employee && u.Role == UserRole.Manager && u.BranchId == branchId)))
             .Select(u => u.Id)
             .ToListAsync(ct);
 }

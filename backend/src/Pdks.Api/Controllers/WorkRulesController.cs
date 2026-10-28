@@ -12,7 +12,7 @@ namespace Pdks.Api.Controllers;
 /// <summary>Firmanın çalışma kuralları. Herkes okuyabilir (personel kalan molasını hesaplamak için), yalnızca Admin değiştirir.</summary>
 [ApiController]
 [Route("api/settings/work-rules")]
-[Authorize]
+[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
 public class WorkRulesController(PdksDbContext db, AuditLogger audit) : ControllerBase
 {
     [HttpGet]

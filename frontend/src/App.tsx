@@ -27,6 +27,7 @@ const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 
 const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
 const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
 const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage'), 'ProfileSetupPage')
+const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="personel" element={<UsersPage />} />
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="kurallar" element={<WorkRulesPage />} />
+          <Route path="denetim" element={<AuditPage />} />
           <Route path="profil" element={<ProfilePage />} />
           <Route path="duyurular" element={<AnnouncementsPage />} />
         </Route>

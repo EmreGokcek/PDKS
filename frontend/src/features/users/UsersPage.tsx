@@ -10,7 +10,6 @@ import { Button, IconButton } from '../../components/ui/Button'
 import { Input, Select } from '../../components/ui/Field'
 import { Menu, type MenuItem } from '../../components/ui/Menu'
 import { Segmented } from '../../components/ui/Segmented'
-import { Spinner } from '../../components/ui/Spinner'
 import { useDebounced } from '../../hooks/useDebounced'
 import { errorMessage } from '../../lib/api'
 import { relativeTime } from '../../lib/format'
@@ -26,6 +25,7 @@ import {
 import { ConfirmDialog, TempPasswordDialog } from './Dialogs'
 import { StaffProfileSheet } from '../profile/StaffProfileSheet'
 import { UserSheet } from './UserSheet'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 type Pending = { kind: 'deactivate' | 'reset'; member: StaffMember } | null
 
@@ -149,9 +149,7 @@ export function UsersPage({ readOnly = false }: { readOnly?: boolean }) {
         </div>
 
         {list.isPending ? (
-          <div className="grid place-items-center py-20 text-ink-soft">
-            <Spinner />
-          </div>
+          <PageSkeleton variant="table" />
         ) : list.isError ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-ink-soft">{errorMessage(list.error, t)}</p>

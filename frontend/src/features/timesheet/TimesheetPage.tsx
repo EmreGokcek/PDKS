@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { PageHeader } from '../../components/AppShell'
 import { Button, IconButton } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
 import { locale } from '../../i18n'
 import { download, errorMessage } from '../../lib/api'
 import { formatDay, parseDate, todayIso } from '../../lib/dates'
 import { useTimesheet, type Timesheet, type TimesheetCell, type TimesheetCode, type TimesheetTotals } from './api'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 /** Gün kodlarının renkleri (Excel çıktısıyla aynı). */
 const codeStyle: Partial<Record<TimesheetCode, string>> = {
@@ -105,9 +105,7 @@ export function TimesheetPage() {
       </div>
 
       {sheet.isPending || !data ? (
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="table" />
       ) : data.rows.length === 0 ? (
         <p className="rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('timesheet.empty')}</p>
       ) : (

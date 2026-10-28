@@ -8,10 +8,10 @@ import { PageHeader } from '../../components/AppShell'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Field'
 import { Segmented } from '../../components/ui/Segmented'
-import { Spinner } from '../../components/ui/Spinner'
 import { errorMessage } from '../../lib/api'
 import { useReview, useTeamRequests, type StaffRequest } from './api'
 import { RequestCard } from './RequestCard'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 /** Yöneticinin talep ekranı: bekleyenler ve geçmiş. */
 export function RequestsPage() {
@@ -36,9 +36,7 @@ export function RequestsPage() {
       </div>
 
       {query.isPending ? (
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="list" />
       ) : items.length === 0 ? (
         <p className="rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">
           {tab === 'pending' ? t('requests.emptyPending') : t('requests.emptyHistory')}

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
 import { roleHome } from '../auth/types'
-import { LiveClock } from '../components/LiveClock'
+import { DayProgress, Greeting, LiveClock } from '../components/LiveClock'
+import { QuoteRotator } from '../components/QuoteRotator'
 import { LanguageMenu, ThemeSwitch } from '../components/PreferencesControls'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Field'
@@ -52,17 +53,31 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.15fr_1fr]">
-      <section className="relative flex flex-col justify-between overflow-hidden bg-brand px-6 py-8 text-on-brand sm:px-12 sm:py-12">
+      <section className="relative flex flex-col justify-between gap-8 overflow-hidden bg-brand px-6 py-8 text-on-brand sm:px-12 sm:py-12 lg:min-h-[560px] lg:gap-10">
+        {/* Arka planda yavaşça dolaşan iki ışık halesi */}
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-40 -left-40 size-[34rem] rounded-full bg-signal/20 blur-3xl"
+          animate={{ x: [0, 120, 40, 0], y: [0, 80, 160, 0] }}
+          transition={{ duration: 28, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-48 -bottom-48 size-[30rem] rounded-full bg-[#2f80ed]/15 blur-3xl"
+          animate={{ x: [0, -100, -20, 0], y: [0, -120, -40, 0] }}
+          transition={{ duration: 34, repeat: Infinity, ease: 'easeInOut' }}
+        />
         {/* Kart okutma çizgisini anımsatan ince tarama ışığı */}
         <motion.div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-signal/70 to-transparent"
+          className="pointer-events-none absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-signal/60 to-transparent"
           initial={{ top: '0%' }}
           animate={{ top: ['8%', '92%', '8%'] }}
-          transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
         />
+
         <motion.div
-          className="flex items-center gap-3"
+          className="relative flex items-center gap-3"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease }}
@@ -70,17 +85,17 @@ export function LoginPage() {
           <img src="/favicon.svg" alt="" className="size-9 rounded-xl ring-1 ring-on-brand/20" />
           <span className="text-lg font-semibold">PDKS</span>
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease }}>
-          <LiveClock className="my-10 lg:my-0" />
+
+        <motion.div className="relative" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1, ease }}>
+          <Greeting className="mb-3 text-xl font-medium text-signal" />
+          <LiveClock />
+          <DayProgress className="mt-8 max-w-sm max-lg:hidden" />
         </motion.div>
-        <motion.p
-          className="max-w-sm text-on-brand/70"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.35 }}
-        >
-          {t('login.tagline')}
-        </motion.p>
+
+        <motion.div className="relative max-w-lg max-lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.4 }}>
+          <QuoteRotator />
+          <p className="mt-8 text-sm text-on-brand/45">{t('login.tagline')}</p>
+        </motion.div>
       </section>
 
       <section className="relative flex items-center justify-center px-4 py-14 sm:px-12">

@@ -9,7 +9,6 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Button, IconButton } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
 import { Dialog } from '../../components/ui/Overlay'
-import { Spinner } from '../../components/ui/Spinner'
 import { locale } from '../../i18n'
 import { api, ApiError, errorMessage } from '../../lib/api'
 import { addDays, formatDay, formatRange, hhmm, isOvernight, shiftMinutes, todayIso, toApiTime, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
@@ -20,6 +19,7 @@ import { CellDialog, type CellTarget } from './CellDialog'
 import { isLeave, leaveColors, leaveKinds, matchTemplate, netWorkMinutes, type LeaveKind } from './leave'
 import { LeaveChip, ShiftChip } from './ShiftChip'
 import { TemplatesSheet } from './TemplatesSheet'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 type Brush =
   | { kind: 'template'; id: string }
@@ -160,9 +160,7 @@ export function ShiftPlannerPage() {
     return (
       <>
         <PageHeader title={t('shifts.plannerTitle')} />
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="table" />
       </>
     )
   }

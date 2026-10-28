@@ -8,7 +8,6 @@ import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button, IconButton } from '../../components/ui/Button'
 import { Sheet } from '../../components/ui/Overlay'
-import { Spinner } from '../../components/ui/Spinner'
 import { api } from '../../lib/api'
 import { addDays, formatDay, formatRange, hhmm, todayIso, weekStartOf, type WeekDayName } from '../../lib/dates'
 import { formatMinutes, formatSeconds, formatTime } from '../../lib/format'
@@ -17,6 +16,8 @@ import { useAuth } from '../../auth/AuthContext'
 import { DayEditor, type DayEditorTarget } from '../corrections/DayEditor'
 import { usePersonReport, useTeamReport, type DayRecord, type ReportPerson } from './api'
 import { statusTone } from './status'
+import { PageSkeleton } from '../../components/ui/Skeleton'
+import { Spinner } from '../../components/ui/Spinner'
 
 /** Haftalık ekip süreleri: kişi başına çalışma, fazla mesai, geç kalma, devamsızlık. */
 export function TeamReportPage() {
@@ -59,9 +60,7 @@ export function TeamReportPage() {
       />
 
       {report.isPending || !report.data ? (
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="table" />
       ) : people.length === 0 ? (
         <p className="rounded-2xl bg-panel p-8 text-center text-ink-soft ring-1 ring-line">{t('reports.empty')}</p>
       ) : (

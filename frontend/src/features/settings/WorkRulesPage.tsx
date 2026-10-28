@@ -7,9 +7,9 @@ import { toast } from 'sonner'
 import { PageHeader } from '../../components/AppShell'
 import { Button } from '../../components/ui/Button'
 import { Segmented } from '../../components/ui/Segmented'
-import { Spinner } from '../../components/ui/Spinner'
 import { api, errorMessage, json } from '../../lib/api'
 import { formatDuration, formatMinutes } from '../../lib/format'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 type WeekDay = 'Monday' | 'Sunday' | 'Saturday'
 
@@ -49,9 +49,7 @@ export function WorkRulesPage({ readOnly = false }: { readOnly?: boolean }) {
     return (
       <>
         <PageHeader title={t('rules.title')} subtitle={t('rules.subtitle')} />
-        <div className="grid place-items-center py-20 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="grid" />
       </>
     )
   }

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { BarChart3, CalendarDays, FileSpreadsheet, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -12,8 +12,13 @@ import { Avatar } from './ui/Avatar'
 import { IconButton } from './ui/Button'
 import { Spinner } from './ui/Spinner'
 
+type Section = 'today' | 'planning' | 'reports' | 'management' | 'team' | 'me'
+
 interface NavItem {
   to: string
+  section?: Section
+  /** Mobil alt sekme çubuğunda görünsün mü */
+  tab?: boolean
   label: string
   icon: ReactNode
   end?: boolean
@@ -28,34 +33,46 @@ function useNavItems(role: Role): NavItem[] {
   switch (role) {
     case 'Admin':
       return [
-        { to: '/admin/pano', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
-        { to: '/admin/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
-        { to: '/admin/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
-        { to: '/admin/puantaj', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
-        { to: '/admin/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
-        { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
-        { to: '/admin/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+        { to: '/admin/pano', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
+        { to: '/admin/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+        { to: '/admin/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+        { to: '/admin/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/admin/puantaj', section: 'reports', tab: true, label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
+        { to: '/admin/personel', section: 'management', label: t('nav.staff'), icon: <Users className={icon} /> },
+        { to: '/admin/kurallar', section: 'management', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
       ]
     case 'Manager':
       return [
-        { to: '/mudur', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
-        { to: '/mudur/bugunum', label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
-        { to: '/mudur/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
-        { to: '/mudur/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
-        { to: '/mudur/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
-        { to: '/mudur/puantaj', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
-        { to: '/mudur/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
-        { to: '/mudur/taleplerim', label: t('nav.myRequests'), icon: <Send className={icon} /> },
-        { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
-        { to: '/mudur/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+        { to: '/mudur', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
+        { to: '/mudur/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+        { to: '/mudur/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
+        { to: '/mudur/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/mudur/puantaj', section: 'reports', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
+        { to: '/mudur/ekip', section: 'team', label: t('nav.team'), icon: <Users className={icon} /> },
+        { to: '/mudur/kurallar', section: 'team', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+        { to: '/mudur/bugunum', section: 'me', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
+        { to: '/mudur/vardiyalarim', section: 'me', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+        { to: '/mudur/taleplerim', section: 'me', label: t('nav.myRequests'), icon: <Send className={icon} /> },
       ]
     default:
       return [
-        { to: '/personel', label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
-        { to: '/personel/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
-        { to: '/personel/taleplerim', label: t('nav.myRequests'), icon: <Send className={icon} /> },
+        { to: '/personel', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
+        { to: '/personel/vardiyalarim', tab: true, label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
+        { to: '/personel/taleplerim', tab: true, label: t('nav.myRequests'), icon: <Send className={icon} /> },
+        { to: '/personel/profil', tab: true, label: t('nav.profile'), icon: <UserRound className={icon} /> },
       ]
   }
+}
+
+/** Menü maddelerini bölümlerine göre gruplar (bölümü olmayanlar tek grup). */
+function groupBySection(items: NavItem[]) {
+  const groups: { section?: Section; items: NavItem[] }[] = []
+  for (const item of items) {
+    const last = groups.at(-1)
+    if (last && last.section === item.section) last.items.push(item)
+    else groups.push({ section: item.section, items: [item] })
+  }
+  return groups
 }
 
 function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
@@ -65,7 +82,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-3 px-5 pt-6 pb-8">
+      <div className="flex items-center gap-3 px-5 pt-6 pb-6">
         <img src="/favicon.svg" alt="" className="size-9 rounded-xl" />
         <div className="min-w-0 flex-1 leading-tight">
           <p className="truncate font-semibold">{user!.companyName}</p>
@@ -76,51 +93,58 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </span>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
-        {items.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={onNavigate}
-            className={({ isActive }) =>
-              `relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-colors ${isActive ? 'text-ink' : 'text-ink-soft hover:bg-panel-2 hover:text-ink'}`
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {isActive && (
-                  <motion.span
-                    layoutId="nav-active"
-                    className="absolute inset-0 rounded-xl bg-panel-2 ring-1 ring-line"
-                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                  />
-                )}
-                {isActive && (
-                  <motion.span
-                    layoutId="nav-active-bar"
-                    className="absolute top-2 bottom-2 left-0 w-[3px] rounded-full bg-signal"
-                    transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                  />
-                )}
-                <span className="relative">{item.icon}</span>
-                <span className="relative flex-1">{item.label}</span>
-                <AnimatePresence>
-                  {!!item.badge && (
-                    <motion.span
-                      key={item.badge}
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      exit={{ scale: 0.5, opacity: 0 }}
-                      className="tabular relative grid min-w-6 place-items-center rounded-full bg-pause px-1.5 text-xs font-semibold text-white"
-                    >
-                      {item.badge}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </>
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        {groupBySection(items.filter((i) => !i.to.endsWith('/profil'))).map((group, gi) => (
+          <div key={gi} className="space-y-1">
+            {group.section && (
+              <p className="px-3 pb-1 text-xs font-medium text-ink-soft/70">{t(`nav.sections.${group.section}`)}</p>
             )}
-          </NavLink>
+            {group.items.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                onClick={onNavigate}
+                className={({ isActive }) =>
+                  `relative flex items-center gap-3 rounded-xl px-3 py-2 text-[15px] font-medium transition-colors ${isActive ? 'text-ink' : 'text-ink-soft hover:bg-panel-2 hover:text-ink'}`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active"
+                        className="absolute inset-0 rounded-xl bg-panel-2 ring-1 ring-line"
+                        transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                      />
+                    )}
+                    {isActive && (
+                      <motion.span
+                        layoutId="nav-active-bar"
+                        className="absolute top-2 bottom-2 left-0 w-[3px] rounded-full bg-signal"
+                        transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                      />
+                    )}
+                    <span className="relative">{item.icon}</span>
+                    <span className="relative flex-1">{item.label}</span>
+                    <AnimatePresence>
+                      {!!item.badge && (
+                        <motion.span
+                          key={item.badge}
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0.5, opacity: 0 }}
+                          className="tabular relative grid min-w-6 place-items-center rounded-full bg-pause px-1.5 text-xs font-semibold text-white"
+                        >
+                          {item.badge}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         ))}
       </nav>
 
@@ -151,6 +175,61 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
+/** Telefonda altta sabit sekme çubuğu. Admin ve müdürde son sekme menüyü açar. */
+function TabBar({ onMore }: { onMore: () => void }) {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const tabs = useNavItems(user!.role).filter((i) => i.tab)
+  const showMore = user!.role !== 'Employee'
+
+  return (
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-panel/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg lg:hidden print:hidden"
+      aria-label={t('nav.menu')}
+    >
+      <div className="mx-auto flex max-w-lg">
+        {tabs.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            className={({ isActive }) =>
+              `relative flex flex-1 flex-col items-center gap-1 px-1 pt-2.5 pb-2 text-[11px] font-medium transition-colors ${isActive ? 'text-signal' : 'text-ink-soft'}`
+            }
+          >
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <motion.span
+                    layoutId="tab-active"
+                    className="absolute top-0 h-[3px] w-10 rounded-b-full bg-signal"
+                    transition={{ type: 'spring', stiffness: 500, damping: 38 }}
+                  />
+                )}
+                <motion.span className="relative" animate={{ scale: isActive ? 1.12 : 1 }} transition={{ type: 'spring', stiffness: 500, damping: 25 }}>
+                  {item.icon}
+                  {!!item.badge && (
+                    <span className="tabular absolute -top-1.5 -right-2.5 grid h-4 min-w-4 place-items-center rounded-full bg-pause px-1 text-[10px] font-semibold text-white">
+                      {item.badge}
+                    </span>
+                  )}
+                </motion.span>
+                <span className="max-w-full truncate">{item.label}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+        {showMore && (
+          <button type="button" onClick={onMore} className="flex flex-1 flex-col items-center gap-1 px-1 pt-2.5 pb-2 text-[11px] font-medium text-ink-soft">
+            <MenuIcon className="size-[18px]" />
+            {t('nav.more')}
+          </button>
+        )}
+      </div>
+    </nav>
+  )
+}
+
 /** Giriş yapılmış sayfaların ortak çerçevesi: kenar menü + içerik. Mobilde menü çekmeceye dönüşür. */
 export function AppShell() {
   const { t } = useTranslation()
@@ -171,12 +250,7 @@ export function AppShell() {
           <img src="/favicon.svg" alt="" className="size-8 rounded-lg" />
           <span className="font-semibold">{user.companyName}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <NotificationBell />
-          <IconButton label={t('nav.menu')} onClick={() => setDrawerOpen(true)}>
-            <MenuIcon className="size-5" />
-          </IconButton>
-        </div>
+        <NotificationBell />
       </header>
 
       <AnimatePresence>
@@ -205,13 +279,15 @@ export function AppShell() {
         )}
       </AnimatePresence>
 
+      <TabBar onMore={() => setDrawerOpen(true)} />
+
       <main className="min-w-0">
         <motion.div
           key={location.pathname}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10 print:max-w-none print:p-0"
+          className="mx-auto max-w-6xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 lg:pb-10 print:max-w-none print:p-0"
         >
           <Suspense fallback={<div className="grid place-items-center py-24 text-ink-soft"><Spinner /></div>}>
             <Outlet />

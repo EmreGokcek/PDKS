@@ -6,7 +6,6 @@ import { PageHeader } from '../../components/AppShell'
 import { Avatar } from '../../components/ui/Avatar'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
-import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
 import { errorMessage } from '../../lib/api'
 import { formatDay, hhmm } from '../../lib/dates'
@@ -14,6 +13,7 @@ import { formatClock, formatTime } from '../../lib/format'
 import { isLeave, leaveColors } from '../shifts/leave'
 import { useLiveDashboard, type LivePerson } from './api'
 import { statusTone } from './status'
+import { PageSkeleton } from '../../components/ui/Skeleton'
 
 type Tile = 'inside' | 'onBreak' | 'notArrived' | 'late' | 'onLeave' | 'done' | 'upcoming'
 
@@ -71,9 +71,7 @@ export function LiveDashboardPage() {
     return (
       <>
         <PageHeader title={t('dashboard.title')} />
-        <div className="grid place-items-center py-24 text-ink-soft">
-          <Spinner />
-        </div>
+        <PageSkeleton variant="cards" />
       </>
     )
   }
@@ -108,32 +106,34 @@ export function LiveDashboardPage() {
         }
       />
 
-      {/* Sayaçlar: tıklayınca listeyi o duruma göre süzer */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
-        {tiles.map((tile, i) => {
+      {/* Üst bölüm: katılım halkası + dört ana sayaç; ikincil durumlar küçük süzgeç olarak */}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-4">
+        <AttendanceRing people={data.people} />
+        <div className="grid grid-cols-2 gap-3 lg:gap-4">
+          {tiles.slice(0, 4).map((tile, i) => (
+            <TileButton key={tile.key} tile={tile} index={i} count={data.people.filter(tile.match).length} selected={filter === tile.key} onClick={() => setFilter(filter === tile.key ? null : tile.key)} />
+          ))}
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {tiles.slice(4).map((tile) => {
           const count = data.people.filter(tile.match).length
           const selected = filter === tile.key
           return (
-            <motion.button
+            <button
               key={tile.key}
               type="button"
               aria-pressed={selected}
               onClick={() => setFilter(selected ? null : tile.key)}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className={`rounded-2xl p-4 text-left ring-1 transition-colors ${selected ? 'bg-brand text-on-brand ring-brand' : 'bg-panel ring-line hover:bg-panel-2'}`}
+              className={`flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm ring-1 transition-colors ${selected ? 'bg-brand text-on-brand ring-brand' : 'bg-panel text-ink-soft ring-line hover:text-ink'}`}
             >
-              <span className="flex items-center gap-2 text-sm opacity-80">
-                <span className={`size-2 rounded-full ${tile.dot}`} />
-                {t(`dashboard.tiles.${tile.key}`)}
-              </span>
-              <motion.span key={count} initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="tabular mt-2 block text-3xl font-semibold">
-                {count}
-              </motion.span>
-            </motion.button>
+              <span className={`size-2 rounded-full ${tile.dot}`} />
+              {t(`dashboard.tiles.${tile.key}`)}
+              <span className="tabular font-semibold text-ink">{count}</span>
+            </button>
           )
         })}
+        <span className="ml-auto text-xs text-ink-soft max-sm:hidden">{t('dashboard.filterHint')}</span>
       </div>
 
       {active && (
@@ -165,6 +165,95 @@ export function LiveDashboardPage() {
         </ul>
       )}
     </>
+  )
+}
+
+const tileAccent: Record<string, string> = {
+  inside: 'from-signal/15 text-signal',
+  onBreak: 'from-pause/15 text-pause',
+  notArrived: 'from-overrun/15 text-overrun',
+  late: 'from-overrun/10 text-overrun',
+}
+
+function TileButton({
+  tile,
+  index,
+  count,
+  selected,
+  onClick,
+}: {
+  tile: (typeof tiles)[number]
+  index: number
+  count: number
+  selected: boolean
+  onClick: () => void
+}) {
+  const { t } = useTranslation()
+  return (
+    <motion.button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.04 }}
+      whileTap={{ scale: 0.98 }}
+      className={`relative overflow-hidden rounded-2xl p-4 text-left ring-1 transition-colors sm:p-5 ${selected ? 'bg-brand text-on-brand ring-brand' : 'bg-panel ring-line hover:bg-panel-2'}`}
+    >
+      {!selected && <span aria-hidden="true" className={`absolute inset-0 bg-gradient-to-br to-transparent to-60% ${tileAccent[tile.key]?.split(' ')[0] ?? ''}`} />}
+      <span className="relative flex items-center gap-2 text-sm opacity-80">
+        <span className={`size-2 rounded-full ${tile.dot}`} />
+        {t(`dashboard.tiles.${tile.key}`)}
+      </span>
+      <motion.span
+        key={count}
+        initial={{ y: 8, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className={`tabular relative mt-3 block text-4xl font-semibold tracking-tight sm:text-5xl ${selected ? '' : count > 0 ? (tileAccent[tile.key]?.split(' ')[1] ?? '') : 'text-ink-soft/50'}`}
+      >
+        {count}
+      </motion.span>
+    </motion.button>
+  )
+}
+
+/** Bugün vardiyası olanların kaçı geldi: halka grafik. */
+function AttendanceRing({ people }: { people: LivePerson[] }) {
+  const { t } = useTranslation()
+  const expected = people.filter((p) => p.today.plan?.kind === 'Work')
+  const arrived = expected.filter((p) => p.today.firstIn).length
+  const ratio = expected.length ? arrived / expected.length : 0
+  const r = 44
+  const c = 2 * Math.PI * r
+
+  return (
+    <section className="flex items-center gap-6 rounded-2xl bg-brand p-5 text-on-brand sm:p-6 dark:ring-1 dark:ring-line">
+      <div className="relative grid size-32 shrink-0 place-items-center sm:size-36">
+        <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90" aria-hidden="true">
+          <circle cx="50" cy="50" r={r} fill="none" stroke="currentColor" strokeOpacity="0.12" strokeWidth="9" />
+          <motion.circle
+            cx="50"
+            cy="50"
+            r={r}
+            fill="none"
+            strokeWidth="9"
+            strokeLinecap="round"
+            className="stroke-signal"
+            strokeDasharray={c}
+            initial={{ strokeDashoffset: c }}
+            animate={{ strokeDashoffset: c * (1 - ratio) }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </svg>
+        <span className="tabular text-3xl font-semibold">{expected.length ? `%${Math.round(ratio * 100)}` : '–'}</span>
+      </div>
+      <div className="min-w-0">
+        <h2 className="text-sm text-on-brand/70">{t('dashboard.attendance')}</h2>
+        <p className="mt-1 text-xl leading-snug font-semibold">
+          {expected.length ? t('dashboard.arrivedOf', { arrived, expected: expected.length }) : t('dashboard.noneExpected')}
+        </p>
+      </div>
+    </section>
   )
 }
 

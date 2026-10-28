@@ -287,6 +287,32 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Congratulations");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.HolidayYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("HolidayYears");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Kiosk", b =>
                 {
                     b.Property<Guid>("Id")
@@ -334,6 +360,42 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Kiosks");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.LeaveAdjustment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Days")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LeaveAdjustments");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -370,6 +432,40 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId", "ReadAt");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.PublicHoliday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsHalfDay")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("PublicHolidays");
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.RefreshToken", b =>
@@ -589,6 +685,9 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.Property<string>("EventType")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<int?>("LeaveDays")
+                        .HasColumnType("integer");
 
                     b.Property<string>("LeaveKind")
                         .HasMaxLength(20)
@@ -880,6 +979,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.LeaveAdjustment", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.Notification", b =>

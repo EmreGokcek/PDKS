@@ -3,54 +3,75 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
-  Renkler durumları anlatır:
+  "Kalkış panosu" teması: antrasit zemin, pano sarısı vurgu, dar ve iri rakamlar.
+  Renkler durumları anlatır (panodaki gibi):
+  - accent (sarı): vurgu, birincil işlem, seçili öğe
   - signal (yeşil): içeride / çalışıyor / onay
-  - pause (kehribar): molada / bekleyen
-  - overrun (kiremit): aşım / hata / pasif
-  brand: giriş ekranı ve kiosk gibi her temada koyu kalan yüzeyler.
+  - pause (turuncu): molada / bekleyen
+  - overrun (kırmızı): aşım / hata / pasif
+  brand: giriş ekranı ve kiosk gibi her temada koyu kalan pano yüzeyleri.
 */
 @theme {
-  --font-sans: 'Onest', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Barlow', ui-sans-serif, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-brand: #16324a;
-  --color-on-brand: #f2f5f7;
+  /* Pano köşeleri: yumuşak değil, kesik */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
 
-  --color-ink: #16324a;
-  --color-ink-soft: #52687c;
-  --color-paper: #f2f5f7;
-  --color-panel: #ffffff;
-  --color-panel-2: #f7f9fa;
-  --color-line: #dbe3e9;
+  --color-brand: #141517;
+  --color-on-brand: #f1eee4;
+  --color-flap: #202226;
+  --color-flap-2: #1a1b1e;
 
-  --color-signal: #1f9a76;
-  --color-signal-soft: #e3f4ee;
-  --color-pause: #b97f0c;
-  --color-pause-soft: #fbf1dc;
-  --color-overrun: #c2410c;
-  --color-overrun-soft: #fdebe2;
+  --color-accent: #f5c518;
+  --color-on-accent: #141517;
+  --color-accent-ink: #8a6a00;
+  --color-accent-soft: #fbf1c7;
 
-  --shadow-pop: 0 1px 2px rgb(22 50 74 / 0.06), 0 12px 32px -8px rgb(22 50 74 / 0.18);
+  --color-ink: #17181a;
+  --color-ink-soft: #5f6064;
+  --color-paper: #e9e7e1;
+  --color-panel: #f8f7f3;
+  --color-panel-2: #efede7;
+  --color-line: #d3d0c7;
+
+  --color-signal: #18874f;
+  --color-signal-soft: #dcefe2;
+  --color-pause: #c25e00;
+  --color-pause-soft: #fbe6d1;
+  --color-overrun: #c4271f;
+  --color-overrun-soft: #f8dfdc;
+
+  --shadow-pop: 0 1px 0 rgb(0 0 0 / 0.04), 0 14px 30px -12px rgb(0 0 0 / 0.28);
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {
-  --color-brand: #0b1824;
-  --color-ink: #e4ecf2;
-  --color-ink-soft: #94a8b9;
-  --color-paper: #0f1d2a;
-  --color-panel: #152838;
-  --color-panel-2: #1a2f41;
-  --color-line: #253c50;
+  --color-brand: #101113;
+  --color-accent-ink: #f5c518;
+  --color-accent-soft: rgb(245 197 24 / 0.13);
 
-  --color-signal: #35c39b;
-  --color-signal-soft: rgb(53 195 155 / 0.14);
-  --color-pause: #e3a83c;
-  --color-pause-soft: rgb(227 168 60 / 0.14);
-  --color-overrun: #f27a45;
-  --color-overrun-soft: rgb(242 122 69 / 0.14);
+  --color-ink: #ece9df;
+  --color-ink-soft: #95948e;
+  --color-paper: #17181b;
+  --color-panel: #1e2023;
+  --color-panel-2: #25272b;
+  --color-line: #33363b;
 
-  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 40px -8px rgb(0 0 0 / 0.55);
+  --color-signal: #3ccf7a;
+  --color-signal-soft: rgb(60 207 122 / 0.13);
+  --color-pause: #ff9a2e;
+  --color-pause-soft: rgb(255 154 46 / 0.14);
+  --color-overrun: #ff5a4e;
+  --color-overrun-soft: rgb(255 90 78 / 0.14);
+
+  --shadow-pop: 0 1px 0 rgb(0 0 0 / 0.4), 0 18px 40px -12px rgb(0 0 0 / 0.7);
 }
 
 @layer base {
@@ -65,10 +86,10 @@
     transition: background-color 0.25s ease, color 0.25s ease;
   }
   :focus-visible {
-    @apply outline-2 outline-offset-2 outline-signal;
+    @apply outline-2 outline-offset-2 outline-accent-ink;
   }
   ::selection {
-    @apply bg-signal/25;
+    @apply bg-accent/40;
   }
 }
 
@@ -76,9 +97,117 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Pano başlığı: dar, büyük harf, aralıklı */
+@layer components {
+  .board-label {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+}
+
+@layer components {
+/* ---- Kanatçıklı pano karakteri ---- */
+.flap-row {
+  display: inline-flex;
+  gap: 0.06em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-on-brand);
+}
+.flap-sep {
+  align-self: center;
+  padding-inline: 0.02em;
+  color: var(--color-accent);
+}
+.flap {
+  position: relative;
+  display: inline-block;
+  width: 0.62em;
+  height: 1.12em;
+  perspective: 3em;
+}
+.flap-half {
+  position: absolute;
+  inset-inline: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--color-flap);
+  backface-visibility: hidden;
+}
+.flap-half > span {
+  position: absolute;
+  inset-inline: 0;
+  height: 200%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flap-top {
+  top: 0;
+  border-radius: 0.07em 0.07em 0 0;
+}
+.flap-top > span {
+  top: 0;
+}
+.flap-bottom {
+  bottom: 0;
+  background: var(--color-flap-2);
+  border-radius: 0 0 0.07em 0.07em;
+}
+.flap-bottom > span {
+  bottom: 0;
+}
+/* Ortadaki menteşe çizgisi */
+.flap::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: calc(50% - 0.015em);
+  height: 0.03em;
+  min-height: 1px;
+  background: rgb(0 0 0 / 0.55);
+  z-index: 3;
+}
+.flap-fold-top {
+  z-index: 2;
+  transform-origin: bottom;
+  animation: flap-fold-top 0.13s ease-in forwards;
+}
+.flap-fold-bottom {
+  z-index: 2;
+  transform-origin: top;
+  transform: rotateX(90deg);
+  animation: flap-fold-bottom 0.13s 0.13s ease-out forwards;
+}
+}
+
+@keyframes flap-fold-top {
+  to {
+    transform: rotateX(-90deg);
+    filter: brightness(0.6);
+  }
+}
+@keyframes flap-fold-bottom {
+  from {
+    filter: brightness(1.4);
+  }
+  to {
+    transform: rotateX(0deg);
+    filter: brightness(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body {
     transition: none;
+  }
+  .flap-fold-top,
+  .flap-fold-bottom {
+    animation-duration: 0.01s;
+    animation-delay: 0s;
   }
 }
 
@@ -91,19 +220,21 @@
   html,
   html.dark {
     color-scheme: light;
-    --color-brand: #16324a;
-    --color-ink: #16324a;
-    --color-ink-soft: #52687c;
+    --color-brand: #141517;
+    --color-ink: #17181a;
+    --color-ink-soft: #5f6064;
     --color-paper: #ffffff;
     --color-panel: #ffffff;
-    --color-panel-2: #f2f5f7;
-    --color-line: #c9d3db;
-    --color-signal: #1f9a76;
-    --color-signal-soft: #e3f4ee;
-    --color-pause: #b97f0c;
-    --color-pause-soft: #fbf1dc;
-    --color-overrun: #c2410c;
-    --color-overrun-soft: #fdebe2;
+    --color-panel-2: #f1f0ec;
+    --color-line: #cfccc3;
+    --color-accent-ink: #8a6a00;
+    --color-accent-soft: #fbf1c7;
+    --color-signal: #18874f;
+    --color-signal-soft: #dcefe2;
+    --color-pause: #c25e00;
+    --color-pause-soft: #fbe6d1;
+    --color-overrun: #c4271f;
+    --color-overrun-soft: #f8dfdc;
   }
   body {
     background: #fff !important;

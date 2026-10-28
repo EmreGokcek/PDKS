@@ -1,11 +1,11 @@
 // İsimden sabit bir renk seçilir; aynı kişi her zaman aynı renkte görünür.
 const tones = [
-  'bg-[#dbeafe] text-[#1e3a8a] dark:bg-[#1e3a5f] dark:text-[#bfdbfe]',
-  'bg-[#dcfce7] text-[#14532d] dark:bg-[#173d2b] dark:text-[#bbf7d0]',
-  'bg-[#fef3c7] text-[#78350f] dark:bg-[#43361a] dark:text-[#fde68a]',
-  'bg-[#fce7f3] text-[#831843] dark:bg-[#4a2238] dark:text-[#fbcfe8]',
-  'bg-[#ede9fe] text-[#4c1d95] dark:bg-[#33275a] dark:text-[#ddd6fe]',
-  'bg-[#ccfbf1] text-[#134e4a] dark:bg-[#123f3c] dark:text-[#99f6e4]',
+  'bg-[#e9dfb8] text-[#4d3d00] dark:bg-[#3a3320] dark:text-[#f3dd8a]',
+  'bg-[#d6e6da] text-[#174a2c] dark:bg-[#1f3a2a] dark:text-[#a9e4bf]',
+  'bg-[#e8d9cc] text-[#5a2c08] dark:bg-[#3e2c1e] dark:text-[#f4c49a]',
+  'bg-[#d9dde4] text-[#24324a] dark:bg-[#272e3a] dark:text-[#bcc8dc]',
+  'bg-[#e4d7d7] text-[#5a1f1f] dark:bg-[#3d2626] dark:text-[#efb6b0]',
+  'bg-[#dcdcd4] text-[#33332c] dark:bg-[#30302b] dark:text-[#d8d7cc]',
 ]
 
 export function Avatar({ name, muted = false, size = 'md' }: { name: string; muted?: boolean; size?: 'sm' | 'md' }) {
@@ -20,7 +20,7 @@ export function Avatar({ name, muted = false, size = 'md' }: { name: string; mut
   return (
     <span
       aria-hidden="true"
-      className={`grid shrink-0 place-items-center rounded-full font-semibold ${tone} ${size === 'sm' ? 'size-8 text-xs' : 'size-10 text-sm'}`}
+      className={`grid shrink-0 place-items-center rounded-md font-display font-semibold tracking-wide ${tone} ${size === 'sm' ? 'size-8 text-xs' : 'size-10 text-sm'}`}
     >
       {initials}
     </span>

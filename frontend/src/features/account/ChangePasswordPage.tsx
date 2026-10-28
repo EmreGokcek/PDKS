@@ -84,7 +84,7 @@ export function ChangePasswordPage() {
           <ul className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             {rules.map((r) => (
               <li key={r.label} className={`flex items-center gap-2 transition-colors ${r.ok ? 'text-signal' : 'text-ink-soft'}`}>
-                <span className={`grid size-4 place-items-center rounded-full transition-colors ${r.ok ? 'bg-signal text-white' : 'ring-1 ring-line'}`}>
+                <span className={`grid size-4 place-items-center rounded-sm transition-colors ${r.ok ? 'bg-signal text-white' : 'ring-1 ring-line'}`}>
                   <AnimatePresence>
                     {r.ok && (
                       <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 25 }}>

@@ -99,7 +99,7 @@ function CellForm({
               key={tpl.id}
               type="button"
               onClick={() => onTemplate(tpl.id, breakToSend)}
-              className={`h-14 rounded-xl ring-2 transition-[box-shadow] ${work?.templateId === tpl.id ? 'ring-signal' : 'ring-transparent hover:ring-line'}`}
+              className={`h-14 rounded-xl ring-2 transition-[box-shadow] ${work?.templateId === tpl.id ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}
             >
               <ShiftChip start={tpl.startTime} end={tpl.endTime} name={tpl.name} color={tpl.color} />
             </button>
@@ -155,7 +155,7 @@ function CellForm({
               key={lk}
               type="button"
               onClick={() => onLeave(lk)}
-              className={`h-11 rounded-xl ring-2 transition-[box-shadow] ${target.shift?.kind === lk ? 'ring-signal' : 'ring-transparent hover:ring-line'}`}
+              className={`h-11 rounded-xl ring-2 transition-[box-shadow] ${target.shift?.kind === lk ? 'ring-ink' : 'ring-transparent hover:ring-line'}`}
             >
               <LeaveChip label={t(`shifts.kinds.${lk}`)} color={leaveColors[lk]} />
             </button>

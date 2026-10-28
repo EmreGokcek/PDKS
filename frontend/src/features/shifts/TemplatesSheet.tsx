@@ -110,7 +110,7 @@ function TemplateForm({ template, onDone }: { template?: ShiftTemplate; onDone: 
               aria-label={c}
               aria-pressed={color === c}
               onClick={() => setColor(c)}
-              className={`size-8 rounded-full ring-offset-2 ring-offset-panel-2 transition-[box-shadow] ${color === c ? 'ring-2 ring-ink' : ''}`}
+              className={`size-8 rounded-sm ring-offset-2 ring-offset-panel-2 transition-[box-shadow] ${color === c ? 'ring-2 ring-ink' : ''}`}
               style={{ backgroundColor: c }}
             />
           ))}

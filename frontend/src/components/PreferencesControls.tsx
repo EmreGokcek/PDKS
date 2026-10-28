@@ -57,7 +57,7 @@ export function LanguageMenu({ tone = 'default' }: { tone?: 'default' | 'onBrand
             className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm text-ink hover:bg-panel-2"
           >
             {lang.label}
-            {lang.code === current.code && <Check className="size-4 text-signal" />}
+            {lang.code === current.code && <Check className="size-4 text-accent-ink" />}
           </button>
         ))
       }

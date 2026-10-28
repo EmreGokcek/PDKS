@@ -76,7 +76,7 @@ export function WorkRulesPage({ readOnly = false }: { readOnly?: boolean }) {
       {/* Canlı özet: kuralların bir cümlelik karşılığı */}
       <motion.p
         layout
-        className="mb-6 rounded-2xl bg-brand px-6 py-5 text-lg leading-relaxed text-on-brand"
+        className="dark mb-6 rounded-lg bg-brand px-6 py-5 text-lg leading-relaxed text-on-brand"
       >
         {t('rules.summary', {
           weekly: formatDuration(draft.weeklyWorkMinutes),
@@ -156,8 +156,8 @@ export function WorkRulesPage({ readOnly = false }: { readOnly?: boolean }) {
           >
             <span className="flex items-center gap-2.5 text-sm font-medium">
               <span className="relative flex size-2">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-pause opacity-60" />
-                <span className="relative inline-flex size-2 rounded-full bg-pause" />
+                <span className="absolute inline-flex size-full rounded-sm bg-pause opacity-60" />
+                <span className="relative inline-flex size-2 rounded-sm bg-pause" />
               </span>
               {t('rules.unsaved')}
             </span>
@@ -180,7 +180,7 @@ function RuleCard({ icon, title, hint, children }: { icon: ReactNode; title: str
   return (
     <section className="flex flex-col rounded-2xl bg-panel p-5 ring-1 ring-line">
       <div className="flex items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-xl bg-signal-soft text-signal">{icon}</span>
+        <span className="grid size-10 place-items-center rounded-xl bg-accent-soft text-accent-ink">{icon}</span>
         <h2 className="font-semibold">{title}</h2>
       </div>
       <p className="mt-3 text-sm text-ink-soft">{hint}</p>
@@ -209,7 +209,7 @@ function NumberBox({
   return (
     <label className="inline-block">
       <span className="mb-1.5 block text-xs text-ink-soft">{label}</span>
-      <span className="inline-flex items-center overflow-hidden rounded-xl ring-1 ring-line focus-within:ring-2 focus-within:ring-signal">
+      <span className="inline-flex items-center overflow-hidden rounded-xl ring-1 ring-line focus-within:ring-2 focus-within:ring-accent">
         <button type="button" className={btn} onClick={() => onChange(Math.max(min, value - step))} disabled={value <= min} aria-label="−">
           −
         </button>
@@ -248,7 +248,7 @@ function Presets({
           key={v}
           type="button"
           onClick={() => onPick(v)}
-          className={`rounded-full px-3 py-1 text-sm ring-1 transition-colors ${current === v ? 'bg-signal-soft text-signal ring-signal/30' : 'text-ink-soft ring-line hover:text-ink'}`}
+          className={`rounded-sm px-3 py-1 text-sm ring-1 transition-colors ${current === v ? 'bg-ink text-panel ring-ink' : 'text-ink-soft ring-line hover:text-ink'}`}
         >
           {format(v)}
         </button>

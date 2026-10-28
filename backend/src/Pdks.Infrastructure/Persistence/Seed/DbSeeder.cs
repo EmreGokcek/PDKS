@@ -1,9 +1,9 @@
-using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Pdks.Domain.Entities;
 using Pdks.Domain.Enums;
+using Pdks.Infrastructure.Companies;
 
 namespace Pdks.Infrastructure.Persistence.Seed;
 
@@ -64,7 +64,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
             CompanyId = company.Id,
             BranchId = branch.Id,
             Name = "Ana Giriş",
-            Secret = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)),
+            Secret = CompanySetup.NewKioskSecret(),
             DeviceUserId = kioskUser.Id
         });
 
@@ -166,21 +166,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         if (branch is null) return;
         if (await db.ShiftTemplates.IgnoreQueryFilters().AnyAsync(t => t.CompanyId == branch.CompanyId, ct)) return;
 
-        ShiftTemplate T(string name, int sh, int sm, int eh, int em, string color) => new()
-        {
-            CompanyId = branch.CompanyId,
-            BranchId = branch.Id,
-            Name = name,
-            StartTime = new TimeOnly(sh, sm),
-            EndTime = new TimeOnly(eh, em),
-            Color = color
-        };
-
-        db.ShiftTemplates.AddRange(
-            T("Sabah", 8, 0, 16, 0, "#2f80ed"),
-            T("Tam gün", 9, 0, 18, 0, "#1f9a76"),
-            T("Akşam", 16, 0, 0, 0, "#9b51e0"),
-            T("Gece", 0, 0, 8, 0, "#e07a2f"));
+        db.ShiftTemplates.AddRange(CompanySetup.DefaultShiftTemplates(branch.CompanyId, branch.Id));
         await db.SaveChangesAsync(ct);
         logger.LogInformation("Örnek vardiya şablonları eklendi.");
     }

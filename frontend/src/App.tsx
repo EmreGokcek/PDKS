@@ -31,6 +31,8 @@ const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage
 const MyMonthPage = named(() => import('./features/month/MyMonthPage'), 'MyMonthPage')
 const LeavePage = named(() => import('./features/leave/LeavePage'), 'LeavePage')
 const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
+const CompanySettingsPage = named(() => import('./features/company/CompanySettingsPage'), 'CompanySettingsPage')
+const RegisterPage = named(() => import('./features/register/RegisterPage'), 'RegisterPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
@@ -61,6 +63,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/giris" element={<LoginPage />} />
+        <Route path="/kayit" element={<RegisterPage />} />
         <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
         <Route path="/kvkk" element={<PrivacyNoticePage />} />
         <Route path="/aydinlatma" element={<RequireRole><PrivacyConsentPage /></RequireRole>} />
@@ -83,6 +86,7 @@ export default function App() {
             <Route path="personel" element={<Gate perm="staff.view"><UsersPage /></Gate>} />
             <Route path="ekip" element={<Navigate to="../personel" replace />} />
             <Route path="kurallar" element={<Gate perm="rules.view"><WorkRulesPage /></Gate>} />
+            <Route path="firma" element={<Gate perm="company.manage"><CompanySettingsPage /></Gate>} />
             <Route path="denetim" element={<Gate perm="audit.view"><AuditPage /></Gate>} />
             <Route path="duyurular" element={<AnnouncementsPage />} />
             <Route path="profil" element={<ProfilePage />} />

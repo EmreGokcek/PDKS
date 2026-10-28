@@ -48,3 +48,5 @@ Herkes (kiosk hariç): kendi profili, bildirimler, duyuruları okuma ve kutlama.
 - Canlı pano bağlantısı yetkiyle aynı kapsamı izler: müdür yalnızca kendi şubesindeki değişiklikleri, yönetici ve İK tüm firmayı duyar.
   Bağlantı veri taşımaz, yalnızca "değişti" der; veri yine yetki kontrolü yapan uç noktadan çekilir.
 - Anlık uyarılar (gelmedi, mola aşımı) şube müdürüne gider; şubede müdür yoksa yöneticilere ve İK'ya. Kişinin kendisine gitmez.
+- Yeni firma kaydı herkese açıktır (ayarla kapatılabilir); kaydı yapan kişi o firmanın yöneticisi olur ve yalnızca kendi firmasını görür.
+- Kiosk hesapları personel listesinde görünmez; Firma ayarlarından yönetilir. Kiosk şifresi yalnızca oluşturma / yenileme anında bir kez gösterilir.

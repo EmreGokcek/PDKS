@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { CalendarCheck, CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Building2, CalendarCheck, CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { useLiveConnection } from '../lib/live'
 import { usePendingCount } from '../features/requests/api'
@@ -58,6 +58,7 @@ function useNavItems(user: User): NavItem[] {
     { show: has('timesheet.view'), to: at('puantaj'), section: 'reports', tab: !has('shifts.plan'), label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
     { show: has('staff.view'), to: at('personel'), section: 'management', label: has('staff.manage') ? t('nav.staff') : t('nav.team'), icon: <Users className={icon} /> },
     { show: has('rules.view'), to: at('kurallar'), section: 'management', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+    { show: has('company.manage'), to: at('firma'), section: 'management', label: t('nav.company'), icon: <Building2 className={icon} /> },
     { show: has('audit.view'), to: at('denetim'), section: 'management', label: t('nav.audit'), icon: <History className={icon} /> },
     { show: has('attendance.self'), to: at('bugunum'), section: 'me', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
     { show: has('attendance.self'), to: at('vardiyalarim'), section: 'me', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },

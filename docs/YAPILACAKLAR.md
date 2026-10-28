@@ -77,6 +77,9 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Tamamlananlar
 
+- [x] Firma kendi kendine kayıt (firma + ilk şube + yönetici; hazır kurallar ve vardiya şablonları)
+- [x] Firma ayarları: firma adı, şubeler (saat dilimi, açma/kapama), giriş kioskları (oluşturma, şifre yenileme, kapatma)
+
 - [x] Canlı pano (SignalR): okutmalar panoya anında düşer, bildirim zili anında güncellenir
 - [x] Anlık uyarılar: vardiyasına gelmeyen ve molasını aşan personel için müdüre bildirim (Çalışma kuralları'ndan ayarlanır)
 

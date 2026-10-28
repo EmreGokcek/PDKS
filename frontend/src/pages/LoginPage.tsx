@@ -1,15 +1,17 @@
 import { motion } from 'motion/react'
+import { useQuery } from '@tanstack/react-query'
+import { Building2 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
-import { roleHome, type User } from '../auth/types'
+import { afterLoginPath } from '../auth/types'
 import { DayProgress, Greeting, LiveClock } from '../components/LiveClock'
 import { QuoteRotator } from '../components/QuoteRotator'
 import { LanguageMenu, ThemeSwitch } from '../components/PreferencesControls'
 import { Button } from '../components/ui/Button'
 import { Field, Input } from '../components/ui/Field'
-import { errorMessage } from '../lib/api'
+import { api, errorMessage } from '../lib/api'
 
 /** Geliştirme ortamındaki demo hesaplar (seed). Üretim derlemesinde gösterilmez. */
 const demoAccounts = [
@@ -21,13 +23,6 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
-/** Girişten sonra gidilecek yer: önce şifre belirleme, aydınlatma metni ve profil tamamlama, sonra istenen sayfa. */
-function afterLogin(user: User, from?: string) {
-  if (user.mustChangePassword) return '/sifre-degistir'
-  if (!user.privacyNoticeAccepted) return '/aydinlatma'
-  if (!user.profileComplete) return '/profil-tamamla'
-  return from ?? roleHome[user.role]
-}
 
 const ease = [0.22, 1, 0.36, 1] as const
 
@@ -42,8 +37,14 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [shake, setShake] = useState(0)
+  const registration = useQuery({
+    queryKey: ['registration'],
+    queryFn: () => api<{ enabled: boolean }>('/auth/registration'),
+    staleTime: Infinity,
+    retry: false,
+  })
 
-  if (user) return <Navigate to={afterLogin(user)} replace />
+  if (user) return <Navigate to={afterLoginPath(user)} replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -52,7 +53,7 @@ export function LoginPage() {
     try {
       const loggedIn = await login(email, password, rememberMe)
       const from = (location.state as { from?: string } | null)?.from
-      navigate(afterLogin(loggedIn, from), { replace: true })
+      navigate(afterLoginPath(loggedIn, from), { replace: true })
     } catch (err) {
       setError(errorMessage(err, t))
       setShake((s) => s + 1)
@@ -177,6 +178,21 @@ export function LoginPage() {
               {submitting ? t('login.submitting') : t('login.submit')}
             </Button>
           </motion.form>
+
+          {registration.data?.enabled && (
+            <Link
+              to="/kayit"
+              className="mt-6 flex items-center gap-3 rounded-2xl bg-panel p-4 ring-1 ring-line transition-colors hover:bg-panel-2"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-signal-soft text-signal">
+                <Building2 className="size-5" />
+              </span>
+              <span className="text-sm">
+                <span className="block font-medium">{t('register.loginCta')}</span>
+                <span className="block text-ink-soft">{t('register.loginCtaHint')}</span>
+              </span>
+            </Link>
+          )}
 
           <p className="mt-6 text-xs text-ink-soft">
             <Link to="/kvkk" className="underline underline-offset-4 hover:text-ink">

@@ -11,6 +11,7 @@ using Pdks.Domain.Entities;
 using Pdks.Domain.Enums;
 using Pdks.Domain.Security;
 using Pdks.Infrastructure.Auth;
+using Pdks.Infrastructure.Companies;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Services;
 
@@ -27,6 +28,7 @@ public class AuthController(
     AuditLogger audit,
     IOptions<LoginSessionOptions> sessionOptions,
     IOptions<PrivacyOptions> privacyOptions,
+    IOptions<RegistrationOptions> registrationOptions,
     IWebHostEnvironment env,
     TimeProvider time) : ControllerBase
 {
@@ -103,6 +105,86 @@ public class AuthController(
 
         SessionCookie.Write(Response, issued, SecureCookies);
         return CreateLoginResponse(user);
+    }
+
+    /// <summary>Giriş ekranı "Firmanı kaydet" bağlantısını göstersin mi?</summary>
+    [HttpGet("registration")]
+    [AllowAnonymous]
+    public RegistrationStatusDto RegistrationStatus() => new(registrationOptions.Value.Enabled);
+
+    /// <summary>
+    /// Yeni firma kaydı: firma, ilk şube (varsayılan "Merkez"), varsayılan çalışma kuralları ve vardiya şablonları
+    /// ile kaydı yapan kişinin yönetici hesabı açılır; kişi doğrudan oturum açmış olur.
+    /// Kiosk ve diğer personel daha sonra Firma ayarları ve Personel sayfalarından eklenir.
+    /// </summary>
+    [HttpPost("register")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.Register)]
+    public async Task<ActionResult<LoginResponse>> Register(RegisterCompanyRequest request, CancellationToken ct)
+    {
+        if (!registrationOptions.Value.Enabled)
+            return this.ApiError(404, "registration_disabled", "Yeni firma kaydı kapalı.");
+        if (request.PrivacyNoticeVersion != privacyOptions.Value.NoticeVersion)
+            return this.ApiError(400, "privacy_notice_outdated", "Aydınlatma metni güncellendi; sayfayı yenileyip yeniden okuyun.");
+        if (!PasswordPolicy.IsValid(request.Password))
+            return this.ApiError(400, "weak_password", "Şifre en az 8 karakter olmalı, harf ve rakam içermeli.");
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        if (await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Email == email, ct))
+            return this.ApiError(409, "email_taken", "Bu e-posta adresi zaten kullanılıyor.");
+
+        var now = time.GetUtcNow();
+        var company = new Company { Name = request.CompanyName.Trim() };
+        var branch = new Branch
+        {
+            CompanyId = company.Id,
+            Name = string.IsNullOrWhiteSpace(request.BranchName) ? "Merkez" : request.BranchName.Trim(),
+            Company = company
+        };
+        var admin = new User
+        {
+            CompanyId = company.Id,
+            BranchId = branch.Id,
+            Company = company,
+            Branch = branch,
+            FirstName = request.FirstName.Trim(),
+            LastName = request.LastName.Trim(),
+            Email = email,
+            Role = UserRole.Admin,
+            PrivacyNoticeVersion = request.PrivacyNoticeVersion,
+            PrivacyNoticeAcceptedAt = now,
+            LastLoginAt = now
+        };
+        admin.PasswordHash = hasher.HashPassword(admin, request.Password);
+
+        db.Companies.Add(company);
+        db.Branches.Add(branch);
+        db.WorkRules.Add(new WorkRule { CompanyId = company.Id });
+        db.ShiftTemplates.AddRange(CompanySetup.DefaultShiftTemplates(company.Id, branch.Id));
+        db.Users.Add(admin);
+        db.AuditLogs.Add(new AuditLog
+        {
+            CompanyId = company.Id,
+            ActorUserId = admin.Id,
+            Action = "company.registered",
+            EntityName = nameof(Company),
+            EntityId = company.Id,
+            NewValues = System.Text.Json.JsonSerializer.Serialize(new { company = company.Name, branch = branch.Name, admin = email })
+        });
+
+        var issued = refreshTokens.Issue(admin, persistent: false);
+        try
+        {
+            await db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Aynı e-postayla aynı anda yapılan iki kayıt: benzersiz dizin ikincisini durdurur.
+            return this.ApiError(409, "email_taken", "Bu e-posta adresi zaten kullanılıyor.");
+        }
+
+        SessionCookie.Write(Response, issued, SecureCookies);
+        return CreateLoginResponse(admin);
     }
 
     /// <summary>Çerezdeki yenileme anahtarıyla yeni erişim anahtarı alır. Anahtar her seferinde değişir.</summary>

@@ -35,6 +35,7 @@ if (!builder.Environment.IsDevelopment() && jwt.SigningKey.StartsWith("GELISTIRM
 
 builder.Services.Configure<PrivacyOptions>(builder.Configuration.GetSection(PrivacyOptions.SectionName));
 builder.Services.Configure<AppOptions>(builder.Configuration.GetSection(AppOptions.SectionName));
+builder.Services.Configure<RegistrationOptions>(builder.Configuration.GetSection(RegistrationOptions.SectionName));
 builder.Services.AddPdksRateLimits(builder.Configuration);
 
 // Ters vekil sunucu (reverse proxy) arkasında gerçek istemci IP'si ve https bilgisi başlıklardan okunur.

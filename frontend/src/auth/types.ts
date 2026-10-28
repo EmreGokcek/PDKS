@@ -82,3 +82,11 @@ export function assignableRoles(role: Role | undefined): Exclude<Role, 'Kiosk'>[
   if (role === 'HumanResources') return ['Employee', 'Manager', 'HumanResources']
   return []
 }
+
+/** Girişten (ya da kayıttan) sonra gidilecek yer: önce şifre belirleme, aydınlatma metni ve profil tamamlama, sonra istenen sayfa. */
+export function afterLoginPath(user: User, from?: string) {
+  if (user.mustChangePassword) return '/sifre-degistir'
+  if (!user.privacyNoticeAccepted) return '/aydinlatma'
+  if (!user.profileComplete) return '/profil-tamamla'
+  return from ?? roleHome[user.role]
+}

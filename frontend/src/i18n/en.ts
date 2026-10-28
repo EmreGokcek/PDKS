@@ -49,7 +49,6 @@ const en: Translations = {
     menu: 'Menu',
   },
   login: {
-    boardTitle: 'Staff attendance board',
     greetings: { morning: 'Good morning', day: 'Good afternoon', evening: 'Good evening', night: 'Good night' },
     dayProgress: 'Day {{percent}}% complete',
     tagline: 'Check-ins, check-outs and breaks, recorded with a single scan.',
@@ -174,8 +173,6 @@ const en: Translations = {
     hello: 'Hello, {{name}}',
   },
   kiosk: {
-    columns: { time: 'Time', person: 'Staff', status: 'Status' },
-    lastScan: 'Last scan',
     qrSoon: 'The QR code will appear here',
     signOut: 'Sign out of kiosk',
     instruction: 'Scan to check in, check out or take a break',
@@ -326,7 +323,6 @@ const en: Translations = {
     nextShiftHint: 'Your next shift is {{day}} at {{start}}.',
   },
   dashboard: {
-    columns: { person: 'Staff', shift: 'Shift', checkIn: 'In', worked: 'Worked', status: 'Status' },
     attendance: 'Today’s attendance',
     arrivedOf: '{{arrived}} of {{expected}} people arrived',
     noneExpected: 'No one has a shift today.',
@@ -554,7 +550,6 @@ const en: Translations = {
     total: 'Total',
   },
   quotes: {
-    label: 'Notice',
     proverb: 'Turkish proverb',
     items: [
       { text: 'Iron that is worked keeps shining.', proverb: true },

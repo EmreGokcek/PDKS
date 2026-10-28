@@ -104,7 +104,7 @@ function Editor({ target }: { target: DayEditorTarget }) {
               setReasonError(false)
             }}
             placeholder={t('corrections.reasonPlaceholder')}
-            className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 focus:border-ink focus:ring-2 focus:ring-accent/60 focus:outline-none aria-invalid:border-overrun"
+            className="w-full resize-none rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 focus:border-signal focus:ring-4 focus:ring-signal/15 focus:outline-none aria-invalid:border-overrun"
           />
         )}
       </Field>
@@ -130,7 +130,7 @@ function Editor({ target }: { target: DayEditorTarget }) {
                   exit={{ opacity: 0, height: 0 }}
                   className="flex flex-wrap items-center gap-3 rounded-xl bg-panel-2/60 px-3 py-2.5 ring-1 ring-line"
                 >
-                  <span className="grid size-8 place-items-center rounded-sm bg-panel ring-1 ring-line [&_svg]:size-4">{actionIcons[e.type]}</span>
+                  <span className="grid size-8 place-items-center rounded-full bg-panel ring-1 ring-line [&_svg]:size-4">{actionIcons[e.type]}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{t(`attendance.eventNames.${e.type}`)}</p>
                     {e.source === 'Manual' && (

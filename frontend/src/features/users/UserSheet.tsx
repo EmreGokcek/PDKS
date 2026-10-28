@@ -157,7 +157,7 @@ function UserForm({
               return (
                 <label
                   key={role}
-                  className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${active ? 'border-ink bg-accent-soft' : 'border-line hover:bg-panel-2'}`}
+                  className={`relative flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${active ? 'border-signal bg-signal-soft/60' : 'border-line hover:bg-panel-2'}`}
                 >
                   <input
                     type="radio"
@@ -167,8 +167,8 @@ function UserForm({
                     onChange={() => set('role', role)}
                     className="sr-only"
                   />
-                  <span className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-sm border-2 transition-colors ${active ? 'border-ink' : 'border-line'}`}>
-                    {active && <motion.span layoutId="role-dot" className="size-2 rounded-sm bg-ink" />}
+                  <span className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border-2 transition-colors ${active ? 'border-signal' : 'border-line'}`}>
+                    {active && <motion.span layoutId="role-dot" className="size-2 rounded-full bg-signal" />}
                   </span>
                   <span>
                     <span className="block font-medium">{t(`roles.${role}`)}</span>

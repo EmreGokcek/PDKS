@@ -46,10 +46,3 @@ export function formatSeconds(totalSeconds: number): string {
 export function formatTime(iso: string | Date): string {
   return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso))
 }
-
-/** Panoda gösterilecek süre: her zaman SS:DD:ss, iki haneli saat. */
-export function boardClock(totalSeconds: number) {
-  const s = Math.max(0, Math.floor(totalSeconds))
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(Math.min(99, Math.floor(s / 3600)))}:${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`
-}

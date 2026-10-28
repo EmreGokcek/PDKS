@@ -2,7 +2,7 @@ import { forwardRef, useId, type InputHTMLAttributes, type ReactNode, type Selec
 import { AnimatePresence, motion } from 'motion/react'
 
 const control =
-  'rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 transition-[border-color,box-shadow] duration-150 focus:border-ink focus:ring-2 focus:ring-accent/60 focus:outline-none aria-invalid:border-overrun aria-invalid:focus:ring-overrun/15'
+  'rounded-xl border border-line bg-panel px-3.5 py-2.5 text-ink placeholder:text-ink-soft/60 transition-[border-color,box-shadow] duration-150 focus:border-signal focus:ring-4 focus:ring-signal/15 focus:outline-none aria-invalid:border-overrun aria-invalid:focus:ring-overrun/15'
 
 interface FieldProps {
   label: ReactNode

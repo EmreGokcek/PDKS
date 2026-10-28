@@ -3,7 +3,6 @@ import { motion } from 'motion/react'
 import { CalendarClock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
-import { SplitFlap } from '../../components/SplitFlap'
 import { useNow } from '../../hooks/useNow'
 import { api } from '../../lib/api'
 import { addDays, formatDay, hhmm, parseDate, shiftMinutes, todayIso, weekDays, weekStartOf, type WeekDayName } from '../../lib/dates'
@@ -69,13 +68,13 @@ export function MyShiftsPage() {
                         initial={{ opacity: 0, y: 4 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: wi * 0.1 + i * 0.03 }}
-                        className={`flex items-center gap-4 rounded-xl px-3 py-2.5 ${isToday ? 'bg-accent-soft' : ''} ${past ? 'opacity-55' : ''}`}
+                        className={`flex items-center gap-4 rounded-xl px-3 py-2.5 ${isToday ? 'bg-signal-soft/60' : ''} ${past ? 'opacity-55' : ''}`}
                       >
                         <div className="w-14 shrink-0">
-                          <p className={`board-label text-xs ${isToday ? 'text-accent-ink' : 'text-ink-soft'}`}>
+                          <p className={`text-xs first-letter:uppercase ${isToday ? 'font-semibold text-signal' : 'text-ink-soft'}`}>
                             {isToday ? t('shifts.today') : formatDay(d, { weekday: 'short' })}
                           </p>
-                          <p className="tabular font-display text-2xl leading-tight font-semibold">{formatDay(d, { day: 'numeric' })}</p>
+                          <p className="tabular text-lg font-semibold">{formatDay(d, { day: 'numeric' })}</p>
                         </div>
                         <div className="flex min-h-12 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                           {s && isLeave(s.kind) ? (
@@ -122,7 +121,7 @@ function NextShiftCard({ shift, now, work, brk }: { shift: Shift | undefined; no
   const { t } = useTranslation()
   if (!shift) {
     return (
-      <section className="flex items-center gap-4 rounded-lg bg-panel p-6 ring-1 ring-line">
+      <section className="flex items-center gap-4 rounded-3xl bg-panel p-6 ring-1 ring-line">
         <CalendarClock className="size-6 text-ink-soft" />
         <p className="text-ink-soft">{t('shifts.noUpcoming')}</p>
       </section>
@@ -135,19 +134,16 @@ function NextShiftCard({ shift, now, work, brk }: { shift: Shift | undefined; no
 
   return (
     <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="relative overflow-hidden dark rounded-lg bg-brand p-6 text-on-brand ring-1 ring-line sm:p-8"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-3xl bg-brand p-6 text-on-brand sm:p-8 dark:ring-1 dark:ring-line"
     >
       <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: shift.color }} />
-      <p className="board-label text-xs text-on-brand/55">{t('shifts.nextShift')}</p>
-      <p className="board-label mt-2 text-2xl text-accent">{dayLabel}</p>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <SplitFlap text={hhmm(shift.startTime)} className="text-[clamp(2.4rem,7vw,3.5rem)]" />
-        <span aria-hidden="true" className="h-1 w-6 bg-on-brand/40" />
-        <SplitFlap text={hhmm(shift.endTime)} className="text-[clamp(2.4rem,7vw,3.5rem)]" />
-      </div>
-      <p className="mt-4 text-on-brand/70">
+      <p className="text-on-brand/70">{t('shifts.nextShift')}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight first-letter:uppercase sm:text-4xl">
+        {dayLabel}, <span className="tabular">{hhmm(shift.startTime)}–{hhmm(shift.endTime)}</span>
+      </p>
+      <p className="mt-2 text-on-brand/70">
         {shift.templateName && <>{shift.templateName} · </>}
         {t('shifts.in', { time: formatDuration(minutes) })}
       </p>

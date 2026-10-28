@@ -21,7 +21,7 @@ export function ShiftChip({
       className={`flex h-full w-full flex-col justify-center rounded-lg border-l-[3px] px-2 text-left transition-opacity ${compact ? 'py-1' : 'py-1.5'} ${pending ? 'opacity-60' : ''}`}
       style={{ borderColor: color, backgroundColor: `${color}1f` }}
     >
-      <span className="tabular font-display text-[15px] leading-tight font-semibold text-ink">
+      <span className="tabular text-[13px] leading-tight font-semibold text-ink">
         {hhmm(start)}–{hhmm(end)}
       </span>
       {name && !compact && <span className="truncate text-[11px] leading-tight text-ink-soft">{name}</span>}
@@ -41,7 +41,7 @@ export function LeaveChip({ label, color, pending = false }: { label: string; co
         boxShadow: `inset 0 0 0 1px ${color}55`,
       }}
     >
-      <span className="mr-1.5 size-2 shrink-0 rounded-sm" style={{ backgroundColor: color }} />
+      <span className="mr-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />
       <span className="truncate">{label}</span>
     </span>
   )

@@ -105,17 +105,17 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-brand">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-brand">
         <video ref={videoRef} className="size-full object-cover" muted playsInline />
 
         {/* Hedef çerçevesi ve tarama çizgisi */}
         {camera === 'ready' && (
           <div className="pointer-events-none absolute inset-[14%]">
-            {['top-0 left-0 border-t-4 border-l-4', 'top-0 right-0 border-t-4 border-r-4', 'bottom-0 left-0 border-b-4 border-l-4', 'right-0 bottom-0 border-r-4 border-b-4'].map((c) => (
-              <span key={c} className={`absolute size-10 border-accent ${c}`} />
+            {['top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl', 'top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl', 'bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-2xl'].map((c) => (
+              <span key={c} className={`absolute size-10 border-white/90 ${c}`} />
             ))}
             <motion.span
-              className="absolute inset-x-3 h-0.5 bg-accent/80"
+              className="absolute inset-x-3 h-0.5 rounded-full bg-signal shadow-[0_0_16px_2px] shadow-signal/70"
               animate={{ top: ['8%', '92%', '8%'] }}
               transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
             />
@@ -159,7 +159,7 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="border-l-[3px] border-overrun bg-overrun-soft px-4 py-3 text-sm text-overrun"
+            className="rounded-xl bg-overrun-soft px-4 py-3 text-sm text-overrun"
           >
             {error}
           </motion.p>

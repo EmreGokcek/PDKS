@@ -285,11 +285,11 @@ export function ShiftPlannerPage() {
             }}
           >
             {/* Başlık satırı */}
-            <div className="board-label sticky left-0 z-[1] border-b border-line bg-panel px-4 py-3 text-xs text-ink-soft">{t('shifts.person')}</div>
+            <div className="sticky left-0 z-[1] border-b border-line bg-panel px-4 py-3 text-sm text-ink-soft">{t('shifts.person')}</div>
             {days.map((d) => (
-              <div key={d} className={`border-b border-l border-line px-3 py-3 text-center ${d === today ? 'bg-accent-soft' : ''}`}>
-                <p className="board-label text-xs text-ink-soft">{formatDay(d, { weekday: 'short' })}</p>
-                <p className={`tabular font-display text-2xl leading-tight font-semibold ${d === today ? 'text-accent-ink' : ''}`}>{formatDay(d, { day: 'numeric' })}</p>
+              <div key={d} className={`border-b border-l border-line px-3 py-3 text-center ${d === today ? 'bg-signal-soft/50' : ''}`}>
+                <p className="text-xs text-ink-soft first-letter:uppercase">{formatDay(d, { weekday: 'short' })}</p>
+                <p className={`tabular text-lg font-semibold ${d === today ? 'text-signal' : ''}`}>{formatDay(d, { day: 'numeric' })}</p>
               </div>
             ))}
 
@@ -312,9 +312,9 @@ export function ShiftPlannerPage() {
                         {leaves > 0 && <> · {t('shifts.leaveCount', { count: leaves })}</>}
                       </p>
                       {empties > 0 && <p className="text-xs font-medium text-pause">{t('shifts.emptyDays', { count: empties })}</p>}
-                      <div className="mt-1 h-1 overflow-hidden rounded-sm bg-panel-2">
+                      <div className="mt-1 h-1 overflow-hidden rounded-full bg-panel-2">
                         <motion.div
-                          className={`h-full rounded-sm ${planned > target ? 'bg-pause' : 'bg-signal'}`}
+                          className={`h-full rounded-full ${planned > target ? 'bg-pause' : 'bg-signal'}`}
                           animate={{ width: `${Math.min(100, ratio * 100)}%` }}
                           transition={{ duration: 0.4 }}
                         />
@@ -349,7 +349,7 @@ export function ShiftPlannerPage() {
                             shift,
                           })
                         }}
-                        className={`group relative h-16 border-b border-l border-line p-1.5 text-left transition-colors ${d === today ? 'bg-accent-soft/50' : ''} ${isPainted ? 'bg-accent-soft' : 'hover:bg-panel-2'} ${brush ? 'cursor-crosshair' : 'cursor-pointer'}`}
+                        className={`group relative h-16 border-b border-l border-line p-1.5 text-left transition-colors ${d === today ? 'bg-signal-soft/25' : ''} ${isPainted ? 'bg-signal-soft' : 'hover:bg-panel-2'} ${brush ? 'cursor-crosshair' : 'cursor-pointer'}`}
                       >
                         <AnimatePresence mode="popLayout" initial={false}>
                           {isPainted && brush?.kind === 'leave' ? (
@@ -495,7 +495,7 @@ export function ShiftPlannerPage() {
               to: formatDay(weekStart, { day: 'numeric', month: 'long' }),
             })}
             <label className="mt-4 flex items-center gap-2.5 text-ink">
-              <input type="checkbox" className="size-4 accent-[var(--color-ink)]" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
+              <input type="checkbox" className="size-4 accent-[var(--color-signal)]" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
               {t('shifts.copyOverwrite')}
             </label>
           </>
@@ -549,11 +549,11 @@ function BrushButton({
       {active && (
         <motion.span
           layoutId="active-brush"
-          className="absolute inset-0 rounded-xl bg-panel ring-2 ring-ink"
+          className="absolute inset-0 rounded-xl bg-panel shadow-sm ring-2 ring-signal"
           transition={{ type: 'spring', stiffness: 500, damping: 36 }}
         />
       )}
-      {color && <span className="relative size-2.5 rounded-sm" style={{ backgroundColor: color }} />}
+      {color && <span className="relative size-2.5 rounded-full" style={{ backgroundColor: color }} />}
       <span className="relative flex items-center gap-1.5">{label}</span>
     </button>
   )
@@ -627,7 +627,7 @@ function PublishBar({
       className={`mb-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-5 py-3.5 ring-1 ${published ? 'bg-signal-soft ring-signal/25' : 'bg-panel ring-line'}`}
     >
       <span className={`flex items-center gap-2 font-semibold ${published ? 'text-signal' : 'text-ink'}`}>
-        {published ? <CheckCircle2 className="size-5" /> : <span className="size-2.5 rounded-sm bg-pause" />}
+        {published ? <CheckCircle2 className="size-5" /> : <span className="size-2.5 rounded-full bg-pause" />}
         {published ? t('shifts.published') : t('shifts.draft')}
       </span>
       <span className="min-w-0 flex-1 text-sm text-ink-soft">

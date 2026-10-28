@@ -15,6 +15,7 @@ test('yeni firma kaydolur, profilini tamamlar ve kiosk ekler', async ({ page }) 
   await page.getByRole('button', { name: 'Firmayı oluştur' }).click()
 
   // Yönetici hesabı açıldı; profil tamamlanınca panele geçilir.
+  await page.waitForURL((url) => url.pathname !== '/kayit')
   await acceptPrivacyIfAsked(page)
   await expect(page.getByRole('heading', { name: 'Genel bakış' })).toBeVisible()
 

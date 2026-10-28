@@ -74,6 +74,40 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                     b.ToTable("Announcements");
                 });
 
+            modelBuilder.Entity("Pdks.Domain.Entities.AttendanceAlert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "Date", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("AttendanceAlerts");
+                });
+
             modelBuilder.Entity("Pdks.Domain.Entities.AttendanceEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -933,6 +967,11 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("BreakOverrunAlert")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid");
 
@@ -944,6 +983,11 @@ namespace Pdks.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("LateToleranceMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<int>("NotArrivedAlertMinutes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(15);
 
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -978,6 +1022,15 @@ namespace Pdks.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("CreatedBy");
+                });
+
+            modelBuilder.Entity("Pdks.Domain.Entities.AttendanceAlert", b =>
+                {
+                    b.HasOne("Pdks.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Pdks.Domain.Entities.AttendanceEvent", b =>

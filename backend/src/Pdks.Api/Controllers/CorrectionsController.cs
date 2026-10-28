@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Attendance;
@@ -19,7 +20,7 @@ namespace Pdks.Api.Controllers;
 /// Elle eklenen kayıtlar Source = Manual olarak işaretlenir.
 /// </summary>
 [ApiController]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.AttendanceCorrect)]
 public class CorrectionsController(
     PdksDbContext db,
     ICurrentUser currentUser,
@@ -147,7 +148,7 @@ public class CorrectionsController(
 
     private IQueryable<User> StaffScope()
     {
-        var query = db.Users.Where(u => u.Role == UserRole.Employee || u.Role == UserRole.Manager);
+        var query = db.Users.Where(u => RolePermissions.Workforce.Contains(u.Role));
         return currentUser.Role == UserRole.Manager ? query.Where(u => u.BranchId == currentUser.BranchId) : query;
     }
 }

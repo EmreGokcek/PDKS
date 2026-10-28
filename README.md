@@ -71,6 +71,7 @@ Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçil
 |---|---|---|
 | Yönetici | admin@pdks.local | /admin |
 | Müdür | mudur@pdks.local | /mudur |
+| İnsan kaynakları | ik@pdks.local | /ik |
 | Personel | personel@pdks.local | /personel |
 | Kiosk | kiosk@pdks.local | /kiosk |
 
@@ -109,6 +110,10 @@ Gizli bilgiler depoda tutulmaz; sunucuda **ortam değişkeni** olarak verilir (i
 Oturum ve giriş güvenliği ayarları (`Session`, `RateLimits`) ve KVKK aydınlatma metni sürümü (`Privacy__NoticeVersion`) `appsettings.json` içinde varsayılanlarıyla durur.
 
 > **KVKK aydınlatma metni** (`frontend/src/features/privacy/notice.ts`) bir şablondur; canlı kullanımdan önce hukuk danışmanına gözden geçirtilmelidir. Metin değişince sürüm numarası hem orada hem `Privacy__NoticeVersion` ayarında artırılır; herkes bir sonraki girişte yeniden onaylar.
+
+## Roller ve yetkiler
+
+Yönetici, İnsan kaynakları, Müdür, Personel ve Kiosk rolleri; kim neyi görür ve değiştirir: [docs/YETKILER.md](docs/YETKILER.md).
 
 ## Mimari notlar
 

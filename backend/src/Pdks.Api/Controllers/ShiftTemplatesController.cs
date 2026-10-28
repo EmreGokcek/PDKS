@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -16,7 +17,7 @@ namespace Pdks.Api.Controllers;
 /// <summary>Vardiya şablonları ("Sabah 08:00–16:00" gibi). Admin ve müdür yönetir.</summary>
 [ApiController]
 [Route("api/shift-templates")]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.ShiftsPlan)]
 public class ShiftTemplatesController(PdksDbContext db, ICurrentUser currentUser, AuditLogger audit) : ControllerBase
 {
     [HttpGet]

@@ -24,6 +24,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         {
             await EnsureDemoShiftTemplatesAsync(ct);
             await EnsureDemoSocialAsync(ct);
+            await EnsureDemoHrAsync(options, ct);
             await EnsureDemoProfilesAsync(options, ct);
             return;
         }
@@ -55,6 +56,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         NewUser("Sistem", "Yöneticisi", options.AdminEmail, UserRole.Admin);
         NewUser("Demo", "Müdür", options.ManagerEmail, UserRole.Manager);
         NewUser("Demo", "Personel", options.EmployeeEmail, UserRole.Employee);
+        NewUser("Demo", "İK", options.HrEmail, UserRole.HumanResources);
         var kioskUser = NewUser("Giriş", "Kiosku", options.KioskEmail, UserRole.Kiosk);
 
         db.Kiosks.Add(new Kiosk
@@ -74,13 +76,36 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         await EnsureDemoProfilesAsync(options, ct);
     }
 
+    /// <summary>Önceden oluşturulmuş demo veritabanına İK demo hesabını ekler.</summary>
+    private async Task EnsureDemoHrAsync(SeedOptions options, CancellationToken ct)
+    {
+        var email = options.HrEmail.Trim().ToLowerInvariant();
+        if (await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Email == email, ct)) return;
+        var branch = await db.Branches.IgnoreQueryFilters().OrderBy(b => b.CreatedAt).FirstOrDefaultAsync(ct);
+        if (branch is null) return;
+
+        var user = new User
+        {
+            CompanyId = branch.CompanyId,
+            BranchId = branch.Id,
+            FirstName = "Demo",
+            LastName = "İK",
+            Email = email,
+            Role = UserRole.HumanResources
+        };
+        user.PasswordHash = hasher.HashPassword(user, options.DefaultPassword);
+        db.Users.Add(user);
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("İK demo hesabı eklendi: {Email}", email);
+    }
+
     /// <summary>
     /// Demo hesaplar ilk girişte profil tamamlama ekranına takılmasın diye eksik zorunlu bilgileri doldurur.
     /// (Yeni eklenen personel bu ekranı görür.)
     /// </summary>
     private async Task EnsureDemoProfilesAsync(SeedOptions options, CancellationToken ct)
     {
-        string[] emails = [options.AdminEmail, options.ManagerEmail, options.EmployeeEmail];
+        string[] emails = [options.AdminEmail, options.ManagerEmail, options.EmployeeEmail, options.HrEmail];
         var normalized = emails.Select(e => e.Trim().ToLowerInvariant()).ToList();
         var users = await db.Users.IgnoreQueryFilters().Where(u => normalized.Contains(u.Email)).ToListAsync(ct);
         var changed = false;

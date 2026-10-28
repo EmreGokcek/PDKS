@@ -27,7 +27,11 @@ public record UserDto(
     /// <summary>Güncel KVKK aydınlatma metni onaylandı mı (kiosk için her zaman true).</summary>
     bool PrivacyNoticeAccepted,
     /// <summary>İlk girişte istenen profil bilgileri dolu mu (kiosk için her zaman true).</summary>
-    bool ProfileComplete);
+    bool ProfileComplete,
+    /// <summary>Kullanıcının yetkileri (arayüz menü ve düğmeleri buna göre gösterir).</summary>
+    IReadOnlyCollection<string> Permissions,
+    /// <summary>true: tüm firmanın verisini görür; false: yalnızca kendi şubesini.</summary>
+    bool CompanyWide);
 
 public record LoginResponse(string AccessToken, DateTimeOffset ExpiresAt, UserDto User);
 

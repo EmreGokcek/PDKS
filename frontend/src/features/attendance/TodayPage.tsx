@@ -1,3 +1,4 @@
+import { pathFor } from '../../auth/types'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertTriangle, Coffee, LogIn, LogOut, Play, TrendingUp, Watch } from 'lucide-react'
 import { useCallback, useState, type ReactNode } from 'react'
@@ -98,7 +99,7 @@ export function TodayPage() {
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <span>
             {t('attendance.unclosed')}{' '}
-            <Link to={user?.role === 'Manager' ? '/mudur/taleplerim' : '/personel/taleplerim'} className="font-medium underline underline-offset-4">
+            <Link to={user ? pathFor(user.role, 'taleplerim') : '/'} className="font-medium underline underline-offset-4">
               {t('requests.unclosedLink')}
             </Link>
           </span>
@@ -177,7 +178,7 @@ export function TodayPage() {
       </section>
 
       <div className="mt-4">
-        <FeedPanel allHref={user?.role === 'Manager' ? '/mudur/duyurular' : '/personel/duyurular'} />
+        <FeedPanel allHref={user ? pathFor(user.role, 'duyurular') : '/'} />
       </div>
 
       {/* Özet kartları */}

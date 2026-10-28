@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -18,7 +19,7 @@ namespace Pdks.Api.Controllers;
 /// Duyurular ve kutlamalar. Herkes okur; yönetici tüm firmaya, müdür kendi şubesine duyuru yayınlar.
 /// </summary>
 [ApiController]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Roles = Roles.Staff)]
 public class AnnouncementsController(
     PdksDbContext db,
     ICurrentUser currentUser,
@@ -26,8 +27,9 @@ public class AnnouncementsController(
     Notifier notifier,
     AuditLogger audit) : ControllerBase
 {
-    private bool IsAdmin => currentUser.Role == UserRole.Admin;
-    private bool CanPost => currentUser.Role is UserRole.Admin or UserRole.Manager;
+    /// <summary>Yönetici ve İK tüm firmaya yazar ve tüm duyuruları düzenler; müdür yalnızca kendi şubesine.</summary>
+    private bool IsAdmin => currentUser.Role is { } r && RolePermissions.IsCompanyWide(r);
+    private bool CanPost => currentUser.Role is { } r && RolePermissions.Has(r, Perm.AnnouncementsPost);
     private FeedScope Scope => new(currentUser.BranchId, IsAdmin);
 
     /// <summary>Panodaki akış: yayındaki duyurular, bugünkü ve önümüzdeki 7 günün kutlamaları.</summary>
@@ -43,7 +45,7 @@ public class AnnouncementsController(
     }
 
     /// <summary>Yönetim listesi: süresi dolanlar dahil son 50 duyuru.</summary>
-    [HttpGet("api/announcements"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpGet("api/announcements"), Authorize(Policy = Perm.AnnouncementsPost)]
     public async Task<List<AnnouncementDto>> List(CancellationToken ct)
     {
         var today = await feed.TodayAsync(currentUser.BranchId, ct);
@@ -52,7 +54,7 @@ public class AnnouncementsController(
         return items.Select(a => AnnouncementDto.Create(a, today, CanEdit(a))).ToList();
     }
 
-    [HttpPost("api/announcements"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpPost("api/announcements"), Authorize(Policy = Perm.AnnouncementsPost)]
     public async Task<ActionResult<AnnouncementDto>> Create(SaveAnnouncementRequest request, CancellationToken ct)
     {
         var today = await feed.TodayAsync(currentUser.BranchId, ct);
@@ -83,7 +85,7 @@ public class AnnouncementsController(
         return CreatedAtAction(nameof(List), AnnouncementDto.Create(announcement, today, true));
     }
 
-    [HttpPut("api/announcements/{id:guid}"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpPut("api/announcements/{id:guid}"), Authorize(Policy = Perm.AnnouncementsPost)]
     public async Task<ActionResult<AnnouncementDto>> Update(Guid id, SaveAnnouncementRequest request, CancellationToken ct)
     {
         var announcement = await db.Announcements.Include(a => a.CreatedBy).FirstOrDefaultAsync(a => a.Id == id, ct);
@@ -106,7 +108,7 @@ public class AnnouncementsController(
         return AnnouncementDto.Create(announcement, today, true);
     }
 
-    [HttpDelete("api/announcements/{id:guid}"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpDelete("api/announcements/{id:guid}"), Authorize(Policy = Perm.AnnouncementsPost)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         var announcement = await db.Announcements.FirstOrDefaultAsync(a => a.Id == id, ct);

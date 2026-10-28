@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
-import type { Role } from '../../auth/types'
+import { can, myDayPath, pathFor, type User } from '../../auth/types'
 import { formatDay, isoDate } from '../../lib/dates'
 import { relativeTime, formatTime } from '../../lib/format'
 import { useMarkRead, useNotifications, type AppNotification, type NotificationType } from './api'
@@ -31,23 +31,23 @@ const tones: Record<NotificationType, string> = {
   Congratulated: 'bg-pause-soft text-pause',
 }
 
-/** Bildirime tıklayınca gidilecek sayfa (rolüne göre). */
-function targetOf(type: NotificationType, role: Role): string {
-  const base = role === 'Admin' ? '/admin' : role === 'Manager' ? '/mudur' : '/personel'
+/** Bildirime tıklayınca gidilecek sayfa (kullanıcının yetkilerine göre). */
+function targetOf(type: NotificationType, user: User): string {
+  const at = (segment: string) => pathFor(user.role, segment)
   switch (type) {
     case 'ShiftWeekPublished':
     case 'ShiftChanged':
-      return role === 'Admin' ? '/admin/vardiyalar' : `${base}/vardiyalarim`
+      return can(user, 'attendance.self') ? at('vardiyalarim') : at('vardiyalar')
     case 'RequestCreated':
-      return `${base}/talepler`
+      return at('talepler')
     case 'RequestApproved':
     case 'RequestRejected':
-      return `${base}/taleplerim`
+      return at('taleplerim')
     case 'RecordCorrected':
-      return role === 'Manager' ? '/mudur/bugunum' : base
+      return myDayPath(user)
     case 'AnnouncementPublished':
     case 'Congratulated':
-      return `${base}/duyurular`
+      return at('duyurular')
   }
 }
 
@@ -77,7 +77,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onB
   function openItem(n: AppNotification) {
     if (!n.isRead) markRead.mutate([n.id])
     setOpen(false)
-    if (user) navigate(targetOf(n.type, user.role))
+    if (user) navigate(targetOf(n.type, user))
   }
 
   return (

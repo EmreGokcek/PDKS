@@ -1,3 +1,5 @@
+import { useAuth } from '../../auth/AuthContext'
+import { assignableRoles } from '../../auth/types'
 import { motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,7 +10,6 @@ import { Sheet } from '../../components/ui/Overlay'
 import { ApiError, errorMessage } from '../../lib/api'
 import { useBranches, useCreateStaff, useUpdateStaff, type ManagedRole, type StaffInput, type StaffMember, type StaffWithPassword } from './api'
 
-const roles: ManagedRole[] = ['Employee', 'Manager', 'Admin']
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type Errors = Partial<Record<keyof StaffInput, string>>
@@ -64,6 +65,9 @@ function UserForm({
   onCreated: (result: StaffWithPassword) => void
 }) {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  // Yönetici tüm rolleri, İK yönetici dışındakileri atayabilir. Mevcut rol listede yoksa düzenleme sırasında da gösterilir.
+  const roles: ManagedRole[] = assignableRoles(user?.role)
   const [values, setValues] = useState<StaffInput>(() => emptyInput(member))
   const [errors, setErrors] = useState<Errors>({})
   const branches = useBranches()

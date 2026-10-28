@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Infrastructure;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
@@ -68,7 +69,12 @@ builder.Services
             RoleClaimType = PdksClaims.Role
         };
     });
-builder.Services.AddAuthorization();
+// Her yetki bir politika: [Authorize(Policy = Perm.X)] o yetkiye sahip rolleri kabul eder (Pdks.Domain/Security/Permissions.cs).
+builder.Services.AddAuthorization(options =>
+{
+    foreach (var permission in Perm.All)
+        options.AddPolicy(permission, p => p.RequireRole(RolePermissions.RolesWith(permission).Select(r => r.ToString())));
+});
 
 // ---- Web API ----
 builder.Services.AddControllers()

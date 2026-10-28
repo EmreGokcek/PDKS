@@ -2,7 +2,8 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
 import { useAuth } from './auth/AuthContext'
 import { FullPageLoader, RequireRole } from './auth/RequireRole'
-import { roleHome } from './auth/types'
+import { basePath, can, roleHome, type Permission, type Role } from './auth/types'
+import type { ReactNode } from 'react'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
 
@@ -27,12 +28,29 @@ const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 
 const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
 const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
 const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage'), 'ProfileSetupPage')
+const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
   if (isLoading) return <FullPageLoader />
   return <Navigate to={user ? roleHome[user.role] : '/giris'} replace />
+}
+
+const staffRoles: Role[] = ['Admin', 'Manager', 'HumanResources', 'Employee']
+
+/** Yetkisi olmayan sayfaya gelen kişi kendi ana sayfasına döner. */
+function Gate({ perm, children }: { perm: Permission; children: ReactNode }) {
+  const { user } = useAuth()
+  if (!user) return null
+  return can(user, perm) ? children : <Navigate to={roleHome[user.role]} replace />
+}
+
+/** Rolün ana sayfası: panosu olanlarda Genel bakış, diğerlerinde Bugünüm. */
+function HomeIndex() {
+  const { user } = useAuth()
+  if (!user) return null
+  return can(user, 'dashboard.view') ? <LiveDashboardPage /> : <TodayPage />
 }
 
 export default function App() {
@@ -46,44 +64,29 @@ export default function App() {
         <Route path="/aydinlatma" element={<RequireRole><PrivacyConsentPage /></RequireRole>} />
         <Route path="/profil-tamamla" element={<RequireRole><ProfileSetupPage /></RequireRole>} />
 
-        <Route path="/admin" element={<RequireRole roles={['Admin']}><AppShell /></RequireRole>}>
-          <Route index element={<Navigate to="pano" replace />} />
-          <Route path="pano" element={<LiveDashboardPage />} />
-          <Route path="sureler" element={<TeamReportPage />} />
-          <Route path="puantaj" element={<TimesheetPage />} />
-          <Route path="talepler" element={<RequestsPage />} />
-          <Route path="personel" element={<UsersPage />} />
-          <Route path="vardiyalar" element={<ShiftPlannerPage />} />
-          <Route path="kurallar" element={<WorkRulesPage />} />
-          <Route path="profil" element={<ProfilePage />} />
-          <Route path="duyurular" element={<AnnouncementsPage />} />
-        </Route>
-
-        <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
-          <Route index element={<LiveDashboardPage />} />
-          <Route path="sureler" element={<TeamReportPage />} />
-          <Route path="puantaj" element={<TimesheetPage />} />
-          <Route path="talepler" element={<RequestsPage />} />
-          <Route path="taleplerim" element={<MyRequestsPage />} />
-          <Route path="bugunum" element={<TodayPage />} />
-          <Route path="vardiyalar" element={<ShiftPlannerPage />} />
-          <Route path="vardiyalarim" element={<MyShiftsPage />} />
-          <Route path="ekip" element={<UsersPage readOnly />} />
-          <Route path="kurallar" element={<WorkRulesPage readOnly />} />
-          <Route path="profil" element={<ProfilePage />} />
-          <Route path="duyurular" element={<AnnouncementsPage />} />
-        </Route>
-
-        <Route path="/personel" element={<RequireRole roles={['Employee']}><AppShell /></RequireRole>}>
-          <Route index element={<TodayPage />} />
-          <Route path="vardiyalarim" element={<MyShiftsPage />} />
-          <Route path="taleplerim" element={<MyRequestsPage />} />
-          <Route path="profil" element={<ProfilePage />} />
-          <Route path="duyurular" element={<AnnouncementsPage />} />
-        </Route>
+        {/* Her rolün sayfaları kendi önekinde; hangi sayfanın açılacağını yetkiler belirler (docs/YETKILER.md). */}
+        {staffRoles.map((role) => (
+          <Route key={role} path={basePath[role]} element={<RequireRole roles={[role]}><AppShell /></RequireRole>}>
+            <Route index element={<HomeIndex />} />
+            <Route path="pano" element={<Gate perm="dashboard.view"><LiveDashboardPage /></Gate>} />
+            <Route path="bugunum" element={<Gate perm="attendance.self"><TodayPage /></Gate>} />
+            <Route path="vardiyalarim" element={<Gate perm="attendance.self"><MyShiftsPage /></Gate>} />
+            <Route path="taleplerim" element={<Gate perm="attendance.self"><MyRequestsPage /></Gate>} />
+            <Route path="talepler" element={<Gate perm="requests.review"><RequestsPage /></Gate>} />
+            <Route path="vardiyalar" element={<Gate perm="shifts.plan"><ShiftPlannerPage /></Gate>} />
+            <Route path="sureler" element={<Gate perm="reports.view"><TeamReportPage /></Gate>} />
+            <Route path="puantaj" element={<Gate perm="timesheet.view"><TimesheetPage /></Gate>} />
+            <Route path="personel" element={<Gate perm="staff.view"><UsersPage /></Gate>} />
+            <Route path="ekip" element={<Navigate to="../personel" replace />} />
+            <Route path="kurallar" element={<Gate perm="rules.view"><WorkRulesPage /></Gate>} />
+            <Route path="denetim" element={<Gate perm="audit.view"><AuditPage /></Gate>} />
+            <Route path="duyurular" element={<AnnouncementsPage />} />
+            <Route path="profil" element={<ProfilePage />} />
+          </Route>
+        ))}
 
         {/* Telefonun kendi kamerasıyla kiosk QR'ı okutulunca açılan sayfa */}
-        <Route path="/okut" element={<RequireRole roles={['Admin', 'Manager', 'Employee']}><ScanLinkPage /></RequireRole>} />
+        <Route path="/okut" element={<RequireRole roles={staffRoles}><ScanLinkPage /></RequireRole>} />
         <Route path="/kiosk" element={<RequireRole roles={['Kiosk']}><KioskPage /></RequireRole>} />
         <Route path="*" element={<HomeRedirect />} />
       </Routes>

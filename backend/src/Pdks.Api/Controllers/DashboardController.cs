@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -18,7 +19,7 @@ namespace Pdks.Api.Controllers;
 /// Kapsam: Personel ve Müdür rolleri.
 /// </summary>
 [ApiController]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Roles = Roles.Staff)]
 public class DashboardController(
     PdksDbContext db,
     ICurrentUser currentUser,
@@ -30,7 +31,7 @@ public class DashboardController(
     private const int MaxRangeDays = 62;
 
     /// <summary>Bugün kim içeride, kim molada, kim gelmedi, kim geç kaldı.</summary>
-    [HttpGet("api/dashboard/live")]
+    [HttpGet("api/dashboard/live"), Authorize(Policy = Perm.DashboardView)]
     public async Task<ActionResult<LiveDashboardDto>> Live(CancellationToken ct)
     {
         var tz = await attendance.TimeZoneForAsync(currentUser.BranchId, ct);
@@ -46,7 +47,7 @@ public class DashboardController(
     }
 
     /// <summary>Seçilen aralıkta kişi başına çalışma, fazla mesai, geç kalma, devamsızlık özetleri.</summary>
-    [HttpGet("api/reports/attendance")]
+    [HttpGet("api/reports/attendance"), Authorize(Policy = Perm.ReportsView)]
     public async Task<ActionResult<TeamReportDto>> Team([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
     {
         if (to < from || to.DayNumber - from.DayNumber > MaxRangeDays)
@@ -63,7 +64,7 @@ public class DashboardController(
     }
 
     /// <summary>Bir kişinin gün gün devam kaydı.</summary>
-    [HttpGet("api/reports/attendance/{userId:guid}")]
+    [HttpGet("api/reports/attendance/{userId:guid}"), Authorize(Policy = Perm.ReportsView)]
     public async Task<ActionResult<PersonReportDto>> Person(Guid userId, [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct)
     {
         if (to < from || to.DayNumber - from.DayNumber > MaxRangeDays)
@@ -78,7 +79,7 @@ public class DashboardController(
     }
 
     /// <summary>Aylık puantaj: kişi × gün kodları ve aylık toplamlar.</summary>
-    [HttpGet("api/reports/monthly")]
+    [HttpGet("api/reports/monthly"), Authorize(Policy = Perm.TimesheetView)]
     public async Task<ActionResult<TimesheetDto>> Monthly([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
     {
         var sheet = await BuildTimesheetAsync(year, month, ct);
@@ -86,7 +87,7 @@ public class DashboardController(
     }
 
     /// <summary>Aylık puantajın Excel dosyası (Puantaj, Detay, Açıklamalar sayfaları).</summary>
-    [HttpGet("api/reports/monthly/export")]
+    [HttpGet("api/reports/monthly/export"), Authorize(Policy = Perm.TimesheetView)]
     public async Task<IActionResult> MonthlyExport([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
     {
         var sheet = await BuildTimesheetAsync(year, month, ct);
@@ -119,7 +120,7 @@ public class DashboardController(
 
     private IQueryable<User> StaffScope()
     {
-        var query = db.Users.Where(u => u.Role == UserRole.Employee || u.Role == UserRole.Manager);
+        var query = db.Users.Where(u => RolePermissions.Workforce.Contains(u.Role));
         return currentUser.Role == UserRole.Manager ? query.Where(u => u.BranchId == currentUser.BranchId) : query;
     }
 }

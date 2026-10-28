@@ -15,6 +15,7 @@ import { errorMessage } from '../lib/api'
 const demoAccounts = [
   { role: 'Admin', email: 'admin@pdks.local' },
   { role: 'Manager', email: 'mudur@pdks.local' },
+  { role: 'HumanResources', email: 'ik@pdks.local' },
   { role: 'Employee', email: 'personel@pdks.local' },
   { role: 'Kiosk', email: 'kiosk@pdks.local' },
 ] as const

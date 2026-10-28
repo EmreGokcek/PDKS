@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
-import { roleHome } from '../../auth/types'
+import { myDayPath } from '../../auth/types'
 import { LanguageMenu, ThemeSwitch } from '../../components/PreferencesControls'
 import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
@@ -31,7 +31,7 @@ export function ScanLinkPage() {
   const [expired, setExpired] = useState(false)
   const [success, setSuccess] = useState<{ action: AttendanceAction; at: string } | null>(null)
 
-  const home = user?.role === 'Manager' ? '/mudur/bugunum' : user ? roleHome[user.role] : '/'
+  const home = user ? myDayPath(user) : '/'
   const finish = useCallback(() => navigate(home, { replace: true }), [navigate, home])
 
   async function run(action: AttendanceAction) {

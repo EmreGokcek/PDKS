@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Attendance;
@@ -17,7 +18,7 @@ namespace Pdks.Api.Controllers;
 /// <summary>Personelin kendi talepleri: düzeltme ve izin.</summary>
 [ApiController]
 [Route("api/me/requests")]
-[Authorize(Roles = Roles.Admin + "," + Roles.Manager + "," + Roles.Employee)]
+[Authorize(Policy = Perm.AttendanceSelf)]
 public class MyRequestsController(
     PdksDbContext db,
     ICurrentUser currentUser,
@@ -99,7 +100,7 @@ public class MyRequestsController(
 /// <summary>Yöneticinin talepleri görmesi ve karara bağlaması. Müdür kendi şubesini görür, kendi talebini onaylayamaz.</summary>
 [ApiController]
 [Route("api/requests")]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.RequestsReview)]
 public class RequestsController(
     PdksDbContext db,
     ICurrentUser currentUser,

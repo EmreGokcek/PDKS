@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
@@ -20,7 +21,7 @@ namespace Pdks.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/users")]
-[Authorize(Roles = Roles.AdminOrManager)]
+[Authorize(Policy = Perm.StaffView)]
 public class UsersController(
     PdksDbContext db,
     IPasswordHasher<User> hasher,
@@ -28,7 +29,11 @@ public class UsersController(
     AuditLogger audit,
     RefreshTokenService refreshTokens) : ControllerBase
 {
-    private static readonly UserRole[] ManageableRoles = [UserRole.Admin, UserRole.Manager, UserRole.Employee];
+    /// <summary>Bu kullanıcının atayabileceği roller (İK yönetici hesabı açamaz).</summary>
+    private IReadOnlyCollection<UserRole> Assignable => currentUser.Role is { } r ? RolePermissions.AssignableRoles(r) : [];
+
+    /// <summary>İK, yönetici hesaplarını düzenleyemez, pasife alamaz, şifresini sıfırlayamaz.</summary>
+    private bool CanManage(User target) => Assignable.Contains(target.Role);
 
     [HttpGet]
     public async Task<ActionResult<List<UserListItem>>> List(
@@ -73,7 +78,7 @@ public class UsersController(
         return ToItem(user);
     }
 
-    [HttpPost, Authorize(Roles = Roles.Admin)]
+    [HttpPost, Authorize(Policy = Perm.StaffManage)]
     public async Task<ActionResult<UserWithPasswordResponse>> Create(SaveUserRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(request, null, ct) is { } error) return error;
@@ -103,11 +108,12 @@ public class UsersController(
             new UserWithPasswordResponse(ToItem(user), tempPassword));
     }
 
-    [HttpPut("{id:guid}"), Authorize(Roles = Roles.Admin)]
+    [HttpPut("{id:guid}"), Authorize(Policy = Perm.StaffManage)]
     public async Task<ActionResult<UserListItem>> Update(Guid id, SaveUserRequest request, CancellationToken ct)
     {
         var user = await FindAsync(id, ct);
         if (user is null) return this.NotFoundError("Personel bulunamadı.");
+        if (!CanManage(user)) return NotAllowed();
         if (await ValidateAsync(request, user, ct) is { } error) return error;
 
         var before = Snapshot(user);
@@ -128,18 +134,19 @@ public class UsersController(
     }
 
     /// <summary>Personeli pasife alır: giriş yapamaz, geçmiş kayıtları korunur.</summary>
-    [HttpPost("{id:guid}/deactivate"), Authorize(Roles = Roles.Admin)]
+    [HttpPost("{id:guid}/deactivate"), Authorize(Policy = Perm.StaffManage)]
     public Task<ActionResult<UserListItem>> Deactivate(Guid id, CancellationToken ct) => SetActive(id, false, ct);
 
-    [HttpPost("{id:guid}/activate"), Authorize(Roles = Roles.Admin)]
+    [HttpPost("{id:guid}/activate"), Authorize(Policy = Perm.StaffManage)]
     public Task<ActionResult<UserListItem>> Activate(Guid id, CancellationToken ct) => SetActive(id, true, ct);
 
     /// <summary>Yeni geçici şifre üretir; personel ilk girişte değiştirmek zorunda kalır.</summary>
-    [HttpPost("{id:guid}/reset-password"), Authorize(Roles = Roles.Admin)]
+    [HttpPost("{id:guid}/reset-password"), Authorize(Policy = Perm.StaffManage)]
     public async Task<ActionResult<UserWithPasswordResponse>> ResetPassword(Guid id, CancellationToken ct)
     {
         var user = await FindAsync(id, ct);
         if (user is null) return this.NotFoundError("Personel bulunamadı.");
+        if (!CanManage(user)) return NotAllowed();
 
         var tempPassword = PasswordPolicy.GenerateTemporary();
         user.PasswordHash = hasher.HashPassword(user, tempPassword);
@@ -169,6 +176,7 @@ public class UsersController(
         var user = await FindAsync(id, ct);
         if (user is null) return this.NotFoundError("Personel bulunamadı.");
 
+        if (!CanManage(user)) return NotAllowed();
         if (!active && user.Id == currentUser.UserId)
             return this.ApiError(400, "cannot_deactivate_self", "Kendi hesabınızı pasife alamazsınız.");
 
@@ -184,10 +192,10 @@ public class UsersController(
 
     private async Task<ObjectResult?> ValidateAsync(SaveUserRequest request, User? existing, CancellationToken ct)
     {
-        if (!ManageableRoles.Contains(request.Role))
-            return this.ApiError(400, "invalid_role", "Geçersiz rol.");
+        if (!Assignable.Contains(request.Role))
+            return this.ApiError(400, "invalid_role", "Bu rolü atama yetkin yok.");
 
-        if (existing is not null && existing.Id == currentUser.UserId && request.Role != UserRole.Admin)
+        if (existing is not null && existing.Id == currentUser.UserId && request.Role != existing.Role)
             return this.ApiError(400, "cannot_change_own_role", "Kendi rolünüzü değiştiremezsiniz.");
 
         // E-posta tüm sistemde benzersiz (giriş e-postayla yapılıyor), bu yüzden firma filtresi devre dışı.
@@ -202,6 +210,9 @@ public class UsersController(
 
         return null;
     }
+
+    private ObjectResult NotAllowed() =>
+        this.ApiError(403, "cannot_manage_user", "Bu hesabı düzenleme yetkin yok.");
 
     private Task<User?> FindAsync(Guid id, CancellationToken ct) =>
         db.Users.Include(u => u.Branch).FirstOrDefaultAsync(u => u.Id == id && u.Role != UserRole.Kiosk, ct);

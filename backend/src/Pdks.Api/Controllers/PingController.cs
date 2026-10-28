@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 
 namespace Pdks.Api.Controllers;
 
@@ -15,6 +16,6 @@ public class PingController : ControllerBase
     [HttpGet("admin"), Authorize(Roles = Roles.Admin)]
     public IActionResult AdminOnly() => Ok(new { message = "Admin yetkisi doğrulandı." });
 
-    [HttpGet("manager"), Authorize(Roles = Roles.AdminOrManager)]
+    [HttpGet("manager"), Authorize(Policy = Perm.DashboardView)]
     public IActionResult ManagerOrAdmin() => Ok(new { message = "Müdür yetkisi doğrulandı." });
 }

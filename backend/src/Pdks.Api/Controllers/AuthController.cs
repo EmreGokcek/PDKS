@@ -9,6 +9,7 @@ using Pdks.Api.Common;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
 using Pdks.Domain.Enums;
+using Pdks.Domain.Security;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Services;
@@ -239,7 +240,9 @@ public class AuthController(
         u.Id, u.FirstName, u.LastName, u.FullName, u.Email, u.Role.ToString(),
         u.CompanyId, u.Company?.Name ?? string.Empty, u.BranchId, u.Branch?.Name, u.MustChangePassword,
         u.Role == UserRole.Kiosk || u.PrivacyNoticeVersion == privacyOptions.Value.NoticeVersion,
-        u.Role == UserRole.Kiosk || u.HasRequiredProfile);
+        u.Role == UserRole.Kiosk || u.HasRequiredProfile,
+        RolePermissions.For(u.Role),
+        RolePermissions.IsCompanyWide(u.Role));
 
     /// <summary>Olmayan hesaplar için sabit bir şifre özeti (zamanlama farkını gidermek için).</summary>
     private static readonly string DummyHash =

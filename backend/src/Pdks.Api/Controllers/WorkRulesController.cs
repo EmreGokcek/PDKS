@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Pdks.Api.Auth;
+using Pdks.Domain.Security;
 using Pdks.Api.Contracts;
 using Pdks.Domain.Entities;
 using Pdks.Infrastructure.Persistence;
@@ -22,7 +23,7 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
         return ToDto(rule);
     }
 
-    [HttpPut, Authorize(Roles = Roles.Admin)]
+    [HttpPut, Authorize(Policy = Perm.RulesManage)]
     public async Task<ActionResult<WorkRuleDto>> Update(UpdateWorkRuleRequest request, CancellationToken ct)
     {
         var rule = await GetOrCreateAsync(ct);

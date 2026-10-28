@@ -1,3 +1,4 @@
+import { pathFor } from '../../auth/types'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
 import { useMemo, useState } from 'react'
@@ -140,7 +141,7 @@ export function LiveDashboardPage() {
       </div>
 
       <div className="mt-6">
-        <FeedPanel allHref={user?.role === 'Admin' ? '/admin/duyurular' : '/mudur/duyurular'} />
+        <FeedPanel allHref={user ? pathFor(user.role, 'duyurular') : '/'} />
       </div>
 
       {active && (

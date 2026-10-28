@@ -74,6 +74,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Tamamlananlar
 
+- [x] İK rolü ve tek yerden yönetilen yetki tablosu (docs/YETKILER.md); denetim kaydı ekranı
+
 - [x] Giriş deneme sınırı ve hesap kilidi; yenileme token'ı ve "beni hatırla"; üretim gizli ayarları; `App__PublicUrl`; düzeltme ekranında şube saat dilimi; KVKK aydınlatma metni ve onayı; API entegrasyon testleri; Playwright uçtan uca testleri
 
 - [x] Duyurular (sabitleme, bitiş tarihi, kioskta gösterme, yeni duyuruda bildirim), doğum günü ve iş yıl dönümü kutlamaları, "Kutla" düğmesi

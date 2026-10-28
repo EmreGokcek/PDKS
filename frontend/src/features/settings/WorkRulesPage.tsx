@@ -1,3 +1,5 @@
+import { useAuth } from '../../auth/AuthContext'
+import { can } from '../../auth/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
 import { CalendarDays, Coffee, Lock, TimerReset, Watch } from 'lucide-react'
@@ -28,8 +30,10 @@ const LIMITS = {
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, Number.isFinite(v) ? v : min))
 
-export function WorkRulesPage({ readOnly = false }: { readOnly?: boolean }) {
+export function WorkRulesPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const readOnly = !can(user, 'rules.manage')
   const qc = useQueryClient()
   const query = useQuery({ queryKey: ['work-rules'], queryFn: () => api<WorkRules>('/settings/work-rules') })
   // Kullanıcı bir şeyi değiştirene kadar taslak yok; sunucudaki değer gösterilir.

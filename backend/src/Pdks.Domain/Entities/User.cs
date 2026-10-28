@@ -60,4 +60,9 @@ public class User : TenantEntity
     public Branch? Branch { get; set; }
 
     public string FullName => $"{FirstName} {LastName}";
+
+    /// <summary>İlk girişte kişiden istenen bilgiler: telefon, doğum tarihi ve acil durumda aranacak kişi.</summary>
+    public bool HasRequiredProfile =>
+        !string.IsNullOrWhiteSpace(Phone) && BirthDate is not null &&
+        !string.IsNullOrWhiteSpace(EmergencyContactName) && !string.IsNullOrWhiteSpace(EmergencyContactPhone);
 }

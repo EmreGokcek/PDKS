@@ -183,4 +183,37 @@ public class AuthTests(PdksApiFactory api)
         Assert.Equal(HttpStatusCode.OK, reset.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await _c.Refresh(s.RefreshCookie)).StatusCode);
     }
+
+    [Fact]
+    public async Task New_employee_must_complete_profile_and_admin_details_are_prefilled()
+    {
+        var admin = await _c.Login("admin@pdks.local");
+        var email = $"profil.{Guid.NewGuid():N}@pdks.local";
+        var created = await (await _c.Send(HttpMethod.Post, "/api/users", admin.AccessToken,
+            new { firstName = "Profil", lastName = "Deneme", email, phone = "0532 000 00 00", role = "Employee", position = "Kasiyer" })).Json<JsonElement>();
+        var temp = created.GetProperty("temporaryPassword").GetString()!;
+
+        var s = await _c.Login(email, temp);
+        Assert.False(s.User.GetProperty("profileComplete").GetBoolean());
+        var changed = await (await _c.Send(HttpMethod.Post, "/api/auth/change-password", s.AccessToken,
+            new { currentPassword = temp, newPassword = "YeniSifre123" })).Json<JsonElement>();
+        var token = changed.GetProperty("accessToken").GetString()!;
+
+        // Yöneticinin girdiği bilgiler profilde hazır gelir.
+        var profile = await (await _c.Send(HttpMethod.Get, "/api/me/profile", token)).Json<JsonElement>();
+        Assert.Equal("0532 000 00 00", profile.GetProperty("phone").GetString());
+        Assert.Equal("Kasiyer", profile.GetProperty("position").GetString());
+
+        await (await _c.Send(HttpMethod.Put, "/api/me/profile", token, new
+        {
+            phone = "0532 000 00 00",
+            birthDate = "1995-05-05",
+            healthDataConsent = false,
+            emergencyContactName = "Ayşe Deneme",
+            emergencyContactPhone = "0533 111 11 11"
+        })).Json<JsonElement>();
+
+        var me = await (await _c.Send(HttpMethod.Get, "/api/auth/me", token)).Json<JsonElement>();
+        Assert.True(me.GetProperty("profileComplete").GetBoolean());
+    }
 }

@@ -14,6 +14,8 @@ export interface User {
   mustChangePassword: boolean
   /** Güncel KVKK aydınlatma metni onaylandı mı. */
   privacyNoticeAccepted: boolean
+  /** İlk girişte istenen profil bilgileri (telefon, doğum tarihi, acil durum kişisi) dolu mu. */
+  profileComplete: boolean
 }
 
 export interface LoginResponse {

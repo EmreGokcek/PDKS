@@ -20,10 +20,11 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
-/** Girişten sonra gidilecek yer: önce şifre belirleme, sonra aydınlatma metni, sonra istenen sayfa. */
+/** Girişten sonra gidilecek yer: önce şifre belirleme, aydınlatma metni ve profil tamamlama, sonra istenen sayfa. */
 function afterLogin(user: User, from?: string) {
   if (user.mustChangePassword) return '/sifre-degistir'
   if (!user.privacyNoticeAccepted) return '/aydinlatma'
+  if (!user.profileComplete) return '/profil-tamamla'
   return from ?? roleHome[user.role]
 }
 

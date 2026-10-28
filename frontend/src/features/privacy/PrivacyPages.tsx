@@ -66,7 +66,7 @@ export function PrivacyConsentPage() {
     try {
       const updated = await api<User>('/auth/privacy-notice', { method: 'POST', ...json({ version: NOTICE_VERSION }) })
       updateUser(updated)
-      navigate(roleHome[updated.role], { replace: true })
+      navigate(updated.profileComplete ? roleHome[updated.role] : '/profil-tamamla', { replace: true })
     } catch (err) {
       setError(errorMessage(err, t))
     } finally {

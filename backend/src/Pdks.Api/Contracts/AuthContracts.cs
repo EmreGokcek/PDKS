@@ -25,7 +25,9 @@ public record UserDto(
     string? BranchName,
     bool MustChangePassword,
     /// <summary>Güncel KVKK aydınlatma metni onaylandı mı (kiosk için her zaman true).</summary>
-    bool PrivacyNoticeAccepted);
+    bool PrivacyNoticeAccepted,
+    /// <summary>İlk girişte istenen profil bilgileri dolu mu (kiosk için her zaman true).</summary>
+    bool ProfileComplete);
 
 public record LoginResponse(string AccessToken, DateTimeOffset ExpiresAt, UserDto User);
 

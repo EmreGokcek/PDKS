@@ -58,6 +58,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(x => x.BranchId).OnDelete(DeleteBehavior.Restrict);
 
         b.Ignore(x => x.FullName);
+        b.Ignore(x => x.HasRequiredProfile);
     }
 }
 

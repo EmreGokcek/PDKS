@@ -245,6 +245,10 @@ const en: Translations = {
     days: { short: 'Mon Tue Wed Thu Fri Sat Sun' },
   },
   shifts: {
+    notPublishedThisWeek: 'This week’s shifts haven’t been shared yet.',
+    notPublishedNextWeek: 'Next week’s shifts haven’t been shared yet.',
+    notPublishedHint: 'They will appear here once your manager publishes the plan, and you will be notified.',
+    noPlan: 'No plan for this day',
     draft: 'Draft',
     published: 'Published',
     draftHint: 'Staff can’t see this week yet.',
@@ -456,6 +460,13 @@ const en: Translations = {
     sentAt: 'Sent on {{date}}',
   },
   profile: {
+    setup: {
+      title: 'Complete your profile',
+      intro: 'Welcome {{name}}! The details your manager entered are ready; fill in the few missing ones and you are good to go.',
+      fromAdmin: 'Entered by your manager',
+      fromAdminHint: 'If something here is wrong, tell your manager; only they can change it.',
+      submit: 'Save and continue',
+    },
     shareBirthday: 'Let my team celebrate my birthday',
     shareBirthdayHint: 'Only the day and month are shown in announcements, never your age.',
     birthdayHidden: 'Birthday is not announced',
@@ -470,6 +481,7 @@ const en: Translations = {
       account: 'Account',
     },
     fields: {
+      fullName: 'Full name',
       email: 'Email',
       phone: 'Phone',
       address: 'Address',

@@ -243,6 +243,10 @@ const tr = {
     days: { short: 'Pzt Sal Çar Per Cum Cmt Paz' },
   },
   shifts: {
+    notPublishedThisWeek: 'Bu haftanın vardiyası henüz paylaşılmadı.',
+    notPublishedNextWeek: 'Gelecek haftanın vardiyası henüz paylaşılmadı.',
+    notPublishedHint: 'Müdürün planı yayınlayınca burada görünecek ve sana bildirim gelecek.',
+    noPlan: 'Bu gün için plan yok',
     draft: 'Taslak',
     published: 'Yayında',
     draftHint: 'Personel bu haftayı henüz göremez.',
@@ -454,6 +458,13 @@ const tr = {
     sentAt: '{{date}} tarihinde gönderildi',
   },
   profile: {
+    setup: {
+      title: 'Profilini tamamla',
+      intro: 'Hoş geldin {{name}}! Yöneticinin girdiği bilgiler hazır; birkaç eksik bilgiyi tamamla, sonra uygulamaya geçelim.',
+      fromAdmin: 'Yöneticinin girdiği bilgiler',
+      fromAdminHint: 'Bunlarda bir hata varsa yöneticine söyle; yalnızca yönetici değiştirebilir.',
+      submit: 'Kaydet ve devam et',
+    },
     shareBirthday: 'Doğum günüm ekipte kutlansın',
     shareBirthdayHint: 'Duyurularda yalnızca gün ve ay görünür, yaşın görünmez.',
     birthdayHidden: 'Doğum günü duyurulmuyor',
@@ -468,6 +479,7 @@ const tr = {
       account: 'Hesap',
     },
     fields: {
+      fullName: 'Ad soyad',
       email: 'E-posta',
       phone: 'Telefon',
       address: 'Adres',

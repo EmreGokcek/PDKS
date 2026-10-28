@@ -82,7 +82,7 @@ public class DashboardController(
     public async Task<ActionResult<TimesheetDto>> Monthly([FromQuery] int year, [FromQuery] int month, CancellationToken ct)
     {
         var sheet = await BuildTimesheetAsync(year, month, ct);
-        return sheet is null ? InvalidMonth() : TimesheetDto.From(sheet);
+        return sheet is null ? InvalidMonth() : TimesheetDto.Create(sheet);
     }
 
     /// <summary>Aylık puantajın Excel dosyası (Puantaj, Detay, Açıklamalar sayfaları).</summary>

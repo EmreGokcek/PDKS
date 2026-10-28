@@ -111,7 +111,7 @@ public record TimesheetDto(
     int WeeklyWorkMinutes,
     List<TimesheetRowDto> Rows)
 {
-    public static TimesheetDto From(Pdks.Domain.Reports.Timesheet t) => new(
+    public static TimesheetDto Create(Pdks.Domain.Reports.Timesheet t) => new(
         t.CompanyName, t.BranchName, t.Year, t.Month, t.From, t.To, t.WeeklyWorkMinutes,
         t.Rows.Select(r => new TimesheetRowDto(r.UserId, r.Name, r.EmployeeNumber, r.Position,
             r.Cells.Select(c => new TimesheetCellDto(c.Date, c.Code, Math.Round(c.Hours, 2), c.Late, c.EarlyLeave, c.BreakOverrun, c.Unclosed, c.Unplanned)).ToList(),

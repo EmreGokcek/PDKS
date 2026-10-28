@@ -242,3 +242,18 @@ internal class LeaveAdjustmentConfiguration : IEntityTypeConfiguration<LeaveAdju
         b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+internal class ShiftSwapConfiguration : IEntityTypeConfiguration<ShiftSwap>
+{
+    public void Configure(EntityTypeBuilder<ShiftSwap> b)
+    {
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+        b.Property(x => x.Note).HasMaxLength(300);
+        b.Property(x => x.ReviewNote).HasMaxLength(300);
+        b.HasIndex(x => new { x.BranchId, x.Status });
+        b.HasIndex(x => x.RequesterId);
+        b.HasIndex(x => x.TargetUserId);
+        b.HasOne(x => x.Requester).WithMany().HasForeignKey(x => x.RequesterId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.TargetUser).WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}

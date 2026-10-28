@@ -34,6 +34,20 @@ jobs:
             counters=$(grep -o '<Counters [^>]*>' "$f" | sed -E 's/.*total="([0-9]+)".*passed="([0-9]+)".*failed="([0-9]+)".*/toplam=\1 gecen=\2 kalan=\3/')
             echo "::notice title=Testler::$(grep -o 'name="[^"]*Tests[^"]*\.dll' "$f" | head -n1 | sed 's/name="//') $counters"
           done
+          # Başarısız testlerin adı ve hata mesajı özet olarak gösterilir.
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          ns = {'t': 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for f in glob.glob('TestResults/**/*.trx', recursive=True):
+              for r in ET.parse(f).getroot().iterfind('.//t:UnitTestResult', ns):
+                  if r.get('outcome') != 'Failed':
+                      continue
+                  msg = r.findtext('.//t:Message', default='', namespaces=ns)
+                  stack = r.findtext('.//t:StackTrace', default='', namespaces=ns)
+                  where = next((l.strip() for l in stack.splitlines() if '.cs:line' in l), '')
+                  text = f"{r.get('testName')}: {msg} {where}".replace('%', '%25').replace('\r', '').replace('\n', '%0A')
+                  print(f"::error title=Başarısız test::{text[:1500]}")
+          PY
       - name: Check vulnerable packages
         run: |
           dotnet list package --vulnerable --include-transitive | tee vuln.txt

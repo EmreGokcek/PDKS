@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.*" />
+    <!-- Açıkça yazıldı: Design paketi en güncel EF'yi çekerken başvuran projeler (testler) eski sürümde kalmasın. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.*" />
     <!-- Excel (.xlsx) üretimi; MIT lisanslı -->
     <PackageReference Include="ClosedXML" Version="0.*" />
     <!-- Dolaylı gelen eski sürümdeki güvenlik açığını kapatmak için güncel sürüm sabitlendi. -->

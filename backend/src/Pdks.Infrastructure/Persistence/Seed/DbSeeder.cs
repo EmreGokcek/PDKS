@@ -24,6 +24,7 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
         {
             await EnsureDemoShiftTemplatesAsync(ct);
             await EnsureDemoSocialAsync(ct);
+            await EnsureDemoProfilesAsync(options, ct);
             return;
         }
 
@@ -70,6 +71,34 @@ public class DbSeeder(PdksDbContext db, IPasswordHasher<User> hasher, ILogger<Db
 
         await EnsureDemoShiftTemplatesAsync(ct);
         await EnsureDemoSocialAsync(ct);
+        await EnsureDemoProfilesAsync(options, ct);
+    }
+
+    /// <summary>
+    /// Demo hesaplar ilk girişte profil tamamlama ekranına takılmasın diye eksik zorunlu bilgileri doldurur.
+    /// (Yeni eklenen personel bu ekranı görür.)
+    /// </summary>
+    private async Task EnsureDemoProfilesAsync(SeedOptions options, CancellationToken ct)
+    {
+        string[] emails = [options.AdminEmail, options.ManagerEmail, options.EmployeeEmail];
+        var normalized = emails.Select(e => e.Trim().ToLowerInvariant()).ToList();
+        var users = await db.Users.IgnoreQueryFilters().Where(u => normalized.Contains(u.Email)).ToListAsync(ct);
+        var changed = false;
+        foreach (var (u, i) in users.Select((u, i) => (u, i)))
+        {
+            if (u.HasRequiredProfile) continue;
+            u.Phone ??= $"0555 000 00 0{i + 1}";
+            u.BirthDate ??= new DateOnly(1990 + i, 3 + i, 10 + i);
+            u.EmergencyContactName ??= "Demo Yakını";
+            u.EmergencyContactPhone ??= $"0555 111 11 1{i + 1}";
+            u.EmergencyContactRelation ??= "Kardeşi";
+            changed = true;
+        }
+        if (changed)
+        {
+            await db.SaveChangesAsync(ct);
+            logger.LogInformation("Demo hesapların profil bilgileri tamamlandı.");
+        }
     }
 
     /// <summary>

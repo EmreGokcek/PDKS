@@ -238,7 +238,8 @@ public class AuthController(
     private UserDto ToDto(User u) => new(
         u.Id, u.FirstName, u.LastName, u.FullName, u.Email, u.Role.ToString(),
         u.CompanyId, u.Company?.Name ?? string.Empty, u.BranchId, u.Branch?.Name, u.MustChangePassword,
-        u.Role == UserRole.Kiosk || u.PrivacyNoticeVersion == privacyOptions.Value.NoticeVersion);
+        u.Role == UserRole.Kiosk || u.PrivacyNoticeVersion == privacyOptions.Value.NoticeVersion,
+        u.Role == UserRole.Kiosk || u.HasRequiredProfile);
 
     /// <summary>Olmayan hesaplar için sabit bir şifre özeti (zamanlama farkını gidermek için).</summary>
     private static readonly string DummyHash =

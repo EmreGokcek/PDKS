@@ -20,6 +20,14 @@ export async function acceptPrivacyIfAsked(page: Page) {
     await page.getByRole('button', { name: 'Devam et' }).click()
     await page.waitForURL((url) => url.pathname !== '/aydinlatma')
   }
+  if (new URL(page.url()).pathname === '/profil-tamamla') {
+    await page.getByLabel('Telefon').first().fill('0555 000 00 00')
+    await page.getByLabel('Doğum tarihi').fill('1990-01-01')
+    await page.getByLabel('Ad soyad').fill('E2E Yakını')
+    await page.getByLabel('Telefon').nth(1).fill('0555 111 11 11')
+    await page.getByRole('button', { name: 'Kaydet ve devam et' }).click()
+    await page.waitForURL((url) => url.pathname !== '/profil-tamamla')
+  }
 }
 
 export async function logout(page: Page) {

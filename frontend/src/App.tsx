@@ -26,6 +26,7 @@ const ProfilePage = named(() => import('./features/profile/ProfilePage'), 'Profi
 const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 'TimesheetPage')
 const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
 const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
+const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage'), 'ProfileSetupPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
         <Route path="/kvkk" element={<PrivacyNoticePage />} />
         <Route path="/aydinlatma" element={<RequireRole><PrivacyConsentPage /></RequireRole>} />
+        <Route path="/profil-tamamla" element={<RequireRole><ProfileSetupPage /></RequireRole>} />
 
         <Route path="/admin" element={<RequireRole roles={['Admin']}><AppShell /></RequireRole>}>
           <Route index element={<Navigate to="pano" replace />} />

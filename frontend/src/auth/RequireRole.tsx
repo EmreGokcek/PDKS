@@ -23,6 +23,10 @@ export function RequireRole({ roles, children }: { roles?: Role[]; children: Rea
   if (!user.mustChangePassword && !user.privacyNoticeAccepted && location.pathname !== '/aydinlatma')
     return <Navigate to="/aydinlatma" replace />
 
+  // Ardından eksik profil bilgileri istenir.
+  if (!user.mustChangePassword && user.privacyNoticeAccepted && !user.profileComplete && location.pathname !== '/profil-tamamla')
+    return <Navigate to="/profil-tamamla" replace />
+
   if (roles && !roles.includes(user.role)) return <Navigate to={roleHome[user.role]} replace />
 
   return children

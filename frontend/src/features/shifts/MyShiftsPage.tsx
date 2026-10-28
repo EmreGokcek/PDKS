@@ -56,7 +56,15 @@ export function MyShiftsPage() {
                     </p>
                   )}
                 </div>
-                {unpublished && <p className="mx-3 mb-2 rounded-xl bg-panel-2 px-3 py-2 text-sm text-ink-soft ring-1 ring-line">{t('shifts.notPublished')}</p>}
+                {unpublished ? (
+                  <div className="mx-1 mb-1 flex flex-col items-center gap-2 rounded-xl bg-panel-2 px-6 py-12 text-center">
+                    <span className="grid size-11 place-items-center rounded-full bg-panel text-ink-soft ring-1 ring-line">
+                      <CalendarClock className="size-5" />
+                    </span>
+                    <p className="font-medium">{wi === 0 ? t('shifts.notPublishedThisWeek') : t('shifts.notPublishedNextWeek')}</p>
+                    <p className="max-w-xs text-sm text-ink-soft">{t('shifts.notPublishedHint')}</p>
+                  </div>
+                ) : (
                 <ul>
                   {weekDays(ws).map((d, i) => {
                     const s = byDate.get(d)
@@ -92,7 +100,7 @@ export function MyShiftsPage() {
                             </>
                           ) : (
                             <span className="flex h-full items-center rounded-lg border border-dashed border-line px-3 text-sm text-ink-soft">
-                              {t('shifts.off')}
+                              {t('shifts.noPlan')}
                             </span>
                           )}
                         </div>
@@ -100,6 +108,7 @@ export function MyShiftsPage() {
                     )
                   })}
                 </ul>
+                )}
               </section>
               )
             })}

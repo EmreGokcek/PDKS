@@ -88,7 +88,12 @@ export function ProfilePage() {
   )
 }
 
-function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void }) {
+/**
+ * Profil düzenleme formu. "setup" kipinde ilk girişte açılır: telefon, doğum tarihi ve acil durum kişisi zorunludur,
+ * vazgeç düğmesi yoktur.
+ */
+export function EditForm({ profile: p, onDone, mode = 'edit' }: { profile: Profile; onDone: () => void; mode?: 'edit' | 'setup' }) {
+  const setup = mode === 'setup'
   const { t } = useTranslation()
   const update = useUpdateProfile()
   const [v, setV] = useState<ProfileInput>({
@@ -120,7 +125,7 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
         emergencyContactPhone: n(v.emergencyContactPhone),
         emergencyContactRelation: n(v.emergencyContactRelation),
       })
-      toast.success(t('profile.saved'))
+      if (!setup) toast.success(t('profile.saved'))
       onDone()
     } catch (err) {
       toast.error(errorMessage(err, t))
@@ -131,8 +136,8 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
     <form onSubmit={submit} className="space-y-6">
       <fieldset className="space-y-4">
         <legend className="mb-3 text-sm font-semibold">{t('profile.sections.contact')}</legend>
-        <Field label={t('profile.fields.phone')}>{(f) => <Input {...f} type="tel" value={v.phone ?? ''} onChange={(e) => set('phone', e.target.value)} />}</Field>
-        <Field label={t('profile.fields.address')}>
+        <Field label={t('profile.fields.phone')}>{(f) => <Input {...f} type="tel" required={setup} autoComplete="tel" value={v.phone ?? ''} onChange={(e) => set('phone', e.target.value)} />}</Field>
+        <Field label={t('profile.fields.address')} optional={setup ? t('common.optional') : undefined}>
           {(f) => (
             <textarea
               {...f}
@@ -150,9 +155,9 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
         <legend className="mb-3 text-sm font-semibold">{t('profile.sections.personal')}</legend>
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('profile.fields.birthDate')}>
-            {(f) => <Input {...f} type="date" max={todayIso()} value={v.birthDate ?? ''} onChange={(e) => set('birthDate', e.target.value)} />}
+            {(f) => <Input {...f} type="date" required={setup} max={todayIso()} value={v.birthDate ?? ''} onChange={(e) => set('birthDate', e.target.value)} />}
           </Field>
-          <Field label={t('profile.fields.bloodType')}>
+          <Field label={t('profile.fields.bloodType')} optional={setup ? t('common.optional') : undefined}>
             {(f) => (
               <Select {...f} value={v.bloodType ?? ''} onChange={(e) => set('bloodType', e.target.value)}>
                 <option value="">{t('profile.noBloodType')}</option>
@@ -199,13 +204,13 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
       <fieldset className="space-y-4">
         <legend className="mb-3 text-sm font-semibold">{t('profile.sections.emergency')}</legend>
         <Field label={t('profile.fields.emergencyName')}>
-          {(f) => <Input {...f} value={v.emergencyContactName ?? ''} onChange={(e) => set('emergencyContactName', e.target.value)} />}
+          {(f) => <Input {...f} required={setup} value={v.emergencyContactName ?? ''} onChange={(e) => set('emergencyContactName', e.target.value)} />}
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label={t('profile.fields.emergencyPhone')}>
-            {(f) => <Input {...f} type="tel" value={v.emergencyContactPhone ?? ''} onChange={(e) => set('emergencyContactPhone', e.target.value)} />}
+            {(f) => <Input {...f} type="tel" required={setup} value={v.emergencyContactPhone ?? ''} onChange={(e) => set('emergencyContactPhone', e.target.value)} />}
           </Field>
-          <Field label={t('profile.fields.emergencyRelation')}>
+          <Field label={t('profile.fields.emergencyRelation')} optional={setup ? t('common.optional') : undefined}>
             {(f) => (
               <Input
                 {...f}
@@ -218,14 +223,16 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
         </div>
       </fieldset>
 
-      <p className="text-xs text-ink-soft">{t('profile.adminOnly')}</p>
+      {!setup && <p className="text-xs text-ink-soft">{t('profile.adminOnly')}</p>}
 
       <div className="flex justify-end gap-2 border-t border-line pt-4">
-        <Button variant="secondary" onClick={onDone} disabled={update.isPending}>
-          {t('common.cancel')}
-        </Button>
+        {!setup && (
+          <Button variant="secondary" onClick={onDone} disabled={update.isPending}>
+            {t('common.cancel')}
+          </Button>
+        )}
         <Button type="submit" loading={update.isPending} disabled={needsConsent && !v.healthDataConsent}>
-          {t('common.save')}
+          {setup ? t('profile.setup.submit') : t('common.save')}
         </Button>
       </div>
     </form>

@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { BarChart3, CalendarDays, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, FileSpreadsheet, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -31,6 +31,7 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/admin/pano', label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
         { to: '/admin/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/admin/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/admin/puantaj', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
         { to: '/admin/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
         { to: '/admin/personel', label: t('nav.staff'), icon: <Users className={icon} /> },
         { to: '/admin/kurallar', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
@@ -42,6 +43,7 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/mudur/vardiyalar', label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/mudur/vardiyalarim', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
         { to: '/mudur/sureler', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
+        { to: '/mudur/puantaj', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
         { to: '/mudur/talepler', label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
         { to: '/mudur/taleplerim', label: t('nav.myRequests'), icon: <Send className={icon} /> },
         { to: '/mudur/ekip', label: t('nav.team'), icon: <Users className={icon} /> },
@@ -159,12 +161,12 @@ export function AppShell() {
   if (!user) return null
 
   return (
-    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr]">
-      <aside className="sticky top-0 z-30 hidden h-dvh border-r border-line bg-panel lg:block">
+    <div className="min-h-dvh lg:grid lg:grid-cols-[264px_1fr] print:block">
+      <aside className="sticky top-0 z-30 hidden h-dvh border-r border-line bg-panel lg:block print:hidden">
         <Sidebar />
       </aside>
 
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-panel/85 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-line bg-panel/85 px-4 py-3 backdrop-blur lg:hidden print:hidden">
         <div className="flex items-center gap-2.5">
           <img src="/favicon.svg" alt="" className="size-8 rounded-lg" />
           <span className="font-semibold">{user.companyName}</span>
@@ -209,7 +211,7 @@ export function AppShell() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10"
+          className="mx-auto max-w-6xl px-4 py-6 sm:px-8 sm:py-10 print:max-w-none print:p-0"
         >
           <Suspense fallback={<div className="grid place-items-center py-24 text-ink-soft"><Spinner /></div>}>
             <Outlet />

@@ -23,6 +23,13 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] 00:00'da başlayan vardiyada bir önceki gün 23:55'te okutulan giriş önceki güne yazılıyor; vardiyaya yakınlığa göre eşleştirme yapılmalı.
 - [ ] Raporlarda pasif personelin geçmiş kayıtları: şu an yalnızca okutma kaydı olan pasif kişiler listeleniyor.
 
+## Puantaj
+
+- [ ] Excel çıktısı şimdilik yalnızca Türkçe; arayüz dili İngilizceyse başlıklar da İngilizce olmalı.
+- [ ] Bordro programlarına (Logo, Mikro, Netsis) aktarım biçimleri.
+- [ ] Ay kapatma: onaylanan ayın kayıtlarının kilitlenmesi (sonradan düzeltme yapılamasın ya da yeniden onay gereksin).
+- [ ] Fazla mesai için günlük üst sınır ve yıllık 270 saat uyarısı.
+
 ## Talepler ve düzeltmeler
 
 - [ ] Talep onaylanınca / reddedilince personele bildirim (Adım 8: bildirimler).

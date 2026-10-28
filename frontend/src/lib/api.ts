@@ -73,3 +73,32 @@ export function errorMessage(error: unknown, t: TFunction): string {
   }
   return t('errors.generic')
 }
+
+/** Dosya indirir (ör. Excel). Token başlıkta gönderildiği için doğrudan bağlantı yerine fetch kullanılır. */
+export async function download(path: string, fallbackName: string) {
+  const headers = new Headers()
+  const token = tokenStorage.get()
+  if (token) headers.set('Authorization', `Bearer ${token}`)
+
+  let response: Response
+  try {
+    response = await fetch(`/api${path}`, { headers })
+  } catch {
+    throw new ApiError(0, 'network', 'Sunucuya ulaşılamadı.')
+  }
+  if (!response.ok) {
+    const problem = await response.json().catch(() => null)
+    throw new ApiError(response.status, problem?.code ?? 'generic', problem?.title ?? `HTTP ${response.status}`, problem)
+  }
+
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const name = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition)?.[1] ?? fallbackName
+  const url = URL.createObjectURL(await response.blob())
+  const a = document.createElement('a')
+  a.href = url
+  a.download = decodeURIComponent(name)
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

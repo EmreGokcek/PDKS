@@ -101,6 +101,6 @@ Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
 - [x] Adım 5 — Müdür canlı panosu, geç kalma / erken çıkma / devamsızlık tespiti, ekip süreleri raporu
 - [x] Adım 6 — Kayıt düzeltme (gerekçeli, denetim kayıtlı), düzeltme ve izin talepleri, onay akışı
 - [x] Adım 7 — Profilim (iletişim, kişisel, acil durum, iş bilgileri; KVKK açık rızası), uygulama içi bildirimler
-- [ ] Adım 8 — Aylık puantaj raporu (Excel/PDF)
+- [x] Adım 8 — Aylık puantaj cetveli, Excel (Puantaj + Detay) ve A4 yatay PDF / baskı
 - [ ] Adım 9 — PWA (telefona uygulama gibi kurulum), anlık bildirimler, konum doğrulaması
 - [ ] Adım 10 — Sunucuya yükleme

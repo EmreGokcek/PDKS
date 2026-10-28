@@ -19,8 +19,7 @@ public sealed class PdksApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 {
     public const string DemoPassword = "Pdks123!";
 
-    private readonly PostgreSqlContainer _db = new PostgreSqlBuilder()
-        .WithImage("postgres:17")
+    private readonly PostgreSqlContainer _db = new PostgreSqlBuilder("postgres:17")
         .WithDatabase("pdks")
         .WithUsername("pdks")
         .WithPassword("pdks_test")

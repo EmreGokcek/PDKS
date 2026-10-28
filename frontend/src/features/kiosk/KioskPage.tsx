@@ -22,6 +22,8 @@ interface KioskState {
   windowSeconds: number
   serverNow: string
   recent: { name: string; type: AttendanceAction; occurredAt: string }[]
+  /** Sunucuda ayarlanmış genel adres (App__PublicUrl); boşsa bu ekranın adresi kullanılır. */
+  publicUrl: string | null
 }
 
 const eventTone: Record<AttendanceAction, string> = {
@@ -54,7 +56,7 @@ export function KioskPage() {
   const data = state.data
 
   // Bağlantı: telefonun kendi kamerasıyla okutulunca doğrudan uygulamanın okutma sayfası açılır.
-  const link = data ? `${window.location.origin}/okut?k=${encodeURIComponent(data.qrToken)}` : null
+  const link = data ? `${data.publicUrl ?? window.location.origin}/okut?k=${encodeURIComponent(data.qrToken)}` : null
   const [svg, setSvg] = useState<string | null>(null)
   useEffect(() => {
     if (!link) return

@@ -47,8 +47,8 @@ public class CorrectionsController(
         var names = await db.Users.Where(u => recorderIds.Contains(u.Id))
             .ToDictionaryAsync(u => u.Id, u => u.FirstName + " " + u.LastName, ct);
 
-        return events.Select(e => new EventDetailDto(e.Id, e.Type, e.OccurredAt, e.Source, e.Note,
-            e.RecordedByUserId is { } r && names.TryGetValue(r, out var n) ? n : null)).ToList();
+        return events.Select(e => EventDetailDto.Create(e,
+            e.RecordedByUserId is { } r && names.TryGetValue(r, out var n) ? n : null, tz)).ToList();
     }
 
     [HttpPost("api/staff/{userId:guid}/attendance")]
@@ -82,7 +82,7 @@ public class CorrectionsController(
         audit.Log("attendance.added", nameof(AttendanceEvent), evt.Id,
             newValues: new { UserId = userId, Type = request.Type.ToString(), OccurredAt = at }, reason: request.Reason);
         await db.SaveChangesAsync(ct);
-        return new EventDetailDto(evt.Id, evt.Type, evt.OccurredAt, evt.Source, evt.Note, null);
+        return EventDetailDto.Create(evt, null, tz);
     }
 
     [HttpPut("api/attendance/events/{id:guid}")]
@@ -109,7 +109,7 @@ public class CorrectionsController(
         audit.Log("attendance.changed", nameof(AttendanceEvent), evt.Id,
             oldValues: new { OccurredAt = before }, newValues: new { OccurredAt = at }, reason: request.Reason);
         await db.SaveChangesAsync(ct);
-        return new EventDetailDto(evt.Id, evt.Type, evt.OccurredAt, evt.Source, evt.Note, null);
+        return EventDetailDto.Create(evt, null, tz);
     }
 
     /// <summary>Kaydı siler. Eski değer gerekçesiyle birlikte denetim kaydında saklanır.</summary>

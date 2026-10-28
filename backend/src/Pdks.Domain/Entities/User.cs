@@ -45,6 +45,17 @@ public class User : TenantEntity
     public bool MustChangePassword { get; set; }
     public DateTimeOffset? LastLoginAt { get; set; }
 
+    // ---- Giriş güvenliği ----
+    /// <summary>Art arda hatalı şifre sayısı; başarılı girişte sıfırlanır.</summary>
+    public int FailedLoginCount { get; set; }
+    /// <summary>Çok sayıda hatalı denemeden sonra bu zamana kadar giriş yapılamaz.</summary>
+    public DateTimeOffset? LockoutUntil { get; set; }
+
+    // ---- KVKK ----
+    /// <summary>Kişinin okuyup onayladığı aydınlatma metninin sürümü.</summary>
+    public string? PrivacyNoticeVersion { get; set; }
+    public DateTimeOffset? PrivacyNoticeAcceptedAt { get; set; }
+
     public Company? Company { get; set; }
     public Branch? Branch { get; set; }
 

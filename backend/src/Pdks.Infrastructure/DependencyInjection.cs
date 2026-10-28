@@ -33,6 +33,8 @@ public static class DependencyInjection
         services.AddScoped<AttendanceReports>();
         services.AddScoped<MonthlyTimesheetService>();
         services.AddScoped<Social.AnnouncementFeed>();
+        services.Configure<Auth.LoginSessionOptions>(configuration.GetSection(Auth.LoginSessionOptions.SectionName));
+        services.AddScoped<Auth.RefreshTokenService>();
 
         return services;
     }

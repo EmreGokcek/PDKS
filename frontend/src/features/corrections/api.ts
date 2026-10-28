@@ -9,6 +9,9 @@ export interface EventDetail {
   source: 'QrScan' | 'Manual'
   note: string | null
   recordedBy: string | null
+  /** Şubenin saat dilimindeki tarih ve saat (tarayıcının saat diliminden bağımsız). */
+  localDate: string
+  localTime: string
 }
 
 const key = (userId: string, date: string) => ['corrections', userId, date] as const

@@ -49,6 +49,7 @@ internal class UserConfiguration : IEntityTypeConfiguration<User>
         b.Property(x => x.EmergencyContactPhone).HasMaxLength(30);
         b.Property(x => x.EmergencyContactRelation).HasMaxLength(50);
         b.Property(x => x.ShareBirthday).HasDefaultValue(true);
+        b.Property(x => x.PrivacyNoticeVersion).HasMaxLength(20);
 
         b.HasIndex(x => x.Email).IsUnique();
         b.HasIndex(x => new { x.CompanyId, x.Role });
@@ -201,5 +202,18 @@ internal class CongratulationConfiguration : IEntityTypeConfiguration<Congratula
         b.HasIndex(x => new { x.ToUserId, x.Date });
         b.HasOne<User>().WithMany().HasForeignKey(x => x.FromUserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne<User>().WithMany().HasForeignKey(x => x.ToUserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
+{
+    public void Configure(EntityTypeBuilder<RefreshToken> b)
+    {
+        b.Property(x => x.TokenHash).HasMaxLength(64).IsRequired();
+        b.Property(x => x.RevokedReason).HasMaxLength(30);
+        b.HasIndex(x => x.TokenHash).IsUnique();
+        b.HasIndex(x => new { x.UserId, x.RevokedAt });
+        b.HasIndex(x => x.FamilyId);
+        b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

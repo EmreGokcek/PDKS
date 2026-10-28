@@ -25,7 +25,8 @@ public class UsersController(
     PdksDbContext db,
     IPasswordHasher<User> hasher,
     ICurrentUser currentUser,
-    AuditLogger audit) : ControllerBase
+    AuditLogger audit,
+    RefreshTokenService refreshTokens) : ControllerBase
 {
     private static readonly UserRole[] ManageableRoles = [UserRole.Admin, UserRole.Manager, UserRole.Employee];
 
@@ -143,6 +144,10 @@ public class UsersController(
         var tempPassword = PasswordPolicy.GenerateTemporary();
         user.PasswordHash = hasher.HashPassword(user, tempPassword);
         user.MustChangePassword = true;
+        user.LockoutUntil = null;
+        user.FailedLoginCount = 0;
+        // Eski şifreyle açılmış oturumlar kapanır.
+        await refreshTokens.RevokeAllForUserAsync(user.Id, "password_reset", ct);
 
         audit.Log("user.password_reset", nameof(User), user.Id);
         await db.SaveChangesAsync(ct);
@@ -170,6 +175,7 @@ public class UsersController(
         if (user.IsActive != active)
         {
             user.IsActive = active;
+            if (!active) await refreshTokens.RevokeAllForUserAsync(user.Id, "deactivated", ct);
             audit.Log(active ? "user.activated" : "user.deactivated", nameof(User), user.Id);
             await db.SaveChangesAsync(ct);
         }

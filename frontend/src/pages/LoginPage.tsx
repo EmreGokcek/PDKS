@@ -1,9 +1,9 @@
 import { motion } from 'motion/react'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../auth/AuthContext'
-import { roleHome } from '../auth/types'
+import { roleHome, type User } from '../auth/types'
 import { DayProgress, Greeting, LiveClock } from '../components/LiveClock'
 import { QuoteRotator } from '../components/QuoteRotator'
 import { LanguageMenu, ThemeSwitch } from '../components/PreferencesControls'
@@ -20,6 +20,13 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
+/** Girişten sonra gidilecek yer: önce şifre belirleme, sonra aydınlatma metni, sonra istenen sayfa. */
+function afterLogin(user: User, from?: string) {
+  if (user.mustChangePassword) return '/sifre-degistir'
+  if (!user.privacyNoticeAccepted) return '/aydinlatma'
+  return from ?? roleHome[user.role]
+}
+
 const ease = [0.22, 1, 0.36, 1] as const
 
 export function LoginPage() {
@@ -29,20 +36,21 @@ export function LoginPage() {
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [shake, setShake] = useState(0)
 
-  if (user) return <Navigate to={user.mustChangePassword ? '/sifre-degistir' : roleHome[user.role]} replace />
+  if (user) return <Navigate to={afterLogin(user)} replace />
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
     try {
-      const loggedIn = await login(email, password)
+      const loggedIn = await login(email, password, rememberMe)
       const from = (location.state as { from?: string } | null)?.from
-      navigate(loggedIn.mustChangePassword ? '/sifre-degistir' : (from ?? roleHome[loggedIn.role]), { replace: true })
+      navigate(afterLogin(loggedIn, from), { replace: true })
     } catch (err) {
       setError(errorMessage(err, t))
       setShake((s) => s + 1)
@@ -139,6 +147,19 @@ export function LoginPage() {
               )}
             </Field>
 
+            <label className="flex cursor-pointer items-start gap-2.5 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-4 shrink-0 accent-[var(--color-signal)]"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <span>
+                {t('login.rememberMe')}
+                <span className="block text-ink-soft">{t('login.rememberMeHint')}</span>
+              </span>
+            </label>
+
             {error && (
               <motion.p
                 role="alert"
@@ -154,6 +175,12 @@ export function LoginPage() {
               {submitting ? t('login.submitting') : t('login.submit')}
             </Button>
           </motion.form>
+
+          <p className="mt-6 text-xs text-ink-soft">
+            <Link to="/kvkk" className="underline underline-offset-4 hover:text-ink">
+              {t('privacy.link')}
+            </Link>
+          </p>
 
           {import.meta.env.DEV && (
             <div className="mt-10 border-t border-line pt-6">

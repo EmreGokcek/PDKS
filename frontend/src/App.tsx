@@ -24,6 +24,8 @@ const MyRequestsPage = named(() => import('./features/requests/MyRequestsPage'),
 const RequestsPage = named(() => import('./features/requests/RequestsPage'), 'RequestsPage')
 const ProfilePage = named(() => import('./features/profile/ProfilePage'), 'ProfilePage')
 const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 'TimesheetPage')
+const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
+const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/giris" element={<LoginPage />} />
         <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
+        <Route path="/kvkk" element={<PrivacyNoticePage />} />
+        <Route path="/aydinlatma" element={<RequireRole><PrivacyConsentPage /></RequireRole>} />
 
         <Route path="/admin" element={<RequireRole roles={['Admin']}><AppShell /></RequireRole>}>
           <Route index element={<Navigate to="pano" replace />} />

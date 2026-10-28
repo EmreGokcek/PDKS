@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: pdks
       POSTGRES_USER: pdks
-      POSTGRES_PASSWORD: pdks_dev_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pdks_dev_password}
       TZ: UTC
     ports:
       - "5432:5432"

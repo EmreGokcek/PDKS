@@ -4,7 +4,9 @@ namespace Pdks.Api.Contracts;
 
 public record LoginRequest(
     [Required, EmailAddress] string Email,
-    [Required] string Password);
+    [Required] string Password,
+    /// <summary>Tarayıcı kapansa da oturum açık kalsın (30 gün, her kullanımda uzar).</summary>
+    bool RememberMe = false);
 
 public record ChangePasswordRequest(
     [Required] string CurrentPassword,
@@ -21,6 +23,10 @@ public record UserDto(
     string CompanyName,
     Guid? BranchId,
     string? BranchName,
-    bool MustChangePassword);
+    bool MustChangePassword,
+    /// <summary>Güncel KVKK aydınlatma metni onaylandı mı (kiosk için her zaman true).</summary>
+    bool PrivacyNoticeAccepted);
 
 public record LoginResponse(string AccessToken, DateTimeOffset ExpiresAt, UserDto User);
+
+public record AcceptPrivacyNoticeRequest([Required, MaxLength(20)] string Version);

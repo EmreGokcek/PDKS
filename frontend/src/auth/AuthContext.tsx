@@ -1,70 +1,71 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { api, json, setUnauthorizedHandler, tokenStorage } from '../lib/api'
+import { api, endSession, json, refreshSession, session } from '../lib/api'
 import type { LoginResponse, User } from './types'
 
 interface AuthState {
   user: User | null
   isLoading: boolean
-  login: (email: string, password: string) => Promise<User>
+  login: (email: string, password: string, rememberMe: boolean) => Promise<User>
   /** Şifre değiştirme gibi yeni token dönen işlemlerden sonra oturumu günceller. */
   applyLogin: (response: LoginResponse) => void
-  logout: () => void
+  /** Sunucudan dönen güncel kullanıcı bilgisini uygular (ör. KVKK onayı sonrası). */
+  updateUser: (user: User) => void
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthState | null>(null)
 
+/** Eski sürümlerde erişim anahtarı tarayıcı deposunda tutuluyordu; artık tutulmuyor. */
+function removeLegacyToken() {
+  try {
+    localStorage.removeItem('pdks.token')
+  } catch {
+    // depolama kapalıysa yapılacak bir şey yok
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
-  const [token, setToken] = useState(() => tokenStorage.get())
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setLoading] = useState(true)
 
-  // Kayıtlı token varsa sayfa yenilendiğinde kullanıcıyı sunucudan doğrula.
-  const me = useQuery({
-    queryKey: ['me', token],
-    queryFn: () => api<User>('/auth/me'),
-    enabled: !!token,
-    retry: false,
-    staleTime: Infinity,
-  })
-
-  const logout = useCallback(() => {
-    tokenStorage.clear()
-    setToken(null)
-    queryClient.clear()
-  }, [queryClient])
-
-  useEffect(() => {
-    setUnauthorizedHandler(logout)
-    return () => setUnauthorizedHandler(null)
-  }, [logout])
-
-  const applyLogin = useCallback(
-    (res: LoginResponse) => {
-      tokenStorage.set(res.accessToken)
-      queryClient.setQueryData(['me', res.accessToken], res.user)
-      setToken(res.accessToken)
-    },
+  // Oturum her değiştiğinde (giriş, sessiz yenileme, süre dolması) kullanıcıyı güncelle.
+  useEffect(
+    () =>
+      session.subscribe((res) => {
+        setUser(res?.user ?? null)
+        if (!res) queryClient.clear()
+      }),
     [queryClient],
   )
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const res = await api<LoginResponse>('/auth/login', { method: 'POST', ...json({ email, password }) })
-      applyLogin(res)
-      return res.user
-    },
-    [applyLogin],
-  )
+  // Sayfa açılınca çerezdeki oturumla devam etmeyi dene.
+  useEffect(() => {
+    removeLegacyToken()
+    let cancelled = false
+    void refreshSession().finally(() => !cancelled && setLoading(false))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const applyLogin = useCallback((res: LoginResponse) => session.apply(res), [])
+
+  const login = useCallback(async (email: string, password: string, rememberMe: boolean) => {
+    const res = await api<LoginResponse>('/auth/login', { method: 'POST', ...json({ email, password, rememberMe }) })
+    session.apply(res)
+    return res.user
+  }, [])
+
+  const logout = useCallback(async () => {
+    await endSession()
+    queryClient.clear()
+  }, [queryClient])
 
   const value = useMemo<AuthState>(
-    () => ({
-      user: token ? (me.data ?? null) : null,
-      isLoading: !!token && me.isPending,
-      login,
-      applyLogin,
-      logout,
-    }),
-    [token, me.data, me.isPending, login, applyLogin, logout],
+    () => ({ user, isLoading, login, applyLogin, updateUser: setUser, logout }),
+    [user, isLoading, login, applyLogin, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

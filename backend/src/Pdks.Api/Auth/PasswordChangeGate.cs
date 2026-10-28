@@ -8,7 +8,7 @@ namespace Pdks.Api.Auth;
 /// </summary>
 public class PasswordChangeGate(RequestDelegate next)
 {
-    private static readonly string[] AllowedPaths = ["/api/auth/me", "/api/auth/change-password"];
+    private static readonly string[] AllowedPaths = ["/api/auth/me", "/api/auth/change-password", "/api/auth/refresh", "/api/auth/logout"];
 
     public async Task InvokeAsync(HttpContext context)
     {

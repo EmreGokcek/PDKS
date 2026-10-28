@@ -68,6 +68,10 @@ internal class WorkRuleConfiguration : IEntityTypeConfiguration<WorkRule>
     {
         b.HasIndex(x => x.CompanyId).IsUnique();
         b.Property(x => x.WeekStartsOn).HasConversion<string>().HasMaxLength(20);
+        // Mevcut firmalar uyarılar açık başlasın. Sentinel: varsayılan değer, "değer verilmedi" sayılmasın diye
+        // CLR varsayılanı yerine sütun varsayılanıyla aynı tutulur (0 / false da kaydedilebilsin).
+        b.Property(x => x.NotArrivedAlertMinutes).HasDefaultValue(15).HasSentinel(15);
+        b.Property(x => x.BreakOverrunAlert).HasDefaultValue(true).HasSentinel(true);
     }
 }
 
@@ -255,5 +259,15 @@ internal class ShiftSwapConfiguration : IEntityTypeConfiguration<ShiftSwap>
         b.HasIndex(x => x.TargetUserId);
         b.HasOne(x => x.Requester).WithMany().HasForeignKey(x => x.RequesterId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.TargetUser).WithMany().HasForeignKey(x => x.TargetUserId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+internal class AttendanceAlertConfiguration : IEntityTypeConfiguration<AttendanceAlert>
+{
+    public void Configure(EntityTypeBuilder<AttendanceAlert> b)
+    {
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(20);
+        b.HasIndex(x => new { x.UserId, x.Date, x.Kind }).IsUnique();
+        b.HasOne<User>().WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

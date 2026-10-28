@@ -6,9 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Pdks.Api.Auth;
+using Pdks.Api.Live;
 using Pdks.Domain.Security;
 using Pdks.Infrastructure;
 using Pdks.Infrastructure.Auth;
+using Pdks.Infrastructure.Live;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Persistence.Seed;
 using Scalar.AspNetCore;
@@ -68,6 +70,17 @@ builder.Services
             NameClaimType = PdksClaims.Name,
             RoleClaimType = PdksClaims.Role
         };
+        // Tarayıcı WebSocket bağlantısında başlık gönderemez; canlı bağlantıda anahtar sorgu dizesinden okunur.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var token = context.Request.Query["access_token"];
+                if (!string.IsNullOrEmpty(token) && context.HttpContext.Request.Path.StartsWithSegments(LiveHub.Path))
+                    context.Token = token;
+                return Task.CompletedTask;
+            }
+        };
     });
 // Her yetki bir politika: [Authorize(Policy = Perm.X)] o yetkiye sahip rolleri kabul eder (Pdks.Domain/Security/Permissions.cs).
 builder.Services.AddAuthorization(options =>
@@ -80,6 +93,13 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
+
+// ---- Canlı pano ve anlık uyarılar ----
+builder.Services.AddSignalR()
+    .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddSingleton<ILiveUpdates, HubLiveUpdates>();
+if (builder.Configuration.GetValue("Alerts:Enabled", true))
+    builder.Services.AddHostedService<AttendanceAlertWorker>();
 builder.Services.AddOpenApi();
 
 const string WebCors = "web";
@@ -117,6 +137,7 @@ app.UseAuthentication();
 app.UseMiddleware<PasswordChangeGate>();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<LiveHub>(LiveHub.Path);
 
 app.Run();
 

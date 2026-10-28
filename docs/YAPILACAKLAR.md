@@ -77,6 +77,9 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Tamamlananlar
 
+- [x] Canlı pano (SignalR): okutmalar panoya anında düşer, bildirim zili anında güncellenir
+- [x] Anlık uyarılar: vardiyasına gelmeyen ve molasını aşan personel için müdüre bildirim (Çalışma kuralları'ndan ayarlanır)
+
 - [x] Benim ayım: personelin kendi aylık puantajı ve özetleri
 
 - [x] Vardiya takası (aynı gün; arkadaş kabulü + müdür onayı, çakışma ve plan değişikliği kontrolü)

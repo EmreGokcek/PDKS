@@ -13,6 +13,8 @@ export type NotificationType =
   | 'SwapRequested'
   | 'SwapUpdated'
   | 'SwapNeedsApproval'
+  | 'EmployeeNotArrived'
+  | 'BreakOverrun'
 
 export interface AppNotification {
   id: string

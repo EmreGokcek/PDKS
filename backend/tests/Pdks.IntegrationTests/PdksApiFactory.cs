@@ -40,6 +40,8 @@ public sealed class PdksApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         Environment.SetEnvironmentVariable("RateLimits__LoginPerMinute", "10000");
         Environment.SetEnvironmentVariable("RateLimits__RefreshPerMinute", "10000");
         Environment.SetEnvironmentVariable("Seed__Enabled", "true");
+        // Anlık uyarı taraması testlerde elle çalıştırılır (zaman ileri sarılınca kendiliğinden çalışmasın).
+        Environment.SetEnvironmentVariable("Alerts__Enabled", "false");
         Environment.SetEnvironmentVariable("Seed__DefaultPassword", DemoPassword);
         _ = Server; // uygulamayı başlat (migration + seed)
     }

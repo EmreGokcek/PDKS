@@ -33,6 +33,8 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
         rule.DailyBreakMinutes = request.DailyBreakMinutes;
         rule.LateToleranceMinutes = request.LateToleranceMinutes;
         rule.WeekStartsOn = request.WeekStartsOn;
+        rule.NotArrivedAlertMinutes = request.NotArrivedAlertMinutes;
+        rule.BreakOverrunAlert = request.BreakOverrunAlert;
 
         audit.Log("work_rule.updated", nameof(WorkRule), rule.Id, before, ToDto(rule));
         await db.SaveChangesAsync(ct);
@@ -52,5 +54,5 @@ public class WorkRulesController(PdksDbContext db, AuditLogger audit) : Controll
     }
 
     private static WorkRuleDto ToDto(WorkRule r) =>
-        new(r.WeeklyWorkMinutes, r.DailyBreakMinutes, r.LateToleranceMinutes, r.WeekStartsOn);
+        new(r.WeeklyWorkMinutes, r.DailyBreakMinutes, r.LateToleranceMinutes, r.WeekStartsOn, r.NotArrivedAlertMinutes, r.BreakOverrunAlert);
 }

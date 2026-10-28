@@ -2,7 +2,7 @@ import { useAuth } from '../../auth/AuthContext'
 import { can } from '../../auth/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'motion/react'
-import { CalendarDays, Coffee, Lock, TimerReset, Watch } from 'lucide-react'
+import { BellRing, CalendarDays, Coffee, Lock, TimerReset, Watch } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -20,12 +20,15 @@ interface WorkRules {
   dailyBreakMinutes: number
   lateToleranceMinutes: number
   weekStartsOn: WeekDay
+  notArrivedAlertMinutes: number
+  breakOverrunAlert: boolean
 }
 
 const LIMITS = {
   weekly: { min: 60, max: 70 * 60 },
   break: { min: 0, max: 240 },
   tolerance: { min: 0, max: 120 },
+  alert: { min: 0, max: 240 },
 }
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, Number.isFinite(v) ? v : min))
@@ -146,6 +149,28 @@ export function WorkRulesPage() {
             options={(['Monday', 'Sunday', 'Saturday'] as WeekDay[]).map((d) => ({ value: d, label: t(`days.${d}`) }))}
           />
         </RuleCard>
+
+        <RuleCard icon={<BellRing className="size-5" />} title={t('rules.alerts')} hint={t('rules.alertsHint')}>
+          <Toggle
+            label={t('rules.notArrivedAlert')}
+            checked={draft.notArrivedAlertMinutes > 0}
+            onChange={(on) => set({ notArrivedAlertMinutes: on ? 15 : 0 })}
+          />
+          {draft.notArrivedAlertMinutes > 0 && (
+            <>
+              <NumberBox
+                label={t('rules.notArrivedAfter')}
+                value={draft.notArrivedAlertMinutes}
+                min={1}
+                max={LIMITS.alert.max}
+                step={5}
+                onChange={(v) => set({ notArrivedAlertMinutes: clamp(v, 1, LIMITS.alert.max) })}
+              />
+              <Presets values={[10, 15, 30, 60]} format={formatMinutes} current={draft.notArrivedAlertMinutes} onPick={(v) => set({ notArrivedAlertMinutes: v })} />
+            </>
+          )}
+          <Toggle label={t('rules.breakOverrunAlert')} checked={draft.breakOverrunAlert} onChange={(on) => set({ breakOverrunAlert: on })} />
+        </RuleCard>
       </fieldset>
 
       {/* Kaydedilmemiş değişiklik olduğunda alttan kayan kaydetme çubuğu */}
@@ -190,6 +215,22 @@ function RuleCard({ icon, title, hint, children }: { icon: ReactNode; title: str
       <p className="mt-3 text-sm text-ink-soft">{hint}</p>
       <div className="mt-5 space-y-4">{children}</div>
     </section>
+  )
+}
+
+/** Aç / kapa anahtarı. */
+function Toggle({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4">
+      <span className="text-sm font-medium">{label}</span>
+      <input type="checkbox" role="switch" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+      <span
+        aria-hidden="true"
+        className={`relative h-6 w-11 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-signal peer-focus-visible:ring-offset-2 ${checked ? 'bg-signal' : 'bg-line'}`}
+      >
+        <span className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+      </span>
+    </label>
   )
 }
 

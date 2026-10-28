@@ -21,5 +21,9 @@ public enum NotificationType
     /// <summary>Takas ilerledi: kabul edildi / reddedildi / onaylandı (Data.status).</summary>
     SwapUpdated = 10,
     /// <summary>Müdüre: onay bekleyen takas.</summary>
-    SwapNeedsApproval = 11
+    SwapNeedsApproval = 11,
+    /// <summary>Müdüre: vardiyası başlayan personel hâlâ gelmedi.</summary>
+    EmployeeNotArrived = 12,
+    /// <summary>Müdüre: personel mola süresini aştı.</summary>
+    BreakOverrun = 13
 }

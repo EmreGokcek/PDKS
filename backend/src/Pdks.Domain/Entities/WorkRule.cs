@@ -18,4 +18,10 @@ public class WorkRule : TenantEntity
     public int LateToleranceMinutes { get; set; } = 5;
 
     public DayOfWeek WeekStartsOn { get; set; } = DayOfWeek.Monday;
+
+    /// <summary>Vardiya başlangıcından bu kadar dakika sonra hâlâ giriş yoksa müdüre uyarı gider. 0 = kapalı.</summary>
+    public int NotArrivedAlertMinutes { get; set; } = 15;
+
+    /// <summary>Molada süre aşılınca müdüre uyarı gitsin mi?</summary>
+    public bool BreakOverrunAlert { get; set; } = true;
 }

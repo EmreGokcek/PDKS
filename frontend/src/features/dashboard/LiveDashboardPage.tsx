@@ -1,7 +1,7 @@
 import { pathFor } from '../../auth/types'
 import { AnimatePresence, motion } from 'motion/react'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '../../components/AppShell'
 import { Avatar } from '../../components/ui/Avatar'
@@ -17,6 +17,7 @@ import { statusTone } from './status'
 import { PageSkeleton } from '../../components/ui/Skeleton'
 import { FeedPanel } from '../announcements/FeedPanel'
 import { useAuth } from '../../auth/AuthContext'
+import { onAttendanceChange, useLiveStatus } from '../../lib/live'
 
 type Tile = 'inside' | 'onBreak' | 'notArrived' | 'late' | 'onLeave' | 'done' | 'upcoming'
 
@@ -42,11 +43,61 @@ function priority(p: LivePerson, overrun: number) {
   return 7
 }
 
-/** Müdürün canlı panosu: bugün kim nerede. 30 sn'de bir yenilenir, sayaçlar saniye saniye akar. */
+/** Son birkaç saniyede kaydı değişen kişiler (kart kısa süre vurgulanır). */
+function useRecentChanges(ms = 4000) {
+  const [ids, setIds] = useState<ReadonlySet<string>>(new Set())
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = []
+    const off = onAttendanceChange((id) => {
+      setIds((cur) => new Set(cur).add(id))
+      timers.push(
+        setTimeout(() => {
+          setIds((cur) => {
+            const next = new Set(cur)
+            next.delete(id)
+            return next
+          })
+        }, ms),
+      )
+    })
+    return () => {
+      off()
+      timers.forEach(clearTimeout)
+    }
+  }, [ms])
+  return ids
+}
+
+/** Panonun sağ üstü: canlı bağlantı işareti ve son güncelleme saati. */
+function LiveBadge({ updatedAt, fetching, onRefresh }: { updatedAt: number; fetching: boolean; onRefresh: () => void }) {
+  const { t } = useTranslation()
+  const live = useLiveStatus() === 'live'
+  return (
+    <div className="flex items-center gap-1">
+      <span
+        className={`flex items-center gap-2 rounded-full px-3 py-1 text-sm font-medium ring-1 ${live ? 'bg-signal-soft text-signal ring-signal/20' : 'bg-panel-2 text-ink-soft ring-line'}`}
+        title={live ? t('dashboard.liveHint') : t('dashboard.offlineHint')}
+      >
+        <span className="relative flex size-2">
+          {live && <span className="absolute inline-flex size-full animate-ping rounded-full bg-signal opacity-60" />}
+          <span className={`relative inline-flex size-2 rounded-full ${live ? 'bg-signal' : 'bg-ink-soft/50'}`} />
+        </span>
+        {live ? t('dashboard.live') : t('dashboard.offline')}
+      </span>
+      <Button variant="ghost" size="sm" onClick={onRefresh} title={t('dashboard.refresh')}>
+        <RefreshCw className={`size-4 ${fetching ? 'animate-spin' : ''}`} />
+        <span className="tabular">{t('dashboard.updated', { time: formatTime(new Date(updatedAt)) })}</span>
+      </Button>
+    </div>
+  )
+}
+
+/** Müdürün canlı panosu: bugün kim nerede. Okutmalar anında düşer, sayaçlar saniye saniye akar. */
 export function LiveDashboardPage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const query = useLiveDashboard()
+  const changed = useRecentChanges()
   const now = useNow(1000)
   const [filter, setFilter] = useState<Tile | null>(null)
   const data = query.data
@@ -102,12 +153,7 @@ export function LiveDashboardPage() {
       <PageHeader
         title={t('dashboard.title')}
         subtitle={<span className="first-letter:uppercase">{formatDay(data.date, { weekday: 'long', day: 'numeric', month: 'long' })}</span>}
-        actions={
-          <Button variant="ghost" size="sm" onClick={() => query.refetch()} title={t('dashboard.refresh')}>
-            <RefreshCw className={`size-4 ${query.isFetching ? 'animate-spin' : ''}`} />
-            <span className="tabular">{t('dashboard.updated', { time: formatTime(new Date(query.dataUpdatedAt)) })}</span>
-          </Button>
-        }
+        actions={<LiveBadge updatedAt={query.dataUpdatedAt} fetching={query.isFetching} onRefresh={() => void query.refetch()} />}
       />
 
       {/* Üst bölüm: katılım halkası + dört ana sayaç; ikincil durumlar küçük süzgeç olarak */}
@@ -165,6 +211,7 @@ export function LiveDashboardPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 34 }}
+                className={`rounded-2xl transition-shadow duration-700 ${changed.has(p.userId) ? 'shadow-[0_0_0_3px_var(--color-signal)]' : ''}`}
               >
                 <PersonCard person={p} worked={worked} breakRemaining={breakRemaining} breakOverrun={breakOverrun} />
               </motion.li>

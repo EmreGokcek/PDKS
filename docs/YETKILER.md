@@ -45,3 +45,6 @@ Herkes (kiosk hariç): kendi profili, bildirimler, duyuruları okuma ve kutlama.
 - Kimse kendi rolünü değiştiremez, kendi hesabını pasife alamaz.
 - Müdür başka şubenin verisini hiçbir uç noktada göremez (veri sorgu düzeyinde süzülür).
 - Firmalar birbirinin verisini göremez (veritabanı düzeyinde firma filtresi).
+- Canlı pano bağlantısı yetkiyle aynı kapsamı izler: müdür yalnızca kendi şubesindeki değişiklikleri, yönetici ve İK tüm firmayı duyar.
+  Bağlantı veri taşımaz, yalnızca "değişti" der; veri yine yetki kontrolü yapan uç noktadan çekilir.
+- Anlık uyarılar (gelmedi, mola aşımı) şube müdürüne gider; şubede müdür yoksa yöneticilere ve İK'ya. Kişinin kendisine gitmez.

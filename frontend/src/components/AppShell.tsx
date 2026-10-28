@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { CalendarCheck, CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
+import { useLiveConnection } from '../lib/live'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -240,6 +241,7 @@ export function AppShell() {
   const { user } = useAuth()
   const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  useLiveConnection(user?.id)
 
   if (!user) return null
 

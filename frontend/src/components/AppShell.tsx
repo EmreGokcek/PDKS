@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Megaphone, ScrollText, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -41,6 +41,7 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/admin/puantaj', section: 'reports', tab: true, label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
         { to: '/admin/personel', section: 'management', label: t('nav.staff'), icon: <Users className={icon} /> },
         { to: '/admin/kurallar', section: 'management', label: t('nav.rules'), icon: <SlidersHorizontal className={icon} /> },
+        { to: '/admin/denetim', section: 'management', label: t('nav.audit'), icon: <ScrollText className={icon} /> },
       ]
     case 'Manager':
       return [

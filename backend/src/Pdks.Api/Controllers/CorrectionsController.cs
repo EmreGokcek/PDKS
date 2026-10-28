@@ -26,13 +26,15 @@ public class CorrectionsController(
     AttendanceService attendance,
     AuditLogger audit,
     Notifier notifier,
-    TimeProvider time) : ControllerBase
+    TimeProvider time,
+    AccessScope scope) : ControllerBase
 {
     /// <summary>Bir günün kayıtları (gece vardiyası çıkışları için ertesi gün öğlene kadar).</summary>
     [HttpGet("api/staff/{userId:guid}/attendance")]
     public async Task<ActionResult<List<EventDetailDto>>> Day(Guid userId, [FromQuery] DateOnly date, CancellationToken ct)
     {
-        var user = await StaffScope().FirstOrDefaultAsync(u => u.Id == userId, ct);
+        // Görme yetkisi yeterli; düzeltme ayrıca denetleme yetkisi ister.
+        var user = await scope.VisibleStaff().FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null) return this.NotFoundError("Personel bulunamadı.");
 
         var tz = await attendance.TimeZoneForAsync(user.BranchId, ct);
@@ -54,9 +56,10 @@ public class CorrectionsController(
     [HttpPost("api/staff/{userId:guid}/attendance")]
     public async Task<ActionResult<EventDetailDto>> Add(Guid userId, ManualEventRequest request, CancellationToken ct)
     {
-        var user = await StaffScope().FirstOrDefaultAsync(u => u.Id == userId, ct);
+        var user = await scope.VisibleStaff().FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user is null) return this.NotFoundError("Personel bulunamadı.");
         if (userId == currentUser.UserId) return OwnRecords();
+        if (!await CanEditAsync(userId, ct)) return NotYourStaff();
 
         var tz = await attendance.TimeZoneForAsync(user.BranchId, ct);
         var at = AttendanceService.ToUtc(request.Date, request.Time, tz);
@@ -91,6 +94,7 @@ public class CorrectionsController(
         var evt = await FindAsync(id, ct);
         if (evt is null) return this.NotFoundError();
         if (evt.UserId == currentUser.UserId) return OwnRecords();
+        if (!await CanEditAsync(evt.UserId, ct)) return NotYourStaff();
 
         var tz = await attendance.TimeZoneForAsync(evt.BranchId, ct);
         var at = AttendanceService.ToUtc(request.Date, request.Time, tz);
@@ -119,6 +123,7 @@ public class CorrectionsController(
         var evt = await FindAsync(id, ct);
         if (evt is null) return this.NotFoundError();
         if (evt.UserId == currentUser.UserId) return OwnRecords();
+        if (!await CanEditAsync(evt.UserId, ct)) return NotYourStaff();
 
         if (await attendance.ValidateChangeAsync(evt.UserId, evt.OccurredAt, evt.Id, null, ct) is { } error)
             return SequenceError(error);
@@ -145,9 +150,12 @@ public class CorrectionsController(
         return await db.AttendanceEvents.FirstOrDefaultAsync(e => e.Id == id && staffIds.Contains(e.UserId), ct);
     }
 
-    private IQueryable<User> StaffScope()
-    {
-        var query = db.Users.Where(u => u.Role == UserRole.Employee || u.Role == UserRole.Manager);
-        return currentUser.Role == UserRole.Manager ? query.Where(u => u.BranchId == currentUser.BranchId) : query;
-    }
+    /// <summary>Kayıtlarını görebildiği kişiler.</summary>
+    private IQueryable<User> StaffScope() => scope.VisibleStaff();
+
+    /// <summary>Düzeltebildiği kişiler (müdür: şubesindeki personel; yönetici: kendisi dışında herkes).</summary>
+    private Task<bool> CanEditAsync(Guid userId, CancellationToken ct) => scope.SupervisedStaff().AnyAsync(u => u.Id == userId, ct);
+
+    private ObjectResult NotYourStaff() =>
+        this.ApiError(403, "not_your_staff", "Bu kişinin kayıtlarını yalnızca yönetici düzeltebilir.");
 }

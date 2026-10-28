@@ -28,6 +28,7 @@ const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 
 const PrivacyNoticePage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyNoticePage')
 const PrivacyConsentPage = named(() => import('./features/privacy/PrivacyPages'), 'PrivacyConsentPage')
 const ProfileSetupPage = named(() => import('./features/profile/ProfileSetupPage'), 'ProfileSetupPage')
+const MyMonthPage = named(() => import('./features/month/MyMonthPage'), 'MyMonthPage')
 const LeavePage = named(() => import('./features/leave/LeavePage'), 'LeavePage')
 const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
@@ -73,6 +74,7 @@ export default function App() {
             <Route path="bugunum" element={<Gate perm="attendance.self"><TodayPage /></Gate>} />
             <Route path="vardiyalarim" element={<Gate perm="attendance.self"><MyShiftsPage /></Gate>} />
             <Route path="taleplerim" element={<Gate perm="attendance.self"><MyRequestsPage /></Gate>} />
+            <Route path="ayim" element={<Gate perm="attendance.self"><MyMonthPage /></Gate>} />
             <Route path="talepler" element={<Gate perm="requests.review"><RequestsPage /></Gate>} />
             <Route path="vardiyalar" element={<Gate perm="shifts.plan"><ShiftPlannerPage /></Gate>} />
             <Route path="izinler" element={<Gate perm="requests.review"><LeavePage /></Gate>} />

@@ -77,6 +77,8 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Tamamlananlar
 
+- [x] Benim ayım: personelin kendi aylık puantajı ve özetleri
+
 - [x] Vardiya takası (aynı gün; arkadaş kabulü + müdür onayı, çakışma ve plan değişikliği kontrolü)
 
 - [x] Resmi tatil takvimi (otomatik), yıllık izin bakiyesi (yasal hak, kıdem ve yaş), bakiye düzeltme, ekip izin takvimi, puantajda resmi tatil ve tatil mesaisi

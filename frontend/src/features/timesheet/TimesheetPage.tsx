@@ -8,18 +8,9 @@ import { Button, IconButton } from '../../components/ui/Button'
 import { locale } from '../../i18n'
 import { download, errorMessage } from '../../lib/api'
 import { formatDay, parseDate, todayIso } from '../../lib/dates'
+import { codeStyle } from './codes'
 import { useTimesheet, type Timesheet, type TimesheetCell, type TimesheetCode, type TimesheetTotals } from './api'
 import { PageSkeleton } from '../../components/ui/Skeleton'
-
-/** Gün kodlarının renkleri (Excel çıktısıyla aynı). */
-const codeStyle: Partial<Record<TimesheetCode, string>> = {
-  WeeklyOff: 'bg-[#eceff3] text-[#52687c] dark:bg-[#22364a] dark:text-[#a9bccd]',
-  AnnualLeave: 'bg-[#d9f4f7] text-[#0b7f8c] dark:bg-[#0e3940] dark:text-[#6fd3df]',
-  SickLeave: 'bg-[#fbe3e7] text-[#b0304a] dark:bg-[#43202a] dark:text-[#f19aab]',
-  ExcusedLeave: 'bg-[#fbf1dc] text-[#8a5e10] dark:bg-[#3d321a] dark:text-[#e7c27a]',
-  Absent: 'bg-overrun-soft text-overrun',
-  PublicHoliday: 'bg-[#ede7f6] text-[#5b3c99] dark:bg-[#2e2445] dark:text-[#c3b0f0]',
-}
 
 const legendCodes: Exclude<TimesheetCode, 'None'>[] = ['Work', 'WeeklyOff', 'AnnualLeave', 'SickLeave', 'ExcusedLeave', 'PublicHoliday', 'Absent', 'Off', 'Planned']
 

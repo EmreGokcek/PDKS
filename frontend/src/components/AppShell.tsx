@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { CalendarCheck, CalendarHeart, History, Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -41,6 +41,7 @@ function useNavItems(user: User): NavItem[] {
       { to: basePath[user.role], tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
       { to: at('vardiyalarim'), tab: true, label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
       { to: at('taleplerim'), tab: true, label: t('nav.myRequests'), icon: <Send className={icon} /> },
+      { to: at('ayim'), label: t('nav.myMonth'), icon: <CalendarCheck className={icon} /> },
       { to: at('duyurular'), tab: true, label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
       { to: at('profil'), tab: true, label: t('nav.profile'), icon: <UserRound className={icon} /> },
     ]
@@ -60,6 +61,7 @@ function useNavItems(user: User): NavItem[] {
     { show: has('attendance.self'), to: at('bugunum'), section: 'me', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} /> },
     { show: has('attendance.self'), to: at('vardiyalarim'), section: 'me', label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
     { show: has('attendance.self'), to: at('taleplerim'), section: 'me', label: t('nav.myRequests'), icon: <Send className={icon} /> },
+    { show: has('attendance.self'), to: at('ayim'), section: 'me', label: t('nav.myMonth'), icon: <CalendarCheck className={icon} /> },
   ]
   return items.filter((i) => i.show).map(({ show: _show, ...item }) => item)
 }
@@ -179,8 +181,10 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 function TabBar({ onMore }: { onMore: () => void }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const tabs = useNavItems(user!).filter((i) => i.tab).slice(0, 4)
   const showMore = can(user, 'dashboard.view')
+  const allTabs = useNavItems(user!).filter((i) => i.tab)
+  // Panosu olanlarda 4 sekme + "Diğer"; personelde menünün tamamı sekmede.
+  const tabs = showMore ? allTabs.slice(0, 4) : allTabs
 
   return (
     <nav

@@ -24,6 +24,7 @@ const MyRequestsPage = named(() => import('./features/requests/MyRequestsPage'),
 const RequestsPage = named(() => import('./features/requests/RequestsPage'), 'RequestsPage')
 const ProfilePage = named(() => import('./features/profile/ProfilePage'), 'ProfilePage')
 const TimesheetPage = named(() => import('./features/timesheet/TimesheetPage'), 'TimesheetPage')
+const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
 function HomeRedirect() {
   const { user, isLoading } = useAuth()
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="vardiyalar" element={<ShiftPlannerPage />} />
           <Route path="kurallar" element={<WorkRulesPage />} />
           <Route path="profil" element={<ProfilePage />} />
+          <Route path="duyurular" element={<AnnouncementsPage />} />
         </Route>
 
         <Route path="/mudur" element={<RequireRole roles={['Manager']}><AppShell /></RequireRole>}>
@@ -63,6 +65,7 @@ export default function App() {
           <Route path="ekip" element={<UsersPage readOnly />} />
           <Route path="kurallar" element={<WorkRulesPage readOnly />} />
           <Route path="profil" element={<ProfilePage />} />
+          <Route path="duyurular" element={<AnnouncementsPage />} />
         </Route>
 
         <Route path="/personel" element={<RequireRole roles={['Employee']}><AppShell /></RequireRole>}>
@@ -70,6 +73,7 @@ export default function App() {
           <Route path="vardiyalarim" element={<MyShiftsPage />} />
           <Route path="taleplerim" element={<MyRequestsPage />} />
           <Route path="profil" element={<ProfilePage />} />
+          <Route path="duyurular" element={<AnnouncementsPage />} />
         </Route>
 
         {/* Telefonun kendi kamerasıyla kiosk QR'ı okutulunca açılan sayfa */}

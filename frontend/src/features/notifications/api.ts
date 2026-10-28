@@ -8,6 +8,8 @@ export type NotificationType =
   | 'RequestApproved'
   | 'RequestRejected'
   | 'RecordCorrected'
+  | 'AnnouncementPublished'
+  | 'Congratulated'
 
 export interface AppNotification {
   id: string

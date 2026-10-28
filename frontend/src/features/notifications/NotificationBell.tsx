@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { Bell, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
+import { Bell, Megaphone, PartyPopper, CalendarCheck2, CalendarClock, CheckCircle2, Inbox, Wrench, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -16,6 +16,8 @@ const icons: Record<NotificationType, ReactNode> = {
   RequestApproved: <CheckCircle2 className="size-4" />,
   RequestRejected: <XCircle className="size-4" />,
   RecordCorrected: <Wrench className="size-4" />,
+  AnnouncementPublished: <Megaphone className="size-4" />,
+  Congratulated: <PartyPopper className="size-4" />,
 }
 
 const tones: Record<NotificationType, string> = {
@@ -25,6 +27,8 @@ const tones: Record<NotificationType, string> = {
   RequestApproved: 'bg-signal-soft text-signal',
   RequestRejected: 'bg-overrun-soft text-overrun',
   RecordCorrected: 'bg-panel-2 text-ink-soft ring-1 ring-line',
+  AnnouncementPublished: 'bg-signal-soft text-signal',
+  Congratulated: 'bg-pause-soft text-pause',
 }
 
 /** Bildirime tıklayınca gidilecek sayfa (rolüne göre). */
@@ -41,6 +45,9 @@ function targetOf(type: NotificationType, role: Role): string {
       return `${base}/taleplerim`
     case 'RecordCorrected':
       return role === 'Manager' ? '/mudur/bugunum' : base
+    case 'AnnouncementPublished':
+    case 'Congratulated':
+      return `${base}/duyurular`
   }
 }
 
@@ -185,6 +192,15 @@ function NotificationBody({ n }: { n: AppNotification }) {
       })
       break
     }
+    case 'AnnouncementPublished':
+      text = t('notifications.AnnouncementPublished.body', { author: String(d.author ?? ''), title: String(d.title ?? '') })
+      break
+    case 'Congratulated':
+      text =
+        d.kind === 'WorkAnniversary'
+          ? t('notifications.Congratulated.bodyAnniversary', { from: String(d.from ?? '') })
+          : t('notifications.Congratulated.bodyBirthday', { from: String(d.from ?? '') })
+      break
   }
   const note = typeof d.note === 'string' && d.note ? ` ${t('notifications.note', { note: d.note })}` : ''
   return (

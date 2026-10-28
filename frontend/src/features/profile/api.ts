@@ -19,6 +19,7 @@ export interface Profile {
   phone: string | null
   address: string | null
   birthDate: string | null
+  shareBirthday: boolean
   bloodType: string | null
   healthDataConsentAt: string | null
   emergencyContactName: string | null
@@ -30,6 +31,7 @@ export interface ProfileInput {
   phone: string | null
   address: string | null
   birthDate: string | null
+  shareBirthday: boolean
   bloodType: string | null
   healthDataConsent: boolean
   emergencyContactName: string | null

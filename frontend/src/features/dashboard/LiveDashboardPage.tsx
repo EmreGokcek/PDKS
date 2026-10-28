@@ -14,6 +14,8 @@ import { isLeave, leaveColors } from '../shifts/leave'
 import { useLiveDashboard, type LivePerson } from './api'
 import { statusTone } from './status'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { FeedPanel } from '../announcements/FeedPanel'
+import { useAuth } from '../../auth/AuthContext'
 
 type Tile = 'inside' | 'onBreak' | 'notArrived' | 'late' | 'onLeave' | 'done' | 'upcoming'
 
@@ -42,6 +44,7 @@ function priority(p: LivePerson, overrun: number) {
 /** Müdürün canlı panosu: bugün kim nerede. 30 sn'de bir yenilenir, sayaçlar saniye saniye akar. */
 export function LiveDashboardPage() {
   const { t } = useTranslation()
+  const { user } = useAuth()
   const query = useLiveDashboard()
   const now = useNow(1000)
   const [filter, setFilter] = useState<Tile | null>(null)
@@ -134,6 +137,10 @@ export function LiveDashboardPage() {
           )
         })}
         <span className="ml-auto text-xs text-ink-soft max-sm:hidden">{t('dashboard.filterHint')}</span>
+      </div>
+
+      <div className="mt-6">
+        <FeedPanel allHref={user?.role === 'Admin' ? '/admin/duyurular' : '/mudur/duyurular'} />
       </div>
 
       {active && (

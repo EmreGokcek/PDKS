@@ -21,7 +21,11 @@ export function ProfileSections({ profile: p, showLocks = false, single = false 
       </Section>
 
       <Section icon={<UserRound className="size-4" />} title={t('profile.sections.personal')}>
-        <Row label={t('profile.fields.birthDate')} value={date(p.birthDate)} />
+        <Row
+          label={t('profile.fields.birthDate')}
+          value={date(p.birthDate)}
+          hint={p.birthDate && !p.shareBirthday ? t('profile.birthdayHidden') : undefined}
+        />
         <Row
           label={t('profile.fields.bloodType')}
           value={

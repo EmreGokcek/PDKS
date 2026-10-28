@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'motion/react'
-import { BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
+import { Megaphone, BarChart3, CalendarDays, FileSpreadsheet, UserRound, CalendarRange, Clock3, Inbox, LayoutDashboard, LogOut, Menu as MenuIcon, Send, SlidersHorizontal, Users, X } from 'lucide-react'
 import { NotificationBell } from '../features/notifications/NotificationBell'
 import { usePendingCount } from '../features/requests/api'
 import { Suspense, useState, type ReactNode } from 'react'
@@ -35,6 +35,7 @@ function useNavItems(role: Role): NavItem[] {
       return [
         { to: '/admin/pano', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} /> },
         { to: '/admin/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+        { to: '/admin/duyurular', section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
         { to: '/admin/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/admin/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
         { to: '/admin/puantaj', section: 'reports', tab: true, label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
@@ -45,6 +46,7 @@ function useNavItems(role: Role): NavItem[] {
       return [
         { to: '/mudur', section: 'today', tab: true, label: t('nav.dashboard'), icon: <LayoutDashboard className={icon} />, end: true },
         { to: '/mudur/talepler', section: 'today', tab: true, label: t('nav.requests'), icon: <Inbox className={icon} />, badge: pending },
+        { to: '/mudur/duyurular', section: 'today', label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
         { to: '/mudur/vardiyalar', section: 'planning', tab: true, label: t('nav.shiftPlanner'), icon: <CalendarRange className={icon} /> },
         { to: '/mudur/sureler', section: 'reports', label: t('nav.teamHours'), icon: <BarChart3 className={icon} /> },
         { to: '/mudur/puantaj', section: 'reports', label: t('nav.timesheet'), icon: <FileSpreadsheet className={icon} /> },
@@ -59,6 +61,7 @@ function useNavItems(role: Role): NavItem[] {
         { to: '/personel', tab: true, label: t('nav.myDay'), icon: <Clock3 className={icon} />, end: true },
         { to: '/personel/vardiyalarim', tab: true, label: t('nav.myShifts'), icon: <CalendarDays className={icon} /> },
         { to: '/personel/taleplerim', tab: true, label: t('nav.myRequests'), icon: <Send className={icon} /> },
+        { to: '/personel/duyurular', tab: true, label: t('nav.announcements'), icon: <Megaphone className={icon} /> },
         { to: '/personel/profil', tab: true, label: t('nav.profile'), icon: <UserRound className={icon} /> },
       ]
   }

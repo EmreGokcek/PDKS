@@ -102,5 +102,6 @@ Acil olmayan eksikler ve fikirler: [docs/YAPILACAKLAR.md](docs/YAPILACAKLAR.md)
 - [x] Adım 6 — Kayıt düzeltme (gerekçeli, denetim kayıtlı), düzeltme ve izin talepleri, onay akışı
 - [x] Adım 7 — Profilim (iletişim, kişisel, acil durum, iş bilgileri; KVKK açık rızası), uygulama içi bildirimler
 - [x] Adım 8 — Aylık puantaj cetveli, Excel (Puantaj + Detay) ve A4 yatay PDF / baskı
+- [x] Ek — Duyurular, doğum günü ve iş yıl dönümü kutlamaları
 - [ ] Adım 9 — PWA (telefona uygulama gibi kurulum), anlık bildirimler, konum doğrulaması
 - [ ] Adım 10 — Sunucuya yükleme

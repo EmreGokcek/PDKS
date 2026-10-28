@@ -95,6 +95,7 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
     phone: p.phone ?? '',
     address: p.address ?? '',
     birthDate: p.birthDate ?? '',
+    shareBirthday: p.shareBirthday,
     bloodType: p.bloodType ?? '',
     healthDataConsent: !!p.healthDataConsentAt,
     emergencyContactName: p.emergencyContactName ?? '',
@@ -112,6 +113,7 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
         phone: n(v.phone),
         address: n(v.address),
         birthDate: n(v.birthDate),
+        shareBirthday: v.shareBirthday,
         bloodType: n(v.bloodType),
         healthDataConsent: v.healthDataConsent,
         emergencyContactName: n(v.emergencyContactName),
@@ -163,6 +165,20 @@ function EditForm({ profile: p, onDone }: { profile: Profile; onDone: () => void
             )}
           </Field>
         </div>
+        {!!v.birthDate && (
+          <label className="flex items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              className="mt-0.5 size-4 shrink-0 accent-[var(--color-signal)]"
+              checked={v.shareBirthday}
+              onChange={(e) => set('shareBirthday', e.target.checked)}
+            />
+            <span>
+              {t('profile.shareBirthday')}
+              <span className="block text-ink-soft">{t('profile.shareBirthdayHint')}</span>
+            </span>
+          </label>
+        )}
         {needsConsent && (
           <motion.label
             initial={{ opacity: 0, height: 0 }}

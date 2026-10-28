@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthContext'
 import { Greeting, LiveClock } from '../../components/LiveClock'
-import { QuoteRotator } from '../../components/QuoteRotator'
+import { KioskFeed } from './KioskFeed'
 import { LanguageMenu } from '../../components/PreferencesControls'
 import { Spinner } from '../../components/ui/Spinner'
 import { useNow } from '../../hooks/useNow'
@@ -174,7 +174,7 @@ export function KioskPage() {
       </main>
 
       <div className="mx-auto w-full max-w-2xl px-6 pb-6">
-        <QuoteRotator align="center" intervalMs={12000} />
+        <KioskFeed />
       </div>
 
       <footer className="px-6 pb-5 text-center">

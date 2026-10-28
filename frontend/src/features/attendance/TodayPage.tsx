@@ -16,6 +16,7 @@ import { QrScannerSheet } from './QrScannerSheet'
 import { SuccessOverlay } from './SuccessOverlay'
 import { useLiveStatus } from './useLiveStatus'
 import { PageSkeleton } from '../../components/ui/Skeleton'
+import { FeedPanel } from '../announcements/FeedPanel'
 
 export const actionIcons: Record<AttendanceAction, ReactNode> = {
   CheckIn: <LogIn className="size-5" />,
@@ -174,6 +175,10 @@ export function TodayPage() {
           </div>
         </div>
       </section>
+
+      <div className="mt-4">
+        <FeedPanel allHref={user?.role === 'Manager' ? '/mudur/duyurular' : '/personel/duyurular'} />
+      </div>
 
       {/* Özet kartları */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">

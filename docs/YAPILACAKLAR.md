@@ -7,7 +7,6 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 - [ ] Hesap kilidi mesajı hesabın var olduğunu belli ediyor (kilitli hesaplar için); gerekirse genel bir mesaja çevrilebilir.
 - [ ] Açık oturumlar listesi: kişinin hangi cihazlarda oturumu açık, uzaktan kapatabilme.
-- [ ] Şifremi unuttum (e-posta ile sıfırlama bağlantısı).
 - [ ] Cihaz eşleme: Personel hesabı tek telefona bağlanmalı, yeni cihaz yönetici onayıyla eklenmeli.
 - [ ] Konum doğrulama: QR okutma anında işyeri çevresinde olup olmadığının kontrolü (KVKK açık rızasıyla).
 
@@ -18,8 +17,6 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Pano ve raporlar
 
-- [ ] Canlı pano 30 sn'de bir yenileniyor; anlık güncelleme için SignalR (okutma olduğu an panoya düşsün).
-- [ ] 00:00'da başlayan vardiyada bir önceki gün 23:55'te okutulan giriş önceki güne yazılıyor; vardiyaya yakınlığa göre eşleştirme yapılmalı.
 - [ ] Raporlarda pasif personelin geçmiş kayıtları: şu an yalnızca okutma kaydı olan pasif kişiler listeleniyor.
 
 ## Puantaj
@@ -33,7 +30,6 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 
 ## Talepler ve düzeltmeler
 
-- [ ] Talep onaylanınca / reddedilince personele bildirim (Adım 8: bildirimler).
 - [ ] Onaylanan izin yayınlanmış bir haftaya düşerse plana yazılıyor; müdüre "plan değişti" bilgisi gösterilebilir.
 
 ## Vardiya planı
@@ -76,6 +72,9 @@ Yeni bir şey çıktığında buraya eklenir; yapılınca işaretlenip hangi PR'
 - [ ] Sunucu hata mesajlarının (title) da çok dilli olması; şu an arayüz "code" alanını çeviriyor, başlık Türkçe yedek.
 
 ## Tamamlananlar
+
+- [x] Şifremi unuttum: e-postaya 30 dakika geçerli, tek kullanımlık bağlantı (SMTP ayarı: `Email__*`)
+- [x] Gece yarısı vardiyası: vardiyadan en fazla 3 saat önce okutulan giriş vardiyanın gününe yazılır
 
 - [x] Firma kendi kendine kayıt (firma + ilk şube + yönetici; hazır kurallar ve vardiya şablonları)
 - [x] Firma ayarları: firma adı, şubeler (saat dilimi, açma/kapama), giriş kioskları (oluşturma, şifre yenileme, kapatma)

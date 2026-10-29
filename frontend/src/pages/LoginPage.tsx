@@ -137,7 +137,14 @@ export function LoginPage() {
                 <Input {...p} type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
               )}
             </Field>
-            <Field label={t('login.password')}>
+            <Field
+              label={t('login.password')}
+              hint={
+                <Link to="/sifremi-unuttum" className="text-signal underline-offset-4 hover:underline">
+                  {t('forgot.link')}
+                </Link>
+              }
+            >
               {(p) => (
                 <Input
                   {...p}

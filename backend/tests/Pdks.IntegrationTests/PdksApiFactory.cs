@@ -27,6 +27,9 @@ public sealed class PdksApiFactory : WebApplicationFactory<Program>, IAsyncLifet
 
     public FakeTimeProvider Time { get; } = new(DateTimeOffset.UtcNow);
 
+    /// <summary>Gönderilen e-postalar (gerçekte gönderilmez).</summary>
+    public CapturingEmailSender Emails { get; } = new();
+
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
@@ -40,6 +43,7 @@ public sealed class PdksApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         Environment.SetEnvironmentVariable("RateLimits__LoginPerMinute", "10000");
         Environment.SetEnvironmentVariable("RateLimits__RefreshPerMinute", "10000");
         Environment.SetEnvironmentVariable("RateLimits__RegisterPerHour", "10000");
+        Environment.SetEnvironmentVariable("RateLimits__PasswordResetPerHour", "10000");
         Environment.SetEnvironmentVariable("Seed__Enabled", "true");
         // Anlık uyarı taraması testlerde elle çalıştırılır (zaman ileri sarılınca kendiliğinden çalışmasın).
         Environment.SetEnvironmentVariable("Alerts__Enabled", "false");
@@ -60,11 +64,27 @@ public sealed class PdksApiFactory : WebApplicationFactory<Program>, IAsyncLifet
         {
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Time);
+            services.RemoveAll<Pdks.Infrastructure.Email.IEmailSender>();
+            services.AddSingleton<Pdks.Infrastructure.Email.IEmailSender>(Emails);
         });
     }
 
     /// <summary>Çerezleri kendisi taşımayan istemci; testler Set-Cookie'yi elle yönetir.</summary>
     public HttpClient Client() => CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false, AllowAutoRedirect = false });
+}
+
+public sealed class CapturingEmailSender : Pdks.Infrastructure.Email.IEmailSender
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<Pdks.Infrastructure.Email.EmailMessage> _sent = new();
+
+    public IReadOnlyList<Pdks.Infrastructure.Email.EmailMessage> To(string address) =>
+        _sent.Where(m => string.Equals(m.To, address, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    public Task SendAsync(Pdks.Infrastructure.Email.EmailMessage message, CancellationToken ct = default)
+    {
+        _sent.Enqueue(message);
+        return Task.CompletedTask;
+    }
 }
 
 [CollectionDefinition(Name)]

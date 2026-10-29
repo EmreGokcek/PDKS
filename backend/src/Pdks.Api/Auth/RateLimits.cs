@@ -13,6 +13,8 @@ public class RateLimitOptions
     public int RefreshPerMinute { get; set; } = 30;
     /// <summary>Yeni firma kaydı (IP başına saatte).</summary>
     public int RegisterPerHour { get; set; } = 5;
+    /// <summary>"Şifremi unuttum" ve şifre sıfırlama (IP başına saatte).</summary>
+    public int PasswordResetPerHour { get; set; } = 10;
 }
 
 public static class RateLimits
@@ -20,6 +22,7 @@ public static class RateLimits
     public const string Login = "login";
     public const string Refresh = "refresh";
     public const string Register = "register";
+    public const string PasswordReset = "password-reset";
 
     public static IServiceCollection AddPdksRateLimits(this IServiceCollection services, IConfiguration configuration)
     {
@@ -44,6 +47,7 @@ public static class RateLimits
             options.AddPolicy(Login, http => Window(http, o.LoginPerMinute));
             options.AddPolicy(Refresh, http => Window(http, o.RefreshPerMinute));
             options.AddPolicy(Register, http => Window(http, o.RegisterPerHour, TimeSpan.FromHours(1)));
+            options.AddPolicy(PasswordReset, http => Window(http, o.PasswordResetPerHour, TimeSpan.FromHours(1)));
         });
     }
 

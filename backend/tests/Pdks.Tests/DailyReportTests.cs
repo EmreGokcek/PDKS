@@ -71,4 +71,49 @@ public class DailyReportTests
         Assert.Equal(0, r.EarlyLeaveMinutes);
         Assert.Equal(TimeSpan.FromMinutes(460), r.Worked);
     }
+
+    private static IReadOnlyList<DayRecord> RunRange(Dictionary<DateOnly, DayPlan> plans, DateTimeOffset now, params (AttendanceEventType Type, DateTimeOffset At)[] events) =>
+        DailyReport.Build(events.Select(e => new EventPoint(e.Type, e.At)), plans, Day, Day.AddDays(1), now, Istanbul,
+            toleranceMinutes: 5, defaultBreakMinutes: 60);
+
+    [Fact]
+    public void Early_check_in_for_midnight_shift_counts_for_the_shift_day()
+    {
+        // 29'u 00:00–08:00 vardiyası; 28'i hafta tatili. 23:55'te giriş, 08:00'de çıkış.
+        var plans = new Dictionary<DateOnly, DayPlan>
+        {
+            [Day] = new(ShiftKind.WeeklyOff, default, default, null),
+            [Day.AddDays(1)] = new(ShiftKind.Work, new TimeOnly(0, 0), new TimeOnly(8, 0), 0),
+        };
+        var days = RunRange(plans, At(9, 0, 29), (CheckIn, At(23, 55)), (CheckOut, At(8, 0, 29)));
+
+        Assert.Equal(DayStatus.OnLeave, days[0].Status); // hafta tatili boş kalır, "planlanmadan çalıştı" olmaz
+        Assert.Equal(TimeSpan.Zero, days[0].Worked);
+        Assert.Equal(DayStatus.Present, days[1].Status);
+        Assert.Equal(0, days[1].LateMinutes);
+        Assert.Equal(TimeSpan.FromMinutes(485), days[1].Worked);
+    }
+
+    [Fact]
+    public void Late_evening_work_on_own_shift_stays_on_that_day()
+    {
+        // 28'i 16:00–00:00, 29'u 00:00–08:00 (art arda). 15:55 girişi 28'ine aittir.
+        var plans = new Dictionary<DateOnly, DayPlan>
+        {
+            [Day] = new(ShiftKind.Work, new TimeOnly(16, 0), new TimeOnly(0, 0), 0),
+            [Day.AddDays(1)] = new(ShiftKind.Work, new TimeOnly(0, 0), new TimeOnly(8, 0), 0),
+        };
+        var days = RunRange(plans, At(23, 59), (CheckIn, At(15, 55)), (CheckOut, At(23, 58)));
+        Assert.Equal(DayStatus.Present, days[0].Status);
+        Assert.Equal(TimeSpan.Zero, days[1].Worked);
+    }
+
+    [Fact]
+    public void Check_in_long_before_next_day_shift_is_not_moved()
+    {
+        // 29'u 06:00 vardiyası; 28'i 20:00 girişi (10 saat önce) taşınmaz.
+        var plans = new Dictionary<DateOnly, DayPlan> { [Day.AddDays(1)] = new(ShiftKind.Work, new TimeOnly(6, 0), new TimeOnly(14, 0), 0) };
+        var days = RunRange(plans, At(23), (CheckIn, At(20)), (CheckOut, At(22)));
+        Assert.Equal(DayStatus.Unplanned, days[0].Status);
+    }
 }

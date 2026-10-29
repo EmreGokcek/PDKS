@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<Leave.LeaveService>();
         services.AddScoped<Alerts.AttendanceAlertScanner>();
         services.AddScoped<Auth.AccessScope>();
+        services.AddScoped<Auth.PasswordResetService>();
+        services.Configure<Email.EmailOptions>(configuration.GetSection(Email.EmailOptions.SectionName));
+        services.TryAddSingleton<Email.IEmailSender, Email.SmtpEmailSender>();
 
         return services;
     }

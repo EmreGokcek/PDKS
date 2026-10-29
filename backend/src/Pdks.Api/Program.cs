@@ -17,12 +17,10 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ---- Altyapı (veritabanı, seed) ----
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
-// ---- Kimlik doğrulama (JWT) ----
 var jwtSection = builder.Configuration.GetSection(JwtOptions.SectionName);
 builder.Services.Configure<JwtOptions>(jwtSection);
 var jwt = jwtSection.Get<JwtOptions>() ?? new JwtOptions();
@@ -90,12 +88,10 @@ builder.Services.AddAuthorization(options =>
         options.AddPolicy(permission, p => p.RequireRole(RolePermissions.RolesWith(permission).Select(r => r.ToString())));
 });
 
-// ---- Web API ----
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddProblemDetails();
 
-// ---- Canlı pano ve anlık uyarılar ----
 builder.Services.AddSignalR()
     .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSingleton<ILiveUpdates, HubLiveUpdates>();
@@ -111,7 +107,7 @@ builder.Services.AddCors(options => options.AddPolicy(WebCors, policy => policy
 
 var app = builder.Build();
 
-// ---- Açılışta migration (geliştirmede her zaman, üretimde Database:MigrateOnStartup ile) + demo verisi ----
+// Açılışta migration (geliştirmede her zaman, üretimde Database:MigrateOnStartup ile) ve demo verisi.
 if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:MigrateOnStartup"))
 {
     using var scope = app.Services.CreateScope();

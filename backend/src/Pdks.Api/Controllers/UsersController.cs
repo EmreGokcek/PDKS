@@ -43,7 +43,6 @@ public class UsersController(
         [FromQuery] bool? isActive,
         CancellationToken ct)
     {
-        // Yönetici herkesi, müdür kendi şubesindeki personel ve müdürleri görür.
         var query = scope.VisibleStaff().AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -166,8 +165,6 @@ public class UsersController(
             .OrderBy(b => b.Name)
             .Select(b => new BranchDto(b.Id, b.Name))
             .ToListAsync(ct);
-
-    // ---- yardımcılar ----
 
     private async Task<ActionResult<UserListItem>> SetActive(Guid id, bool active, CancellationToken ct)
     {

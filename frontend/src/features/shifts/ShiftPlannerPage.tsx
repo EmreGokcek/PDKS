@@ -72,7 +72,6 @@ export function ShiftPlannerPage() {
     return map
   }, [data?.shifts])
 
-  // ---- Kaydetme ----
   const handleError = useCallback((err: unknown) => toast.error(errorMessage(err, t)), [t])
 
   const applyBrush = useCallback(
@@ -92,7 +91,6 @@ export function ShiftPlannerPage() {
     [assign, clear, shiftsByCell, handleError],
   )
 
-  // ---- Sürükleyerek boyama (fare ve dokunmatik) ----
   const painting = useRef<Map<string, Cell> | null>(null)
   const [painted, setPainted] = useState<Set<string>>(new Set())
 
@@ -125,7 +123,6 @@ export function ShiftPlannerPage() {
     }
   }, [brush, applyBrush])
 
-  // ---- Toplamlar ----
   const dailyBreak = data?.dailyBreakMinutes ?? 60
   const netMinutes = (s: Shift) =>
     isLeave(s.kind) ? 0 : netWorkMinutes(shiftMinutes(s.startTime, s.endTime), s.breakMinutes ?? dailyBreak)
@@ -202,7 +199,6 @@ export function ShiftPlannerPage() {
         }
       />
 
-      {/* Fırça paleti */}
       <section className="sticky top-[61px] z-10 -mx-4 mb-4 border-y border-line bg-paper/90 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:bg-panel/90 lg:top-3">
         <div className="flex flex-wrap items-center gap-2">
           <BrushButton active={brush === null} onClick={() => setBrush(null)} label={<MousePointer2 className="size-4" />} title={t('common.edit')} />
@@ -264,7 +260,6 @@ export function ShiftPlannerPage() {
         <p className="mt-2 text-xs text-ink-soft">{t('shifts.brushHint')}</p>
       </section>
 
-      {/* Yayın durumu */}
       {data && data.staff.length > 0 && (
         <PublishBar
           publishedAt={data.publishedAt}
@@ -289,7 +284,6 @@ export function ShiftPlannerPage() {
               if (cell) addToPaint(cell)
             }}
           >
-            {/* Başlık satırı */}
             <div className="sticky left-0 z-[1] border-b border-line bg-panel px-4 py-3 text-sm text-ink-soft">{t('shifts.person')}</div>
             {days.map((d) => (
               <div key={d} title={holidayOf.get(d)?.name} className={`border-b border-l border-line px-3 py-3 text-center ${d === today ? 'bg-signal-soft/50' : holidayOf.get(d) ? 'bg-[#7c5cc4]/8' : ''}`}>
@@ -301,7 +295,6 @@ export function ShiftPlannerPage() {
               </div>
             ))}
 
-            {/* Personel satırları */}
             {data?.staff.map((person) => {
               const rowShifts = days.map((d) => shiftsByCell.get(`${person.id}|${d}`)).filter((s): s is Shift => !!s)
               const planned = rowShifts.reduce((sum, s) => sum + netMinutes(s), 0)
@@ -419,7 +412,6 @@ export function ShiftPlannerPage() {
               )
             })}
 
-            {/* Günlük kişi sayısı */}
             <div className="sticky left-0 z-[1] bg-panel px-4 py-3 text-sm text-ink-soft">{t('shifts.headcount')}</div>
             {days.map((d) => {
               const count = data?.shifts.filter((s) => s.date === d && !isLeave(s.kind)).length ?? 0

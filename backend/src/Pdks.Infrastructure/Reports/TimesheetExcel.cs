@@ -96,7 +96,6 @@ public static class TimesheetExcel
         ws.Row(h1).Height = 22;
         ws.Row(h2).Height = 30;
 
-        // Satırlar
         var r = h2 + 1;
         foreach (var row in t.Rows)
         {
@@ -142,7 +141,6 @@ public static class TimesheetExcel
             r++;
         }
 
-        // Toplam satırı
         if (t.Rows.Count > 0)
         {
             ws.Cell(r, 2).Value = "Toplam";

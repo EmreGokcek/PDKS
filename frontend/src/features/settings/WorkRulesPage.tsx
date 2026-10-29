@@ -80,7 +80,6 @@ export function WorkRulesPage() {
         </p>
       )}
 
-      {/* Canlı özet: kuralların bir cümlelik karşılığı */}
       <motion.p
         layout
         className="mb-6 rounded-2xl bg-brand px-6 py-5 text-lg leading-relaxed text-on-brand"
@@ -173,7 +172,6 @@ export function WorkRulesPage() {
         </RuleCard>
       </fieldset>
 
-      {/* Kaydedilmemiş değişiklik olduğunda alttan kayan kaydetme çubuğu */}
       <AnimatePresence>
         {dirty && !readOnly && (
           <motion.div

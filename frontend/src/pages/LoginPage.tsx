@@ -23,7 +23,6 @@ const demoAccounts = [
 ] as const
 const DEMO_PASSWORD = 'Pdks123!'
 
-
 const ease = [0.22, 1, 0.36, 1] as const
 
 export function LoginPage() {
@@ -65,7 +64,6 @@ export function LoginPage() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.15fr_1fr]">
       <section className="relative flex flex-col justify-between gap-8 overflow-hidden bg-brand px-6 py-8 text-on-brand sm:px-12 sm:py-12 lg:min-h-[560px] lg:gap-10">
-        {/* Arka planda yavaşça dolaşan iki ışık halesi */}
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute -top-40 -left-40 size-[34rem] rounded-full bg-signal/20 blur-3xl"
@@ -78,7 +76,6 @@ export function LoginPage() {
           animate={{ x: [0, -100, -20, 0], y: [0, -120, -40, 0] }}
           transition={{ duration: 34, repeat: Infinity, ease: 'easeInOut' }}
         />
-        {/* Kart okutma çizgisini anımsatan ince tarama ışığı */}
         <motion.div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-0 h-px bg-gradient-to-r from-transparent via-signal/60 to-transparent"

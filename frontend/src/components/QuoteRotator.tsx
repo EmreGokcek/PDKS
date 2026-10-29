@@ -45,7 +45,6 @@ export function QuoteRotator({ className = '', intervalMs = 9000, align = 'start
         </motion.blockquote>
       </AnimatePresence>
 
-      {/* Hangi sözde olunduğunu gösteren küçük noktalar */}
       <div className={`mt-5 flex gap-1.5 ${align === 'center' ? 'justify-center' : ''}`} aria-hidden="true">
         {quotes.map((q, i) => (
           <span

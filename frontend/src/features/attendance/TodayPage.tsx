@@ -106,7 +106,6 @@ export function TodayPage() {
         </p>
       )}
 
-      {/* Durum kartı */}
       <section className="relative overflow-hidden rounded-3xl bg-brand p-6 text-on-brand sm:p-8 dark:ring-1 dark:ring-line">
         <div className="relative grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end">
           <div>
@@ -181,7 +180,6 @@ export function TodayPage() {
         <FeedPanel allHref={user ? pathFor(user.role, 'duyurular') : '/'} />
       </div>
 
-      {/* Özet kartları */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <StatCard
           icon={<Coffee className="size-5" />}
@@ -360,7 +358,6 @@ function WeekChart({ status, liveExtra }: { status: AttendanceStatus; liveExtra:
     <section className="rounded-2xl bg-panel p-5 ring-1 ring-line">
       <h2 className="font-semibold">{t('attendance.week')}</h2>
       <div className="relative mt-6 flex h-40 items-end gap-2 sm:gap-3">
-        {/* Günlük ortalama hedef çizgisi */}
         <div
           className="pointer-events-none absolute inset-x-0 border-t border-dashed border-ink-soft/30"
           style={{ bottom: `${(dailyTarget / max) * 100}%` }}

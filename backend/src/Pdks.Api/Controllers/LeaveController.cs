@@ -39,8 +39,6 @@ public class LeaveController(
 {
     private static readonly ShiftKind[] LeaveKinds = [ShiftKind.AnnualLeave, ShiftKind.SickLeave, ShiftKind.ExcusedLeave];
 
-    // ---- Resmi tatiller ----
-
     [HttpGet("api/holidays")]
     public async Task<List<HolidayDto>> Holidays([FromQuery] int? year, CancellationToken ct)
     {
@@ -87,8 +85,6 @@ public class LeaveController(
         await db.SaveChangesAsync(ct);
         return NoContent();
     }
-
-    // ---- Bakiyeler ----
 
     /// <summary>Kişinin kendi yıllık izin bakiyesi.</summary>
     [HttpGet("api/me/leave-balance"), Authorize(Policy = Perm.AttendanceSelf)]
@@ -145,8 +141,6 @@ public class LeaveController(
         await db.SaveChangesAsync(ct);
         return new AdjustmentDto(a.Id, a.Days, a.Reason, null, a.CreatedAt);
     }
-
-    // ---- Ekip izin takvimi ----
 
     /// <summary>Plandaki izinler ve bekleyen izin talepleri, gün gün.</summary>
     [HttpGet("api/leave/calendar"), Authorize(Policy = Perm.RequestsReview)]

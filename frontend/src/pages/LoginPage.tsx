@@ -207,7 +207,7 @@ export function LoginPage() {
             </Link>
           </p>
 
-          {import.meta.env.DEV && (
+          {import.meta.env.DEV && import.meta.env.MODE !== 'paylas' && (
             <div className="mt-10 border-t border-line pt-6">
               <p className="text-sm text-ink-soft">{t('login.demo', { password: DEMO_PASSWORD })}</p>
               <div className="mt-3 flex flex-wrap gap-2">

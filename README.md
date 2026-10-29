@@ -63,6 +63,20 @@ npm run dev:phone
 geliştirme ortamı için "Gelişmiş → Yine de devam et" ile geçebilirsin. Kiosk ekranını bilgisayarda (`kiosk@pdks.local`),
 personel ekranını telefonda (`personel@pdks.local`) açıp QR okutmayı dene.
 
+## Ücretsiz olarak başkalarına denetmek (yayına almadan)
+
+Uygulama senin bilgisayarında çalışır; Cloudflare'in ücretsiz tüneli ona herkesin açabileceği geçici bir `https://…trycloudflare.com`
+adresi verir. Hesap açmak gerekmez, ücret yoktur. Bilgisayar kapanınca ya da tünel penceresi kapanınca adres çalışmaz;
+her açılışta adres değişir.
+
+1. Bir kez kur (Windows): `winget install --id Cloudflare.cloudflared`
+2. Backend'i her zamanki gibi başlat (`dotnet run`).
+3. Web arayüzünü paylaşım modunda başlat: `cd frontend` → `npm run dev:paylas` (giriş ekranındaki demo hesap düğmeleri gizlenir).
+4. Yeni bir pencerede: `cloudflared tunnel --url http://localhost:5173`
+5. Çıktıdaki `https://….trycloudflare.com` adresini paylaş. Telefon kamerası https gerektirdiği için QR okutma da çalışır.
+
+Gerçek denemede "Firmanı kaydet" ile kendi firmanı aç; demo firmadaki hesapların şifresi (`Pdks123!`) herkesçe bilinir.
+
 ## Demo hesaplar
 
 Tüm hesapların şifresi `Pdks123!`. Giriş ekranındaki düğmelerle de seçilebilir.

@@ -108,7 +108,6 @@ function Camera({ busy, error, onToken }: { busy: boolean; error: string | null;
       <div className="relative aspect-square overflow-hidden rounded-3xl bg-brand">
         <video ref={videoRef} className="size-full object-cover" muted playsInline />
 
-        {/* Hedef çerçevesi ve tarama çizgisi */}
         {camera === 'ready' && (
           <div className="pointer-events-none absolute inset-[14%]">
             {['top-0 left-0 border-t-4 border-l-4 rounded-tl-2xl', 'top-0 right-0 border-t-4 border-r-4 rounded-tr-2xl', 'bottom-0 left-0 border-b-4 border-l-4 rounded-bl-2xl', 'right-0 bottom-0 border-r-4 border-b-4 rounded-br-2xl'].map((c) => (

@@ -38,7 +38,6 @@ export function DayEditor({ target, onClose }: { target: DayEditorTarget | null;
   )
 }
 
-
 function Editor({ target }: { target: DayEditorTarget }) {
   const { t } = useTranslation()
   const events = useDayEvents(target.userId, target.date)
@@ -47,7 +46,6 @@ function Editor({ target }: { target: DayEditorTarget }) {
   const [reasonError, setReasonError] = useState(false)
   const [editing, setEditing] = useState<{ id: string; date: string; time: string } | null>(null)
 
-  // Yeni kayıt formu
   const [newType, setNewType] = useState<AttendanceAction>('CheckOut')
   const [newDate, setNewDate] = useState(target.date)
   const [newTime, setNewTime] = useState(target.plan ? hhmm(target.plan.endTime) : '18:00')
@@ -107,7 +105,6 @@ function Editor({ target }: { target: DayEditorTarget }) {
         )}
       </Field>
 
-      {/* Kayıtlar */}
       {events.isPending ? (
         <div className="grid place-items-center py-8 text-ink-soft">
           <Spinner />
@@ -185,7 +182,6 @@ function Editor({ target }: { target: DayEditorTarget }) {
         </Button>
       )}
 
-      {/* Yeni kayıt */}
       <section className="rounded-2xl bg-panel-2/60 p-4 ring-1 ring-line">
         <h3 className="text-sm font-medium">{t('corrections.add')}</h3>
         <div className="mt-3 grid gap-3 sm:grid-cols-3">

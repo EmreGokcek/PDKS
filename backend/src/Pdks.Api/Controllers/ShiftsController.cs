@@ -371,7 +371,6 @@ public class MyShiftsController(PdksDbContext db, ICurrentUser currentUser, Shif
             .Where(s => s.UserId == currentUser.UserId && s.Date >= from && s.Date <= to)
             .OrderBy(s => s.Date)
             .ToListAsync(ct);
-        // Yalnızca yayınlanmış haftalar
         return (await publication.VisibleAsync(shifts, ct)).Select(ShiftDto.From).ToList();
     }
 }

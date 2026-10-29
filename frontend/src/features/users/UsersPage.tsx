@@ -146,7 +146,6 @@ export function UsersPage() {
       </div>
 
       <section className="overflow-hidden rounded-2xl bg-panel ring-1 ring-line">
-        {/* Masaüstü tablo başlığı */}
         <div className="hidden grid-cols-[minmax(0,2.2fr)_1fr_1fr_1fr_1fr_44px] gap-4 border-b border-line px-5 py-3 text-sm text-ink-soft md:grid">
           <span>{t('users.columns.person')}</span>
           <span>{t('users.columns.role')}</span>
@@ -261,7 +260,6 @@ function StaffRow({
         </div>
       </div>
 
-      {/* Mobilde sağ üstte işlemler */}
       <div className="md:hidden" onClick={(e) => e.stopPropagation()}>
         {!readOnly && <RowMenu actions={actions} />}
       </div>

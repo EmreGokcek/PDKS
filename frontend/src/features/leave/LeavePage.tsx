@@ -54,8 +54,6 @@ export function LeavePage() {
   )
 }
 
-// ---------- Takvim ----------
-
 function monthRange(anchor: string) {
   const d = parseDate(anchor)
   const first = new Date(d.getFullYear(), d.getMonth(), 1)
@@ -179,8 +177,6 @@ function Legend() {
   )
 }
 
-// ---------- Bakiyeler ----------
-
 function BalancesTab() {
   const { t } = useTranslation()
   const { user } = useAuth()
@@ -295,8 +291,6 @@ function AdjustDialog({ balance, onClose }: { balance: LeaveBalance; onClose: ()
     </Dialog>
   )
 }
-
-// ---------- Resmi tatiller ----------
 
 function HolidaysTab() {
   const { t } = useTranslation()

@@ -151,7 +151,6 @@ public class CorrectionsController(
         return await db.AttendanceEvents.FirstOrDefaultAsync(e => e.Id == id && staffIds.Contains(e.UserId), ct);
     }
 
-    /// <summary>Kayıtlarını görebildiği kişiler.</summary>
     private IQueryable<User> StaffScope() => scope.VisibleStaff();
 
     /// <summary>Düzeltebildiği kişiler (AccessScope.SupervisedStaff).</summary>

@@ -156,7 +156,6 @@ export function LiveDashboardPage() {
         actions={<LiveBadge updatedAt={query.dataUpdatedAt} fetching={query.isFetching} onRefresh={() => void query.refetch()} />}
       />
 
-      {/* Üst bölüm: katılım halkası + dört ana sayaç; ikincil durumlar küçük süzgeç olarak */}
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-4">
         <AttendanceRing people={data.people} />
         <div className="grid grid-cols-2 gap-3 lg:gap-4">

@@ -41,7 +41,6 @@ public class PdksDbContext(DbContextOptions<PdksDbContext> options, ICurrentUser
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PdksDbContext).Assembly);
 
-        // Her TenantEntity'ye "sadece kendi firmanın verisi" filtresi uygula.
         var applyFilter = typeof(PdksDbContext)
             .GetMethod(nameof(ApplyTenantFilter), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
 

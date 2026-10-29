@@ -64,8 +64,6 @@ public class CompanyController(
         return NoContent();
     }
 
-    // ---- Şubeler ----
-
     [HttpPost("branches")]
     public async Task<ActionResult<BranchSettingsDto>> CreateBranch(SaveBranchRequest request, CancellationToken ct)
     {
@@ -112,8 +110,6 @@ public class CompanyController(
         var kioskCount = await db.Kiosks.CountAsync(k => k.BranchId == id && k.IsActive, ct);
         return new BranchSettingsDto(branch.Id, branch.Name, branch.TimeZone, branch.IsActive, staff, kioskCount);
     }
-
-    // ---- Kiosklar ----
 
     [HttpPost("kiosks")]
     public async Task<ActionResult<KioskWithPasswordDto>> CreateKiosk(SaveKioskRequest request, CancellationToken ct)
@@ -196,8 +192,6 @@ public class CompanyController(
 
     [HttpPost("kiosks/{id:guid}/activate")]
     public Task<ActionResult<KioskDto>> ActivateKiosk(Guid id, CancellationToken ct) => ToggleKioskAsync(id, true, ct);
-
-    // ---- yardımcılar ----
 
     private async Task<ActionResult<KioskDto>> ToggleKioskAsync(Guid id, bool active, CancellationToken ct)
     {

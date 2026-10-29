@@ -53,8 +53,6 @@ public class ShiftSwapsController(
     AuditLogger audit,
     TimeProvider time) : ControllerBase
 {
-    // ---------------- Personel ----------------
-
     [HttpGet("api/me/swaps"), Authorize(Policy = Perm.AttendanceSelf)]
     public async Task<List<ShiftSwapDto>> Mine(CancellationToken ct)
     {
@@ -175,8 +173,6 @@ public class ShiftSwapsController(
         return (await ToDtos(db.ShiftSwaps.Where(s => s.Id == id), ct)).Single();
     }
 
-    // ---------------- Müdür ----------------
-
     /// <summary>Onay bekleyen (ve son kararlaşan) takaslar. Müdür kendi şubesini görür.</summary>
     [HttpGet("api/swaps"), Authorize(Policy = Perm.ShiftsPlan)]
     public async Task<List<ShiftSwapDto>> Team([FromQuery] bool pendingOnly = true, CancellationToken ct = default)
@@ -237,8 +233,6 @@ public class ShiftSwapsController(
         await db.SaveChangesAsync(ct);
         return (await ToDtos(db.ShiftSwaps.Where(s => s.Id == id), ct)).Single();
     }
-
-    // ---------------- yardımcılar ----------------
 
     private IQueryable<ShiftSwap> Scope() =>
         currentUser.Role is { } r && RolePermissions.IsCompanyWide(r) ? db.ShiftSwaps : db.ShiftSwaps.Where(s => s.BranchId == currentUser.BranchId);

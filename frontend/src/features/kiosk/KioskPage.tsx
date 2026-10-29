@@ -97,7 +97,6 @@ export function KioskPage() {
           <p className="mt-2 max-w-sm text-on-brand/65 max-lg:mx-auto">{t('kiosk.steps')}</p>
         </div>
 
-        {/* QR kart */}
         <div className="flex flex-col items-center gap-5">
           <div className="relative rounded-[2rem] bg-white p-6 shadow-2xl">
             <div className="grid size-[min(72vw,340px)] place-items-center">
@@ -127,7 +126,6 @@ export function KioskPage() {
             )}
           </div>
 
-          {/* Yenilenme çubuğu */}
           <div className="w-full max-w-[340px]">
             <div className="h-1.5 overflow-hidden rounded-full bg-on-brand/15">
               <div
@@ -141,7 +139,6 @@ export function KioskPage() {
           </div>
         </div>
 
-        {/* Son okutmalar */}
         <aside className="lg:justify-self-end">
           <h2 className="text-sm text-on-brand/60">{t('kiosk.recent')}</h2>
           <ul className="mt-3 w-full space-y-2 lg:w-80">

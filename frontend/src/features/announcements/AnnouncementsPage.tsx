@@ -72,7 +72,6 @@ export function AnnouncementsPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:items-start">
-        {/* Duyurular */}
         <section className="space-y-3">
           {data.announcements.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-2xl bg-panel px-6 py-14 text-center ring-1 ring-line">
@@ -114,7 +113,6 @@ export function AnnouncementsPage() {
           )}
         </section>
 
-        {/* Kutlamalar */}
         <aside className="space-y-3">
           <h2 className="font-semibold">{t('announcements.celebrations.title')}</h2>
           {today.map((c) => (

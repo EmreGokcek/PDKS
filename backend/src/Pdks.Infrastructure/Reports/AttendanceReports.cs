@@ -41,9 +41,11 @@ public class AttendanceReports(PdksDbContext db, TimeProvider time)
             .Select(e => new { e.UserId, e.Type, e.OccurredAt })
             .ToListAsync(ct);
 
+        // Bir gün sonrası da okunur: son günün gecesinde erken okutulan giriş ertesi günün vardiyasına yazılır.
+        var planTo = to.AddDays(1);
         var shifts = await db.Shifts.AsNoTracking()
             .Include(s => s.ShiftTemplate)
-            .Where(s => userIds.Contains(s.UserId) && s.Date >= from && s.Date <= to)
+            .Where(s => userIds.Contains(s.UserId) && s.Date >= from && s.Date <= planTo)
             .ToListAsync(ct);
 
         var calcRules = new CalculatorRules(rules.WeeklyWorkMinutes, rules.DailyBreakMinutes, rules.WeekStartsOn);

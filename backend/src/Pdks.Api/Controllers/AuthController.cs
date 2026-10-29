@@ -12,6 +12,7 @@ using Pdks.Domain.Enums;
 using Pdks.Domain.Security;
 using Pdks.Infrastructure.Auth;
 using Pdks.Infrastructure.Companies;
+using Pdks.Infrastructure.Email;
 using Pdks.Infrastructure.Persistence;
 using Pdks.Infrastructure.Services;
 
@@ -29,6 +30,10 @@ public class AuthController(
     IOptions<LoginSessionOptions> sessionOptions,
     IOptions<PrivacyOptions> privacyOptions,
     IOptions<RegistrationOptions> registrationOptions,
+    IOptions<AppOptions> appOptions,
+    PasswordResetService passwordResets,
+    IEmailSender email,
+    ILogger<AuthController> log,
     IWebHostEnvironment env,
     TimeProvider time) : ControllerBase
 {
@@ -269,6 +274,104 @@ public class AuthController(
 
         SessionCookie.Write(Response, issued, SecureCookies);
         return CreateLoginResponse(user);
+    }
+
+    /// <summary>
+    /// "Şifremi unuttum": hesap varsa e-postasına 30 dakika geçerli, tek kullanımlık bir bağlantı gönderilir.
+    /// Hesabın var olup olmadığı yanıttan anlaşılmaz (her zaman aynı yanıt).
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.PasswordReset)]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest request, CancellationToken ct)
+    {
+        var address = request.Email.Trim().ToLowerInvariant();
+        var user = await db.Users.IgnoreQueryFilters().Include(u => u.Company)
+            .FirstOrDefaultAsync(u => u.Email == address, ct);
+
+        // Kiosk hesaplarının şifresini yönetici yeniler; pasif hesaplar ve kapalı firmalar sıfırlayamaz.
+        if (user is null || !user.IsActive || user.Role == UserRole.Kiosk || user.Company is not { IsActive: true })
+            return NoContent();
+
+        var baseUrl = PublicBaseUrl();
+        if (baseUrl is null)
+        {
+            log.LogError("Şifre sıfırlama bağlantısı üretilemedi: App:PublicUrl ayarlanmalı.");
+            return NoContent();
+        }
+
+        var token = await passwordResets.CreateAsync(user, ct);
+        if (token is null) return NoContent(); // saatlik sınır doldu
+
+        db.AuditLogs.Add(new AuditLog
+        {
+            CompanyId = user.CompanyId, ActorUserId = user.Id, Action = "user.password_reset_requested",
+            EntityName = nameof(User), EntityId = user.Id
+        });
+        await db.SaveChangesAsync(ct);
+
+        var link = $"{baseUrl}/sifre-sifirla?token={Uri.EscapeDataString(token)}";
+        try
+        {
+            await email.SendAsync(PasswordResetEmail(user, link), ct);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log.LogError(ex, "Şifre sıfırlama e-postası gönderilemedi.");
+        }
+        return NoContent();
+    }
+
+    /// <summary>Bağlantıdaki anahtarla yeni şifre belirler. Tüm oturumlar kapanır; kişi yeni şifresiyle giriş yapar.</summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [EnableRateLimiting(RateLimits.PasswordReset)]
+    public async Task<IActionResult> ResetPassword(ResetPasswordRequest request, CancellationToken ct)
+    {
+        var token = await passwordResets.FindValidAsync(request.Token, ct);
+        if (token?.User is not { IsActive: true, Company.IsActive: true } user || user.Role == UserRole.Kiosk)
+            return this.ApiError(400, "invalid_reset_token", "Bağlantının süresi dolmuş ya da daha önce kullanılmış. Yeni bağlantı iste.");
+        if (!PasswordPolicy.IsValid(request.NewPassword))
+            return this.ApiError(400, "weak_password", "Yeni şifre en az 8 karakter olmalı, harf ve rakam içermeli.");
+
+        user.PasswordHash = hasher.HashPassword(user, request.NewPassword);
+        user.MustChangePassword = false;
+        user.FailedLoginCount = 0;
+        user.LockoutUntil = null;
+        await passwordResets.InvalidateAsync(user.Id, ct);
+        await refreshTokens.RevokeAllForUserAsync(user.Id, "password_reset", ct);
+        db.AuditLogs.Add(new AuditLog
+        {
+            CompanyId = user.CompanyId, ActorUserId = user.Id, Action = "user.password_reset_by_email",
+            EntityName = nameof(User), EntityId = user.Id
+        });
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    /// <summary>E-postadaki bağlantının adresi. Üretimde App:PublicUrl zorunlu (istek başlığına güvenilmez).</summary>
+    private string? PublicBaseUrl()
+    {
+        if (!string.IsNullOrWhiteSpace(appOptions.Value.PublicUrl)) return appOptions.Value.PublicUrl.TrimEnd('/');
+        return env.IsDevelopment() ? $"{Request.Scheme}://{Request.Host}" : null;
+    }
+
+    private static EmailMessage PasswordResetEmail(User user, string link)
+    {
+        var minutes = (int)PasswordResetService.Lifetime.TotalMinutes;
+        var name = System.Net.WebUtility.HtmlEncode(user.FirstName);
+        var href = System.Net.WebUtility.HtmlEncode(link);
+        var text =
+            $"Merhaba {user.FirstName},\n\n" +
+            $"PDKS hesabın için şifre sıfırlama isteği aldık. Yeni şifreni belirlemek için {minutes} dakika içinde bu bağlantıyı aç:\n\n{link}\n\n" +
+            "Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin; şifren değişmez.";
+        var html =
+            $"<p>Merhaba {name},</p>" +
+            $"<p>PDKS hesabın için şifre sıfırlama isteği aldık. Yeni şifreni belirlemek için {minutes} dakika içinde aşağıdaki düğmeye tıkla.</p>" +
+            $"<p><a href=\"{href}\" style=\"display:inline-block;padding:12px 20px;background:#1f9a76;color:#fff;border-radius:10px;text-decoration:none;font-weight:600\">Yeni şifre belirle</a></p>" +
+            $"<p style=\"color:#667085;font-size:13px\">Düğme çalışmazsa bu adresi tarayıcına yapıştır:<br>{href}</p>" +
+            "<p style=\"color:#667085;font-size:13px\">Bu isteği sen yapmadıysan bu e-postayı yok sayabilirsin; şifren değişmez.</p>";
+        return new EmailMessage(user.Email, "PDKS şifre sıfırlama", text, html);
     }
 
     /// <summary>KVKK aydınlatma metninin okunduğunu kaydeder.</summary>

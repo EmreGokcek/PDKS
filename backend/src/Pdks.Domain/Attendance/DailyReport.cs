@@ -47,6 +47,7 @@ public record DayRecord(
 /// - Erken çıkma: son çıkış vardiya bitişinden tolerans dakikasından fazla önceyse.
 /// - Mola hakkı: o günün vardiyasındaki mola süresi, yoksa varsayılan günlük mola.
 /// - Oturumlar başladıkları güne yazılır (gece vardiyası dahil); bkz. AttendanceCalculator.
+///   İstisna: ertesi günün gece yarısı vardiyasına erken okutulan giriş o vardiyanın gününe yazılır (AttributedDate).
 /// </summary>
 public static class DailyReport
 {
@@ -60,7 +61,9 @@ public static class DailyReport
         int toleranceMinutes,
         int defaultBreakMinutes)
     {
-        var sessions = AttendanceCalculator.BuildSessions(events, now, tz);
+        var sessions = AttendanceCalculator.BuildSessions(events, now, tz)
+            .Select(x => x with { Date = AttributedDate(x, plans, tz) })
+            .ToList();
         var tolerance = TimeSpan.FromMinutes(toleranceMinutes);
         var records = new List<DayRecord>();
 
@@ -111,6 +114,32 @@ public static class DailyReport
         }
 
         return records;
+    }
+
+    /// <summary>Vardiyadan bu kadar önce okutulan giriş o vardiyaya sayılır (gece yarısı vardiyası için).</summary>
+    public static readonly TimeSpan EarlyArrivalWindow = TimeSpan.FromHours(3);
+
+    /// <summary>
+    /// Oturumun yazılacağı gün. Normalde oturumun başladığı gündür; ancak ertesi gün gece yarısı (ya da çok erken)
+    /// başlayan bir çalışma vardiyasından en fazla <see cref="EarlyArrivalWindow"/> önce okutulduysa ve o günün kendi
+    /// vardiyasına ait değilse ertesi güne yazılır. Örn. 00:00 vardiyası için 23:55'te okutulan giriş.
+    /// </summary>
+    public static DateOnly AttributedDate(WorkSession session, IReadOnlyDictionary<DateOnly, DayPlan> plans, TimeZoneInfo tz)
+    {
+        var day = session.Date;
+        var next = day.AddDays(1);
+        if (!plans.TryGetValue(next, out var nextPlan) || nextPlan.Kind != ShiftKind.Work) return day;
+
+        var (nextStart, _) = ShiftBounds(next, nextPlan, tz);
+        if (session.Start >= nextStart || nextStart - session.Start > EarlyArrivalWindow) return day;
+
+        // O günün kendi vardiyası içindeyse (ya da ona erken gelinmişse) o güne aittir.
+        if (plans.TryGetValue(day, out var plan) && plan.Kind == ShiftKind.Work)
+        {
+            var (start, end) = ShiftBounds(day, plan, tz);
+            if (session.Start >= start - EarlyArrivalWindow && session.Start < end) return day;
+        }
+        return next;
     }
 
     /// <summary>Vardiyanın başlangıç ve bitiş anı (gece vardiyası ertesi güne taşar).</summary>

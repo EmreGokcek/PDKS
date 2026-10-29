@@ -32,6 +32,8 @@ const MyMonthPage = named(() => import('./features/month/MyMonthPage'), 'MyMonth
 const LeavePage = named(() => import('./features/leave/LeavePage'), 'LeavePage')
 const AuditPage = named(() => import('./features/audit/AuditPage'), 'AuditPage')
 const CompanySettingsPage = named(() => import('./features/company/CompanySettingsPage'), 'CompanySettingsPage')
+const ForgotPasswordPage = named(() => import('./features/account/PasswordResetPages'), 'ForgotPasswordPage')
+const ResetPasswordPage = named(() => import('./features/account/PasswordResetPages'), 'ResetPasswordPage')
 const RegisterPage = named(() => import('./features/register/RegisterPage'), 'RegisterPage')
 const AnnouncementsPage = named(() => import('./features/announcements/AnnouncementsPage'), 'AnnouncementsPage')
 
@@ -64,6 +66,8 @@ export default function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/giris" element={<LoginPage />} />
         <Route path="/kayit" element={<RegisterPage />} />
+        <Route path="/sifremi-unuttum" element={<ForgotPasswordPage />} />
+        <Route path="/sifre-sifirla" element={<ResetPasswordPage />} />
         <Route path="/sifre-degistir" element={<RequireRole><ChangePasswordPage /></RequireRole>} />
         <Route path="/kvkk" element={<PrivacyNoticePage />} />
         <Route path="/aydinlatma" element={<RequireRole><PrivacyConsentPage /></RequireRole>} />

@@ -106,6 +106,7 @@ Gizli bilgiler depoda tutulmaz; sunucuda **ortam değişkeni** olarak verilir (i
 | `Database__MigrateOnStartup` | `true` ise açılışta veritabanı güncellenir |
 | `ReverseProxy__TrustForwardedHeaders` | Uygulama bir ters vekil (Nginx, barındırma platformu) arkasındaysa `true` |
 | `Seed__Enabled` | Üretimde `false` (demo hesaplar oluşturulmasın). Canlı demo için `true` + `Seed__DefaultPassword` |
+| `Email__Host`, `Email__Port`, `Email__UserName`, `Email__Password`, `Email__From` | "Şifremi unuttum" e-postaları için SMTP (Brevo, Mailgun, Amazon SES, Gmail…). Boşsa e-posta gönderilmez, yalnızca sunucu günlüğüne yazılır. Bağlantı `App__PublicUrl` ile üretilir; üretimde o da gerekli |
 | `Registration__Enabled` | Giriş ekranında "Firmanı kaydet" (yeni firmalar kendi kendine kaydolur). Varsayılan `true`; kapatmak için `false` |
 | `Alerts__Enabled` | Anlık uyarılar (gelmeyen personel, mola aşımı). Varsayılan `true` |
 

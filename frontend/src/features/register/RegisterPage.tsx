@@ -1,11 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'motion/react'
-import { ArrowLeft, Building2, Check, UserRound } from 'lucide-react'
+import { motion } from 'motion/react'
+import { ArrowLeft, Building2, UserRound } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Navigate, useNavigate } from 'react-router'
 import { useAuth } from '../../auth/AuthContext'
 import { afterLoginPath, type LoginResponse } from '../../auth/types'
+import { PasswordRules, usePasswordRules } from '../../components/PasswordRules'
 import { LanguageMenu, ThemeSwitch } from '../../components/PreferencesControls'
 import { Button } from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Field'
@@ -54,6 +55,7 @@ export function RegisterPage() {
     },
   })
 
+  const rules = usePasswordRules(form.password)
   if (user) return <Navigate to={afterLoginPath(user)} replace />
 
   const set = (key: keyof Form, value: string) => {
@@ -61,11 +63,6 @@ export function RegisterPage() {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }))
   }
 
-  const rules = [
-    { ok: form.password.length >= 8, label: t('changePassword.ruleLength') },
-    { ok: /\p{L}/u.test(form.password), label: t('changePassword.ruleLetter') },
-    { ok: /\d/.test(form.password), label: t('changePassword.ruleDigit') },
-  ]
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -130,22 +127,7 @@ export function RegisterPage() {
               <Field label={t('login.password')} error={errors.password}>
                 {(p) => <Input {...p} type="password" autoComplete="new-password" maxLength={200} value={form.password} onChange={(e) => set('password', e.target.value)} />}
               </Field>
-              <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                {rules.map((r) => (
-                  <li key={r.label} className={`flex items-center gap-2 transition-colors ${r.ok ? 'text-signal' : 'text-ink-soft'}`}>
-                    <span className={`grid size-4 place-items-center rounded-full transition-colors ${r.ok ? 'bg-signal text-white' : 'ring-1 ring-line'}`}>
-                      <AnimatePresence>
-                        {r.ok && (
-                          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 600, damping: 25 }}>
-                            <Check className="size-3" strokeWidth={3} />
-                          </motion.span>
-                        )}
-                      </AnimatePresence>
-                    </span>
-                    {r.label}
-                  </li>
-                ))}
-              </ul>
+              <PasswordRules rules={rules} className="flex flex-wrap gap-x-5 gap-y-2" />
             </Section>
 
             <div>

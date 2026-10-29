@@ -36,3 +36,7 @@ public record UserDto(
 public record LoginResponse(string AccessToken, DateTimeOffset ExpiresAt, UserDto User);
 
 public record AcceptPrivacyNoticeRequest([Required, MaxLength(20)] string Version);
+
+public record ForgotPasswordRequest([Required, EmailAddress, StringLength(256)] string Email);
+
+public record ResetPasswordRequest([Required, StringLength(100)] string Token, [Required, StringLength(200)] string NewPassword);

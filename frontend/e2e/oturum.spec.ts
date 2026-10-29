@@ -60,6 +60,7 @@ test('personel yönetim sayfalarını göremez', async ({ page }) => {
 test('şifremi unuttum: hesap olsun olmasın aynı onay gösterilir', async ({ page }) => {
   await page.goto('/giris')
   await page.getByRole('link', { name: 'Şifremi unuttum' }).click()
+  await expect(page.getByRole('heading', { name: 'Şifreni mi unuttun?' })).toBeVisible()
   await page.getByLabel('E-posta').fill('personel@pdks.local')
   await page.getByRole('button', { name: 'Bağlantı gönder' }).click()
   await expect(page.getByRole('heading', { name: 'E-postanı kontrol et' })).toBeVisible()

@@ -37,7 +37,8 @@ public class PasswordResetService(PdksDbContext db, TimeProvider time)
         if (string.IsNullOrWhiteSpace(raw) || raw.Length > 100) return null;
         var hash = RefreshTokenService.Hash(raw);
         var now = time.GetUtcNow();
-        return await db.PasswordResetTokens
+        // İstek kimliksiz gelir: firma filtresi devre dışı (yoksa kişi kaydı süzülür ve anahtar bulunamaz).
+        return await db.PasswordResetTokens.IgnoreQueryFilters()
             .Include(t => t.User).ThenInclude(u => u!.Company)
             .FirstOrDefaultAsync(t => t.TokenHash == hash && t.UsedAt == null && t.ExpiresAt > now, ct);
     }

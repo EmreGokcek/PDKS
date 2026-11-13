@@ -1,0 +1,111 @@
+# Yük ve kaos testi: üretim ayarlarıyla API + PostgreSQL, 2.000+ personellik veri, k6 ile senaryolar.
+# Elle çalıştırılır (Actions → Yük testi → Run workflow) ya da yuk-testi dalına gönderilince.
+# Sonuç özeti iş özetinde (Summary) ve açıklama (annotation) olarak görünür.
+name: Yük testi
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [yuk-testi]
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: pdks
+          POSTGRES_USER: pdks
+          POSTGRES_PASSWORD: pdks_load
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U pdks -d pdks"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGUSER: pdks
+      PGPASSWORD: pdks_load
+      PGDATABASE: pdks
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - uses: grafana/setup-k6-action@v1
+
+      - name: Makine
+        run: echo "::notice title=Makine::$(nproc) çekirdek, $(free -g | awk '/Mem:/{print $2}') GB bellek (API, veritabanı ve k6 aynı makinede)"
+
+      - name: API'yi derle ve üretim ayarlarıyla başlat
+        working-directory: backend
+        env:
+          ASPNETCORE_ENVIRONMENT: Production
+          ASPNETCORE_URLS: http://localhost:5080
+          # Havuz veritabanının bağlantı sınırının (100) altında: yönetim araçlarına ve ikinci bir sunucuya yer kalsın.
+          ConnectionStrings__Default: Host=localhost;Port=5432;Database=pdks;Username=pdks;Password=pdks_load;Maximum Pool Size=60
+          Jwt__SigningKey: yuk-testi-icin-rastgele-anahtar-0123456789-abcdefghij
+          Database__MigrateOnStartup: "true"
+          Seed__Enabled: "true"
+          Seed__DefaultPassword: Pdks123!
+          Logging__LogLevel__Default: Warning
+          Logging__LogLevel__Microsoft.AspNetCore: Warning
+          # Tek makineden gelen binlerce giriş IP sınırına takılmasın (sınırın kendisi entegrasyon testlerinde denetleniyor).
+          RateLimits__LoginPerMinute: "1000000"
+          RateLimits__RefreshPerMinute: "1000000"
+        run: |
+          dotnet publish src/Pdks.Api -c Release -o ../publish --nologo -v q
+          nohup dotnet ../publish/Pdks.Api.dll > ../api.log 2>&1 &
+          echo $! > ../api.pid
+          for i in $(seq 1 90); do curl -sf http://localhost:5080/api/ping > /dev/null && break; sleep 2; done
+          curl -sf http://localhost:5080/api/ping
+
+      - name: Test verisi (10 şube, 2.100 personel, 4 haftalık geçmiş)
+        run: |
+          psql -v ON_ERROR_STOP=1 -q -f loadtest/seed.sql
+          psql -At -c "select json_agg(json_build_object('id', replace(k.\"Id\"::text, '-', ''), 'secret', k.\"Secret\", 'email', u.\"Email\") order by b.\"Name\")
+                       from \"Kiosks\" k join \"Users\" u on u.\"Id\" = k.\"DeviceUserId\" join \"Branches\" b on b.\"Id\" = k.\"BranchId\"
+                       where u.\"Email\" like 'lt-kiosk-%'" > loadtest/kiosks.json
+          psql -At -c "select count(*) from \"Kiosks\"" 
+          python3 -c "import json;d=json.load(open('loadtest/kiosks.json'));print(len(d),'kiosk');assert len(d)==10"
+
+      - name: Kaynak kullanımını izle
+        run: |
+          cat > usage.sh <<'SH'
+          pid=$(cat api.pid); hz=$(getconf CLK_TCK); prev=0
+          while kill -0 $pid 2>/dev/null; do
+            read -r ut st <<< "$(awk '{print $14, $15}' /proc/$pid/stat)"; t=$((ut + st))
+            rss=$(awk '/VmRSS/{print $2}' /proc/$pid/status)
+            [ $prev -gt 0 ] && echo "$rss $(( (t - prev) * 100 / hz / 2 ))" >> api-usage.txt
+            prev=$t; sleep 2
+          done
+          SH
+          nohup bash usage.sh > /dev/null 2>&1 &
+
+      - name: k6
+        working-directory: loadtest
+        run: k6 run --quiet yuk.js
+
+      - name: Sonuç
+        if: always()
+        run: |
+          set +e +o pipefail
+          {
+            cat loadtest/ozet.md 2>/dev/null
+            echo ""
+            echo "### Veri tutarlılığı"
+            psql -q -f loadtest/tutarlilik.sql 2>&1 || echo "- Veritabanına bağlanılamadı (kod $?)"
+            echo ""
+            echo "### API süreci"
+            if [ -s api-usage.txt ]; then
+              echo "- En yüksek bellek: $(awk '{ if ($1>m) m=$1 } END { printf "%.0f MB", m/1024 }' api-usage.txt)"
+              echo "- En yüksek işlemci: $(awk '{ if ($2>m) m=$2 } END { printf "%%%.0f", m }' api-usage.txt) (2 sn'lik anlık; 100 = 1 çekirdek, makinede 400)"
+            fi
+            echo "- API hata günlüğü: $(grep -c -E '^(fail|crit):' api.log || true) hata"
+            grep -E -A1 '^(fail|crit):' api.log | grep -v '^--$' | cut -c1-160 | sort | uniq -c | sort -rn | head -n 8 | sed 's/^/    /'
+          } > sonuc.md
+          cat sonuc.md >> "$GITHUB_STEP_SUMMARY"
+          echo "::notice title=Yük testi::$(sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g' sonuc.md)"

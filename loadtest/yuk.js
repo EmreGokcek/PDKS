@@ -117,7 +117,7 @@ export function morningArrival() {
 
 // Aynı kişi aynı anda 3 kez okutur (çift dokunma, zayıf bağlantıda yeniden gönderme).
 export function doubleScan() {
-  const i = exec.vu.idInTest % 100 + 1
+  const i = exec.scenario.iterationInTest + 1
   const token = login(`lt-cift-${i}@yuk.test`)
   if (!token) return
   const body = JSON.stringify({ qrToken: qrFor(kiosks[0]), action: 'CheckIn' })

@@ -45,7 +45,8 @@ jobs:
         env:
           ASPNETCORE_ENVIRONMENT: Production
           ASPNETCORE_URLS: http://localhost:5080
-          ConnectionStrings__Default: Host=localhost;Port=5432;Database=pdks;Username=pdks;Password=pdks_load
+          # Havuz veritabanının bağlantı sınırının (100) altında: yönetim araçlarına ve ikinci bir sunucuya yer kalsın.
+          ConnectionStrings__Default: Host=localhost;Port=5432;Database=pdks;Username=pdks;Password=pdks_load;Maximum Pool Size=60
           Jwt__SigningKey: yuk-testi-icin-rastgele-anahtar-0123456789-abcdefghij
           Database__MigrateOnStartup: "true"
           Seed__Enabled: "true"
@@ -73,7 +74,16 @@ jobs:
 
       - name: Kaynak kullanımını izle
         run: |
-          nohup bash -c 'while true; do ps -o rss=,%cpu= -p $(cat api.pid) >> api-usage.txt; sleep 2; done' > /dev/null 2>&1 &
+          cat > usage.sh <<'SH'
+          pid=$(cat api.pid); hz=$(getconf CLK_TCK); prev=0
+          while kill -0 $pid 2>/dev/null; do
+            read -r ut st <<< "$(awk '{print $14, $15}' /proc/$pid/stat)"; t=$((ut + st))
+            rss=$(awk '/VmRSS/{print $2}' /proc/$pid/status)
+            [ $prev -gt 0 ] && echo "$rss $(( (t - prev) * 100 / hz / 2 ))" >> api-usage.txt
+            prev=$t; sleep 2
+          done
+          SH
+          nohup bash usage.sh > /dev/null 2>&1 &
 
       - name: k6
         working-directory: loadtest
@@ -92,7 +102,7 @@ jobs:
             echo "### API süreci"
             if [ -s api-usage.txt ]; then
               echo "- En yüksek bellek: $(awk '{ if ($1>m) m=$1 } END { printf "%.0f MB", m/1024 }' api-usage.txt)"
-              echo "- En yüksek işlemci: $(awk '{ if ($2>m) m=$2 } END { printf "%%%.0f", m }' api-usage.txt) (100 = 1 çekirdek)"
+              echo "- En yüksek işlemci: $(awk '{ if ($2>m) m=$2 } END { printf "%%%.0f", m }' api-usage.txt) (2 sn'lik anlık; 100 = 1 çekirdek, makinede 400)"
             fi
             echo "- API hata günlüğü: $(grep -c -E '^(fail|crit):' api.log || true) hata"
             grep -E -A1 '^(fail|crit):' api.log | grep -v '^--$' | cut -c1-160 | sort | uniq -c | sort -rn | head -n 8 | sed 's/^/    /'

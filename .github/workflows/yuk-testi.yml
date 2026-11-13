@@ -86,9 +86,7 @@ jobs:
             cat loadtest/ozet.md 2>/dev/null
             echo ""
             echo "### Veri tutarlılığı"
-            echo "- Bugün aynı kişiye birden fazla giriş kaydı: $(psql -At -c "select count(*) from (select \"UserId\" from \"AttendanceEvents\" where \"Type\"='CheckIn' and \"OccurredAt\" > now() - interval '1 hour' group by \"UserId\" having count(*) > 1) x") kişi"
-            echo "- Çift okutma denemesinde kaydedilen giriş: $(psql -At -c "select count(*) from \"AttendanceEvents\" e join \"Users\" u on u.\"Id\"=e.\"UserId\" where u.\"Email\" like 'lt-cift-%' and e.\"OccurredAt\" > now() - interval '1 hour'") (doğrusu 100)"
-            echo "- Gönderilen anlık uyarı (gelmedi / mola aşımı): $(psql -At -c "select count(*) from \"AttendanceAlerts\"")"
+            psql -q -f loadtest/tutarlilik.sql
             echo ""
             echo "### API süreci"
             if [ -s api-usage.txt ]; then
@@ -96,7 +94,7 @@ jobs:
               echo "- En yüksek işlemci: $(awk '{ if ($2>m) m=$2 } END { printf "%%%.0f", m }' api-usage.txt) (100 = 1 çekirdek)"
             fi
             echo "- API hata günlüğü: $(grep -c -E '^(fail|crit):' api.log || true) hata"
-            grep -E -A2 '^(fail|crit):' api.log | grep -v '^--$' | sort | uniq -c | sort -rn | head -n 10 | sed 's/^/    /'
+            grep -E -A1 '^(fail|crit):' api.log | grep -v '^--$' | cut -c1-160 | sort | uniq -c | sort -rn | head -n 8 | sed 's/^/    /'
           } > sonuc.md
           cat sonuc.md >> "$GITHUB_STEP_SUMMARY"
           echo "::notice title=Yük testi::$(sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g' sonuc.md)"

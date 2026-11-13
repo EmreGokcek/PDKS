@@ -30,6 +30,31 @@ public class FlowTests(PdksApiFactory api)
     }
 
     [Fact]
+    public async Task Simultaneous_scans_record_only_one_check_in()
+    {
+        var admin = await _c.Login("admin@pdks.local");
+        var email = $"cift.{Guid.NewGuid():N}@pdks.local";
+        var created = await (await _c.Send(HttpMethod.Post, "/api/users", admin.AccessToken,
+            new { firstName = "Çift", lastName = "Dokunma", email, role = "Employee" })).Json<JsonElement>();
+        var temp = created.GetProperty("temporaryPassword").GetString()!;
+        var first = await _c.Login(email, temp);
+        var token = (await (await _c.Send(HttpMethod.Post, "/api/auth/change-password", first.AccessToken,
+            new { currentPassword = temp, newPassword = "CiftDokunma1" })).Json<JsonElement>()).GetProperty("accessToken").GetString()!;
+
+        var kiosk = await _c.Login("kiosk@pdks.local");
+        var qr = (await (await _c.Send(HttpMethod.Get, "/api/kiosk/state", kiosk.AccessToken)).Json<JsonElement>()).GetProperty("qrToken").GetString();
+
+        // Telefonda çift dokunma / zayıf bağlantıda yeniden gönderme: aynı anda 5 okutma
+        var results = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ =>
+            api.Client().Send(HttpMethod.Post, "/api/attendance/scan", token, new { qrToken = qr, action = "CheckIn" })));
+        Assert.Equal(1, results.Count(r => r.StatusCode == HttpStatusCode.OK));
+        Assert.All(results.Where(r => r.StatusCode != HttpStatusCode.OK), r => Assert.Equal(HttpStatusCode.Conflict, r.StatusCode));
+
+        var today = await (await _c.Send(HttpMethod.Get, "/api/me/attendance", token)).Json<JsonElement>();
+        Assert.Equal("Working", today.GetProperty("state").GetString());
+    }
+
+    [Fact]
     public async Task Expired_or_forged_qr_is_rejected()
     {
         var employee = await _c.Login("personel@pdks.local");

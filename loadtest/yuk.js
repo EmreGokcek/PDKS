@@ -64,7 +64,11 @@ export const options = {
   // Eşikler testi durdurmaz; her uç nokta için ayrı ölçüm çıksın diye tanımlı.
   thresholds: Object.fromEntries(
     ['login', 'scan', 'me', 'kiosk', 'dashboard', 'dashboard_admin', 'monthly', 'excel', 'team_report', 'chaos_login', 'chaos_me', 'double_scan']
-      .flatMap((n) => [[`http_req_duration{name:${n}}`, ['p(95)<600000']], [`http_req_failed{name:${n}}`, ['rate<=1']]]),
+      .flatMap((n) => [
+        [`http_req_duration{name:${n}}`, ['p(95)<600000']],
+        [`http_req_failed{name:${n}}`, ['rate<=1']],
+        [`http_reqs{name:${n}}`, ['count>=0']],
+      ]),
   ),
   setupTimeout: '2m',
 }
@@ -162,8 +166,9 @@ export function handleSummary(data) {
   const rows = Object.entries(labels).map(([name, label]) => {
     const d = data.metrics[`http_req_duration{name:${name}}`]?.values
     const f = data.metrics[`http_req_failed{name:${name}}`]?.values
-    if (!d || !d.count) return null
-    return `| ${label} | ${d.count} | ${ms(d.med)} | ${ms(d['p(95)'])} | ${ms(d.max)} | %${((f?.rate || 0) * 100).toFixed(1)} |`
+    const n = data.metrics[`http_reqs{name:${name}}`]?.values?.count
+    if (!d || !n) return null
+    return `| ${label} | ${n} | ${ms(d.med)} | ${ms(d['p(95)'])} | ${ms(d.max)} | %${((f?.rate || 0) * 100).toFixed(1)} |`
   }).filter(Boolean)
 
   const total = data.metrics.http_reqs.values

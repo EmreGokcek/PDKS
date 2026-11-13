@@ -53,6 +53,12 @@ public class AttendanceService(PdksDbContext db, TimeProvider time, ShiftPublica
     public async Task<(string? Error, AttendanceEvent? Recorded)> RecordAsync(
         User user, AttendanceEventType action, Kiosk kiosk, CancellationToken ct = default)
     {
+        // Aynı kişinin aynı anda gelen okutmaları (çift dokunma, yeniden gönderme) sırayla işlenir;
+        // yoksa ikisi de "dışarıda" durumunu görüp iki giriş kaydı oluşturur. Kilit işlem sonunda kendiliğinden kalkar
+        // ve birden fazla sunucuda da geçerlidir (PostgreSQL advisory lock).
+        await using var tx = await db.Database.BeginTransactionAsync(ct);
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({UserLockKey(user.Id)})", ct);
+
         var snapshot = await GetSnapshotAsync(user, ct);
         if (AttendanceRules.Validate(action, snapshot.Summary) is { } error) return (error, null);
 
@@ -75,8 +81,12 @@ public class AttendanceService(PdksDbContext db, TimeProvider time, ShiftPublica
         var recorded = NewEvent(action);
         db.AttendanceEvents.Add(recorded);
         await db.SaveChangesAsync(ct);
+        await tx.CommitAsync(ct);
         return (null, recorded);
     }
+
+    /// <summary>Kişiye özel kilit anahtarı (kimliğin ilk 8 baytı).</summary>
+    private static long UserLockKey(Guid userId) => BitConverter.ToInt64(userId.ToByteArray(), 0);
 
     public async Task<TimeZoneInfo> TimeZoneForAsync(Guid? branchId, CancellationToken ct = default)
     {
